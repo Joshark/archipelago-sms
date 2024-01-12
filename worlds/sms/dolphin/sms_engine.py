@@ -1,13 +1,21 @@
 import location_watch
 import asyncio
 import time
+import item_receiver
 from .locations import SmsLocation
 
 myContext = new SmsContext()
-myComProc = new CommonCommandProcessor()
+myComProc = new SmsCommandProcessor()
 
 class SmsContext(CommonContext):
-    self.send_msgs()
+    
+
+class SmsCommandProcessor(CommonCommandProcessor):
+    def _cmd_received(self) -> bool:
+        for index, item in enumerate(self.ctx.items_received, 1):
+            item_receiver.unpack_item(self.ctx.items_received[item.item])
+        super()._cmd_received(self)
+
 
 def main():
     async def _main():
@@ -20,3 +28,4 @@ def main():
 
 def send_location_checks(check_ids):
     self.send_msgs([{cmd: "LocationChecks", locations: [check_ids]}])
+
