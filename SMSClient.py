@@ -1,7 +1,7 @@
 import typing
-import dolphin.location_watch as location_watch
+import worlds.sms.dolphin.location_watch as location_watch
 import asyncio
-import dolphin.item_receiver as item_receiver
+import worlds.sms.dolphin.item_receiver as item_receiver
 from CommonClient import CommonContext, ClientCommandProcessor
 
 global smsComProc
@@ -19,6 +19,7 @@ class SmsCommandProcessor(ClientCommandProcessor):
 
 class SmsContext(CommonContext):
     command_processor: typing.Type[ClientCommandProcessor] = SmsCommandProcessor
+    game = "Super Mario Sunshine"
 
 
 def main():

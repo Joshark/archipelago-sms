@@ -2,11 +2,12 @@ import dolphin_memory_engine as dme
 import addresses
 import time
 import bit_helper
-from worlds.sms import sms_engine
+import SMSClient
 
 storedShines = []
 curShines = []
 delaySeconds = 1
+location_offset = 523000
 
 
 def game_start():
@@ -39,7 +40,8 @@ def parse_bits(all_bits):
     for x in all_bits:
         if x < 120:
             print("Got shine #" + str(x))
-            sms_engine.send_location_checks(all_bits)
+            temp = x + location_offset
+            SMSClient.smsComProc.send_location_checks(temp)
 
 
 def get_shine_id(location, value):
