@@ -1,13 +1,10 @@
+import typing
 import dolphin.location_watch as location_watch
 import asyncio
 import dolphin.item_receiver as item_receiver
 from CommonClient import CommonContext, ClientCommandProcessor
-from .locations import SmsLocation
 
-
-class SmsContext(CommonContext):
-    def placeholder(self):
-        return
+global smsComProc
 
 
 class SmsCommandProcessor(ClientCommandProcessor):
@@ -20,7 +17,12 @@ class SmsCommandProcessor(ClientCommandProcessor):
         self.ctx.send_msgs([{"cmd": "LocationChecks", "locations": [check_ids]}])
 
 
+class SmsContext(CommonContext):
+    command_processor: typing.Type[ClientCommandProcessor] = SmsCommandProcessor
+
+
 def main():
+
     async def _main():
         loc_watch = asyncio.create_task(location_watch.location_watcher(True))
 
