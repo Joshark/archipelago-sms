@@ -2,9 +2,8 @@ import dolphin_memory_engine as dme
 import addresses
 import time
 import bit_helper
-import sms_engine
+from worlds.sms import sms_engine
 
-testHex = hex(0)
 storedShines = []
 curShines = []
 delaySeconds = 1
@@ -41,7 +40,6 @@ def parse_bits(all_bits):
         if x < 120:
             print("Got shine #" + str(x))
             sms_engine.send_location_checks(all_bits)
-
 
 
 def get_shine_id(location, value):
