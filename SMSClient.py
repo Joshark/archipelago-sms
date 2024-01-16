@@ -19,7 +19,6 @@ class SmsCommandProcessor(ClientCommandProcessor):
 
 class SmsContext(CommonContext):
     command_processor: typing.Type[ClientCommandProcessor] = SmsCommandProcessor
-    game = "Super Mario Sunshine"
 
 
 def main():
@@ -31,6 +30,3 @@ def main():
 
     location_watch.game_start()
     asyncio.run(_main())
-
-
-

@@ -1,7 +1,7 @@
 import dolphin_memory_engine as dme
-import addresses
+import worlds.sms.dolphin.addresses as addresses
 import time
-import bit_helper
+import worlds.sms.dolphin.bit_helper as bit_helper
 import SMSClient
 
 storedShines = []

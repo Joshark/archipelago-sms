@@ -1,5 +1,5 @@
 import dolphin_memory_engine as dme
-import addresses
+import worlds.sms.dolphin.addresses as addresses
 
 cur_shine_count = 0
 
