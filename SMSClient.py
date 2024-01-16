@@ -53,7 +53,6 @@ class SmsContext(CommonContext):
         await self.get_username()
         await self.send_connect()
 
-
     @property
     def endpoints(self):
         if self.server:
@@ -96,6 +95,9 @@ async def game_watcher(ctx: SmsContext):
 
 
 if __name__ == '__main__':
+
+    location_watch.game_start()
+
     async def main(args):
         ctx = SmsContext(args.connect, args.password)
         ctx.server_task = asyncio.create_task(server_loop(ctx), name="server loop")
@@ -104,6 +106,9 @@ if __name__ == '__main__':
         ctx.run_cli()
         progression_watcher = asyncio.create_task(
             game_watcher(ctx), name="SmsProgressionWatcher")
+
+        loc_watch = asyncio.create_task(location_watch.location_watcher(True))
+        await loc_watch
 
         await ctx.exit_event.wait()
         ctx.server_address = None
@@ -120,14 +125,3 @@ if __name__ == '__main__':
     colorama.init()
     asyncio.run(main(args))
     colorama.deinit()
-
-
-def main():
-
-    async def _main():
-        loc_watch = asyncio.create_task(location_watch.location_watcher(True))
-
-        await loc_watch
-
-    location_watch.game_start()
-    asyncio.run(_main())

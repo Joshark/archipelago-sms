@@ -18,7 +18,6 @@ def game_start():
     dme.hook()
     if not dme.is_hooked():
         print("hook unsuccessful")
-        quit()
 
 
 def memory_changed():
@@ -53,8 +52,6 @@ def get_shine_id(location, value):
 async def location_watcher(watch_running):
 
     def _sub():
-        if not dme.is_hooked():
-            quit()
 
         for x in range(0, addresses.SMS_BYTE_COUNT):
             targ_location = addresses.SMS_SHINE_OFFSET + x
@@ -67,4 +64,7 @@ async def location_watcher(watch_running):
 
     while watch_running:
         time.sleep(delaySeconds)
-        _sub()
+        if not dme.is_hooked():
+            dme.hook()
+        else:
+            _sub()
