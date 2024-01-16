@@ -1,8 +1,8 @@
 import dolphin_memory_engine as dme
 import worlds.sms.dolphin.addresses as addresses
-import time
 import worlds.sms.dolphin.bit_helper as bit_helper
-import SMSClient
+from SMSClient import SmsContext
+import asyncio
 
 storedShines = []
 curShines = []
@@ -20,7 +20,7 @@ def game_start():
         print("hook unsuccessful")
 
 
-def memory_changed():
+def memory_changed(ctx: SmsContext):
     print(str(curShines))
     bit_list = []
     for x in range(0, addresses.SMS_BYTE_COUNT):
@@ -28,10 +28,10 @@ def memory_changed():
             bit_found = bit_helper.extract_bits((curShines[x]), x)
             bit_list.extend(bit_found)
             storedShines[x] = curShines[x]
-    parse_bits(bit_list)
+    parse_bits(bit_list, ctx)
 
 
-def parse_bits(all_bits):
+def parse_bits(all_bits, ctx: SmsContext):
     if len(all_bits) == 0:
         return
 
@@ -40,7 +40,7 @@ def parse_bits(all_bits):
         if x < 120:
             print("Got shine #" + str(x))
             temp = x + location_offset
-            SMSClient.smsComProc.send_location_checks(temp)
+            ctx.locations_checked.add(temp)
 
 
 def get_shine_id(location, value):
@@ -49,7 +49,7 @@ def get_shine_id(location, value):
     return shine_id
 
 
-async def location_watcher(watch_running):
+async def location_watcher(ctx):
 
     def _sub():
 
@@ -59,12 +59,12 @@ async def location_watcher(watch_running):
             curShines[x] = cache_byte
 
         if storedShines != curShines:
-            memory_changed()
+            memory_changed(ctx)
         return
 
-    while watch_running:
-        time.sleep(delaySeconds)
+    while not ctx.exit_event.is_set():
         if not dme.is_hooked():
             dme.hook()
         else:
             _sub()
+        await asyncio.sleep(0.1)

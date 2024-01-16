@@ -75,17 +75,18 @@ class SmsContext(CommonContext):
 
 
 async def game_watcher(ctx: SmsContext):
-    from worlds.checksfinder.Locations import lookup_id_to_name
+    from worlds.sms.locations import ALL_LOCATIONS_TABLE
     while not ctx.exit_event.is_set():
-        if ctx.syncing == True:
+        if ctx.syncing:
             sync_msg = [{'cmd': 'Sync'}]
             if ctx.locations_checked:
                 sync_msg.append({"cmd": "LocationChecks", "locations": list(ctx.locations_checked)})
+            print(sync_msg)
             await ctx.send_msgs(sync_msg)
             ctx.syncing = False
         sending = []
         victory = False
-        ctx.locations_checked = sending
+        # ctx.locations_checked = sending
         message = [{"cmd": 'LocationChecks', "locations": sending}]
         await ctx.send_msgs(message)
         if not ctx.finished_game and victory:
@@ -104,17 +105,15 @@ if __name__ == '__main__':
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
+        loc_watch = asyncio.create_task(location_watch.location_watcher(ctx))
         progression_watcher = asyncio.create_task(
             game_watcher(ctx), name="SmsProgressionWatcher")
-
-        loc_watch = asyncio.create_task(location_watch.location_watcher(True))
-        await loc_watch
 
         await ctx.exit_event.wait()
         ctx.server_address = None
 
+        await loc_watch
         await progression_watcher
-
         await ctx.shutdown()
 
     import colorama
