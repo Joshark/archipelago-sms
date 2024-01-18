@@ -22,18 +22,26 @@ from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProc
 
 
 class SmsCommandProcessor(ClientCommandProcessor):
+
+    def _cmd_connect(self, address: str = "") -> bool:
+        temp = super()._cmd_connect()
+        if temp:
+            item_receiver.refresh_shine_count(self.ctx)
+            return True
+        else:
+            return False
+
     def _cmd_resync(self):
         """Manually trigger a resync."""
         self.output(f"Syncing items.")
         self.ctx.syncing = True
+        item_receiver.refresh_shine_count(self.ctx)
 
     def _cmd_received(self) -> bool:
         for index, item in enumerate(self.ctx.items_received, 1):
-            item_receiver.unpack_item(self.ctx.items_received[item.item])
+            item_receiver.unpack_item(self.ctx.items_received[item.item], self.ctx)
         return super()._cmd_received()
 
-    def send_location_checks(self, check_ids):
-        self.ctx.send_msgs([{"cmd": "LocationChecks", "locations": [check_ids]}])
 
 
 class SmsContext(CommonContext):
@@ -59,6 +67,9 @@ class SmsContext(CommonContext):
             return [self.server]
         else:
             return []
+
+    def send_location_checks(self, check_ids):
+        self.send_msgs([{"cmd": "LocationChecks", "locations": [check_ids]}])
 
     def run_gui(self):
         """Import kivy UI system and start running it as self.ui_task."""

@@ -41,6 +41,7 @@ def parse_bits(all_bits, ctx: SmsContext):
             print("Got shine #" + str(x))
             temp = x + location_offset
             ctx.locations_checked.add(temp)
+            ctx.send_location_checks(temp)
 
 
 def get_shine_id(location, value):
