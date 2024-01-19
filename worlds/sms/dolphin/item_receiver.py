@@ -12,8 +12,9 @@ def refresh_shine_count(ctx):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
     global local_shine_counter
     local_shine_counter = counts[523004]
-    print("Shine Count: " + str(local_shine_counter))
-    dme.write_double(addresses.SMS_SHINE_COUNTER, local_shine_counter)
+    temp = local_shine_counter.to_bytes(2, "big")
+    temp = int.from_bytes(temp)
+    dme.write_byte(addresses.SMS_SHINE_COUNTER, temp)
 
 
 def unpack_item(item, ctx):

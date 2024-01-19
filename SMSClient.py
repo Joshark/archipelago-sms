@@ -26,7 +26,7 @@ class SmsCommandProcessor(ClientCommandProcessor):
     def _cmd_connect(self, address: str = "") -> bool:
         temp = super()._cmd_connect()
         if temp:
-            item_receiver.refresh_shine_count(self.ctx)
+            self._cmd_resync()
             return True
         else:
             return False
@@ -92,7 +92,6 @@ async def game_watcher(ctx: SmsContext):
             sync_msg = [{'cmd': 'Sync'}]
             if ctx.locations_checked:
                 sync_msg.append({"cmd": "LocationChecks", "locations": list(ctx.locations_checked)})
-            print(sync_msg)
             await ctx.send_msgs(sync_msg)
             ctx.syncing = False
         sending = []

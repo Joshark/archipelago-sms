@@ -14,14 +14,10 @@ def game_start():
     for x in range(0, addresses.SMS_BYTE_COUNT):
         storedShines.append(0x00)
         curShines.append(0x00)
-    print(storedShines)
     dme.hook()
-    if not dme.is_hooked():
-        print("hook unsuccessful")
 
 
 def memory_changed(ctx: SmsContext):
-    print(str(curShines))
     bit_list = []
     for x in range(0, addresses.SMS_BYTE_COUNT):
         if curShines[x] > storedShines[x]:
@@ -35,10 +31,8 @@ def parse_bits(all_bits, ctx: SmsContext):
     if len(all_bits) == 0:
         return
 
-    print(all_bits)
     for x in all_bits:
         if x < 120:
-            print("Got shine #" + str(x))
             temp = x + location_offset
             ctx.locations_checked.add(temp)
             ctx.send_location_checks(temp)
