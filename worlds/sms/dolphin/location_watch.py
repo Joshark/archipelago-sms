@@ -11,7 +11,7 @@ location_offset = 523000
 
 
 def game_start():
-    for x in range(0, addresses.SMS_BYTE_COUNT):
+    for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
         storedShines.append(0x00)
         curShines.append(0x00)
     dme.hook()
@@ -19,7 +19,7 @@ def game_start():
 
 def memory_changed(ctx: SmsContext):
     bit_list = []
-    for x in range(0, addresses.SMS_BYTE_COUNT):
+    for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
         if curShines[x] > storedShines[x]:
             bit_found = bit_helper.extract_bits((curShines[x]), x)
             bit_list.extend(bit_found)
@@ -39,7 +39,7 @@ def parse_bits(all_bits, ctx: SmsContext):
 
 
 def get_shine_id(location, value):
-    temp = location + value - addresses.SMS_SHINE_OFFSET
+    temp = location + value - addresses.SMS_SHINE_LOCATION_OFFSET
     shine_id = int(temp)
     return shine_id
 
@@ -48,8 +48,8 @@ async def location_watcher(ctx):
 
     def _sub():
 
-        for x in range(0, addresses.SMS_BYTE_COUNT):
-            targ_location = addresses.SMS_SHINE_OFFSET + x
+        for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
+            targ_location = addresses.SMS_SHINE_LOCATION_OFFSET + x
             cache_byte = dme.read_byte(targ_location)
             curShines[x] = cache_byte
 

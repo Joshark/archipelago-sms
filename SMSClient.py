@@ -35,7 +35,7 @@ class SmsCommandProcessor(ClientCommandProcessor):
         """Manually trigger a resync."""
         self.output(f"Syncing items.")
         self.ctx.syncing = True
-        item_receiver.refresh_shine_count(self.ctx)
+        item_receiver.refresh_item_count(self.ctx, 523004, addresses.SMS_SHINE_COUNTER)
 
     def _cmd_received(self) -> bool:
         for index, item in enumerate(self.ctx.items_received, 1):
