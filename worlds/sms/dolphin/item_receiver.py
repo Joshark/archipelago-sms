@@ -18,12 +18,20 @@ def refresh_collection_counts(ctx):
 
 
 def enable_nozzle(nozzle_name):
-    return
+    if nozzle_name == "Rocket Nozzle":
+        return
+    elif nozzle_name == "Turbo Nozzle":
+        return
 
 
 def disable_nozzle(nozzle_name):
+    if nozzle_name == "Hover Nozzle":
+        dme.write_double(addresses.SMS_NOZZLE_LOCK_ADDRESS, addresses.SMS_HOVER_LOCK_VALUE)
     return
 
+
+def initialize_nozzles():
+    disable_nozzle("Hover Nozzle")
 
 def unpack_item(item, ctx):
     refresh_collection_counts(ctx)
