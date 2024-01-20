@@ -116,6 +116,7 @@ if __name__ == '__main__':
             ctx.run_gui()
         ctx.run_cli()
         loc_watch = asyncio.create_task(location_watch.location_watcher(ctx))
+        item_locker = asyncio.create_task(item_receiver.disable_nozzle("Hover Nozzle"))
         progression_watcher = asyncio.create_task(
             game_watcher(ctx), name="SmsProgressionWatcher")
 
@@ -123,6 +124,7 @@ if __name__ == '__main__':
         ctx.server_address = None
 
         await loc_watch
+        await item_locker
         await progression_watcher
         await ctx.shutdown()
 
