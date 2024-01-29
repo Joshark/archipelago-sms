@@ -7,11 +7,11 @@ class NozzleItem:
     unlock_address = 0x0
     unlock_value = ""
 
-    def __init__(self, name, ap_id, address, value):
+    def __init__(self, name, ap_id, address, unlocker):
         self.nozzle_name = name
         self.ap_item_id = ap_id
         self.unlock_address = address
-        self.unlock_value = value
+        self.unlock_value = unlocker
 
 
 def add_nozzles():

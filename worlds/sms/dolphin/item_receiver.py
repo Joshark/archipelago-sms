@@ -39,6 +39,7 @@ def unpack_item(item, ctx):
     refresh_collection_counts(ctx)
     if item == 523001:
         ap_nozzles_received.append("Hover Nozzle")
+        dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_NOZZLE_RELEASE))
     elif item == 532002:
         ap_nozzles_received.append("Rocket Nozzle")
     elif item == 523003:
