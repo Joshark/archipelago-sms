@@ -20,8 +20,16 @@ def refresh_collection_counts(ctx):
 
 
 def enable_nozzle(nozzle_name):
-
-    return
+    if nozzle_name == "Hover Nozzle":
+        dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_NOZZLE_RELEASE))
+    elif nozzle_name == "Rocket Nozzle":
+        dme.write_bytes(addresses.SMS_ROCKET_UNLOCK, bytes.fromhex(addresses.SMS_ROCKET_UNLOCK_VALUE))
+    elif nozzle_name == "Turbo Nozzle":
+        dme.write_bytes(addresses.SMS_TURBO_UNLOCK, bytes.fromhex(addresses.SMS_TURBO_UNLOCK_VALUE))
+    elif nozzle_name == "Yoshi":
+        temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
+        temp += 0x1
+        dme.write_byte(addresses.SMS_YOSHI_UNLOCK, temp)
 
 
 async def disable_nozzle(nozzle_name):
@@ -32,7 +40,7 @@ async def disable_nozzle(nozzle_name):
 
 
 def initialize_nozzles():
-    disable_nozzle("Hover Nozzle")
+    proc = disable_nozzle("Hover Nozzle")
 
 
 def unpack_item(item, ctx):
@@ -42,10 +50,13 @@ def unpack_item(item, ctx):
         dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_NOZZLE_RELEASE))
     elif item == 532002:
         ap_nozzles_received.append("Rocket Nozzle")
+        enable_nozzle("Rocket Nozzle")
     elif item == 523003:
         ap_nozzles_received.append("Turbo Nozzle")
+        enable_nozzle("Turbo Nozzle")
     elif item == 523013:
         ap_nozzles_received.append("Yoshi")
+        enable_nozzle("Yoshi")
     elif item == 523000:
         ap_nozzles_received.append("Spray Nozzle")
 

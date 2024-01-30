@@ -71,8 +71,9 @@ class SmsContext(CommonContext):
     def send_location_checks(self, check_ids):
         self.send_msgs([{"cmd": "LocationChecks", "locations": [check_ids]}])
 
-    def resync(self):
+    def force_resync(self):
         self.syncing = True
+        return
 
     def run_gui(self):
         """Import kivy UI system and start running it as self.ui_task."""

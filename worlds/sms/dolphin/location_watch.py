@@ -6,7 +6,7 @@ import asyncio
 
 storedShines = []
 curShines = []
-delaySeconds = 1
+delaySeconds = .25
 location_offset = 523000
 
 
@@ -45,9 +45,7 @@ def get_shine_id(location, value):
 
 
 async def location_watcher(ctx):
-
     def _sub():
-        SmsContext.resync(ctx)
         for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
             targ_location = addresses.SMS_SHINE_LOCATION_OFFSET + x
             cache_byte = dme.read_byte(targ_location)
@@ -56,6 +54,7 @@ async def location_watcher(ctx):
         if storedShines != curShines:
             memory_changed(ctx)
 
+        SmsContext.force_resync(ctx)
         return
 
     while not ctx.exit_event.is_set():
@@ -63,4 +62,4 @@ async def location_watcher(ctx):
             dme.hook()
         else:
             _sub()
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(delaySeconds)
