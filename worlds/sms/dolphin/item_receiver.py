@@ -28,7 +28,7 @@ def enable_nozzle(nozzle_name):
         dme.write_bytes(addresses.SMS_TURBO_UNLOCK, bytes.fromhex(addresses.SMS_TURBO_UNLOCK_VALUE))
     elif nozzle_name == "Yoshi":
         temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
-        temp += 0x1
+        temp = bit_helper.bit_flagger(temp, 7, True)
         dme.write_byte(addresses.SMS_YOSHI_UNLOCK, temp)
 
 
@@ -37,17 +37,27 @@ async def disable_nozzle(nozzle_name):
         if nozzle_name == "Hover Nozzle":
             dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_SPRAY_NOZZLE_VALUE))
         await asyncio.sleep(0.1)
+    while not ap_nozzles_received.__contains__("Yoshi"):
+        if nozzle_name == "Yoshi":
+            temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
+            temp = bit_helper.bit_flagger(temp, 7, False)
+            dme.write_byte(addresses.SMS_YOSHI_UNLOCK, temp)
 
 
 def initialize_nozzles():
-    proc = disable_nozzle("Hover Nozzle")
+    disable_nozzle("Hover Nozzle")
+    disable_nozzle("Yoshi")
+
+
+def open_stage(ticket_id):
+    return
 
 
 def unpack_item(item, ctx):
     refresh_collection_counts(ctx)
     if item == 523001:
         ap_nozzles_received.append("Hover Nozzle")
-        dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_NOZZLE_RELEASE))
+        enable_nozzle("Hover Nozzle")
     elif item == 532002:
         ap_nozzles_received.append("Rocket Nozzle")
         enable_nozzle("Rocket Nozzle")
@@ -59,6 +69,9 @@ def unpack_item(item, ctx):
         enable_nozzle("Yoshi")
     elif item == 523000:
         ap_nozzles_received.append("Spray Nozzle")
+    elif 523004 < item < 523011:
+        open_stage(item)
+        return
 
 
 def check_in_game_nozzles():
