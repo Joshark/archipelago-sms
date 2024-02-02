@@ -2,6 +2,7 @@ import dolphin_memory_engine as dme
 
 import worlds.sms.dolphin.addresses as addresses
 import worlds.sms.dolphin.bit_helper as bit_helper
+import worlds.sms.dolphin.stage_ticket as stage_ticket
 import collections
 import asyncio
 
@@ -50,6 +51,9 @@ def initialize_nozzles():
 
 
 def open_stage(ticket_id):
+    for ticket in stage_ticket.TICKETS:
+        if ticket_id == ticket.item_id:
+            bit_helper.bit_flagger(ticket.address, ticket.bit_position, True)
     return
 
 
