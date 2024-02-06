@@ -45,7 +45,7 @@ class ArchipIDLEWorld(World):
 
     location_name_to_id = {}
     start_id = 9000
-    for i in range(1, 201):
+    for i in range(1, 101):
         location_name_to_id[f"IDLE item number {i}"] = start_id
         start_id += 1
 
@@ -60,7 +60,7 @@ class ArchipIDLEWorld(World):
         self.multiworld.random.shuffle(item_table_copy)
 
         item_pool = []
-        for i in range(200):
+        for i in range(100):
             item = ArchipIDLEItem(
                 item_table_copy[i],
                 ItemClassification.progression if i < 40 else ItemClassification.filler,
