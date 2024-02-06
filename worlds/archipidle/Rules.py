@@ -27,12 +27,6 @@ def set_rules(world: MultiWorld, player: int):
             lambda state: state._archipidle_location_is_accessible(player, 20)
         )
 
-    for i in range(101, 201):
-        set_rule(
-            world.get_location(f"IDLE item number {i}", player),
-            lambda state: state._archipidle_location_is_accessible(player, 40)
-        )
-
     world.completion_condition[player] =\
         lambda state:\
         state.can_reach(world.get_location("IDLE item number 200", player), "Location", player)
