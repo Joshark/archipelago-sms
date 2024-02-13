@@ -9,6 +9,7 @@ class NozzleItem(NamedTuple):
 
 
 NOZZLES: list[NozzleItem] = [
+    NozzleItem("Spray Nozzle", 523000, 0, "none"),
     NozzleItem("Hover Nozzle", 523001, 0x80294438, "unknown"),
     NozzleItem("Rocket Nozzle", 523002, 0x8029443C, "38600001"),
     NozzleItem("Turbo Nozzle", 523003, 0x80294440, "4E800020")

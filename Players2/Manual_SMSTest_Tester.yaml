@@ -1,0 +1,6 @@
+Manual_SMSTest_Tester:
+    progression_balancing: 50
+    accessibility: items
+
+game: Manual_SMSTest_Tester
+name: Tester

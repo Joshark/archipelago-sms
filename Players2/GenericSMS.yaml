@@ -1,0 +1,60 @@
+description: Experimental yaml for SMS.
+name: GenericSMS
+game: Super Mario Sunshine
+requires:
+  plando: items
+ 
+Super Mario Sunshine:
+  level_access: 1
+  enable_coin_shines: false
+  corona_mountain_shines: 50
+  amount_of_shines: 70
+
+  plando_items:
+  - item:
+      Hover Nozzle: 1
+    world: Tester
+    location: Get Hover Nozzle
+    force: true
+  
+  - item:
+      Rocket Nozzle: 1
+    world: Tester
+    location: Get Rocket Nozzle
+    force: true
+  
+  - item:
+      Turbo Nozzle: 1
+    world: Tester
+    location: Get Turbo Nozzle
+    force: true
+  
+  - item:
+      Yoshi: 1
+    world: Tester
+    location: Get Yoshi
+    force: true
+  
+  - item:
+      Bianco Hills Ticket: 1
+    world: Tester
+    location: To Bianco Hills
+    force: true
+  
+  - item:
+      Ricco Harbor Ticket: 1
+    world: Tester
+    location: To Ricco Harbor
+    force: true
+  
+  - item:
+      Gelato Beach Ticket: 1
+    world: Tester
+    location: To Gelato Beach
+    force: true
+  
+  - item:
+      Sirena Beach Ticket: 1
+    world: Tester
+    location: To Sirena Beach
+    force: true

@@ -15,6 +15,7 @@ def game_start():
         storedShines.append(0x00)
         curShines.append(0x00)
     dme.hook()
+    return dme.is_hooked()
 
 
 def memory_changed(ctx: SmsContext):

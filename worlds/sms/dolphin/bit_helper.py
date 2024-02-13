@@ -3,9 +3,13 @@ def extract_bits(input_byte, input_offset):
     input_byte = change_endian(input_byte)
     temp = str(bin(input_byte))
     temp = str.removeprefix(temp, "0b")
+
+    while len(temp)<8:
+        temp = "0" + temp
+
     for x in range(0, len(temp)):
         if temp[x] == "1":
-            byte_list.append(((input_offset + 1) * 8) - int(x))
+            byte_list.append(((input_offset + 1) * 8) - int(x+1))
     print(byte_list)
     return byte_list
 

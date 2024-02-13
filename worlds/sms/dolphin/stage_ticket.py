@@ -14,6 +14,6 @@ TICKETS: list[Ticket] = [
     Ticket("Ricco Harbor Ticket", 523006, 6),
     Ticket("Gelato Beach Ticket", 523007, 7),
     Ticket("Pinna Park Ticket", 523008, 1, 0x805789f8),
-    #Ticket("Noki Bay Ticket", 523009, 0, 0x805789f8),
+    Ticket("Noki Bay Ticket", 523009, 0, 0x805789f8),
     Ticket("Sirena Beach Ticket", 523010, 3, 0x805789f8)
 ]

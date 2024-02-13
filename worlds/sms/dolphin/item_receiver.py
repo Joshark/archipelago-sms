@@ -46,8 +46,13 @@ async def disable_nozzle(nozzle_name):
 
 
 def initialize_nozzles():
+    info = False
+    if not dme.is_hooked():
+        dme.hook()
+        info = True
     disable_nozzle("Hover Nozzle")
     disable_nozzle("Yoshi")
+    return info
 
 
 def open_stage(ticket_id):

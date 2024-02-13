@@ -144,7 +144,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("A Golden Bird", 523058, Requirements([NozzleType.hover, NozzleType.spray])),
         Shine("Red Coins on the Half Shell", 523059, Requirements([NozzleType.hover])),
         Shine("100 Coins", 523105, Requirements([NozzleType.hover]), hundred=True)
-    ], ticketed=True),
+    ], ticketed=False),
     SmsRegion("Pianta Village", Requirements([NozzleType.rocket]), [
         Shine("Chain Chomplets Unchained", 523060, Requirements([NozzleType.spray | NozzleType.hover])),
         Shine("Il Piantissimo's Crazy Climb", 523061, Requirements([NozzleType.spray | NozzleType.hover])),
@@ -159,6 +159,6 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Red Coin Chucksters", 523068, Requirements([NozzleType.spray | NozzleType.hover], yoshi=True)),
         Shine("Soak the Sun", 523069, Requirements([NozzleType.spray | NozzleType.hover], yoshi=True)),
         Shine("100 Coins", 523106, Requirements([NozzleType.spray | NozzleType.hover], yoshi=True), hundred=True)
-    ], ticketed=True),
+    ], ticketed=False),
     SmsRegion("Corona Mountain", Requirements(corona=True), []),
 ]

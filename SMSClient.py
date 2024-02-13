@@ -5,21 +5,20 @@ import asyncio
 import shutil
 
 import typing
-import worlds.sms.dolphin.location_watch as location_watch
-import worlds.sms.dolphin.item_receiver as item_receiver
+
+from worlds.sms.dolphin import location_watch
+from worlds.sms.dolphin import item_receiver
 
 import ModuleUpdate
 ModuleUpdate.update()
 
 import Utils
-
 if __name__ == "__main__":
     Utils.init_logging("SMSClient", exception_logger="Client")
 
 from NetUtils import NetworkItem, ClientStatus
 from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
     CommonContext, server_loop
-
 
 class SmsCommandProcessor(ClientCommandProcessor):
 
@@ -33,7 +32,8 @@ class SmsCommandProcessor(ClientCommandProcessor):
 
     def _cmd_resync(self):
         """Manually trigger a resync."""
-        item_receiver.initialize_nozzles()
+        if item_receiver.initialize_nozzles():
+            self.output(text="Connected to Dolphin.")
         self.output(f"Syncing items.")
         self.ctx.syncing = True
         item_receiver.refresh_collection_counts(self.ctx)
@@ -111,14 +111,14 @@ async def game_watcher(ctx: SmsContext):
 
 if __name__ == '__main__':
 
-    location_watch.game_start()
-
     async def main(args):
         ctx = SmsContext(args.connect, args.password)
         ctx.server_task = asyncio.create_task(server_loop(ctx), name="server loop")
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
+        if location_watch.game_start():
+            print("Hooked to Dolphin, will change this part later")
         loc_watch = asyncio.create_task(location_watch.location_watcher(ctx))
         item_locker = asyncio.create_task(item_receiver.disable_nozzle("Hover Nozzle"))
         progression_watcher = asyncio.create_task(
