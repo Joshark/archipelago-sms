@@ -4,11 +4,13 @@ import worlds.sms.dolphin.addresses as addresses
 import worlds.sms.dolphin.bit_helper as bit_helper
 import worlds.sms.dolphin.stage_ticket as stage_ticket
 import worlds.sms.dolphin.nozzle_item as nozzle_item
+from worlds.sms.options import SmsOptions
 import collections
 import asyncio
 
 ap_nozzles_received = ["Spray Nozzle"]
 in_game_nozzles_avail = ["Spray Nozzle"]
+world_flags = {}
 
 
 def refresh_item_count(ctx, item_id, targ_address):
@@ -22,11 +24,23 @@ def refresh_all_items(ctx):
     for items in counts:
         if counts[items] > 0:
             unpack_item(items, ctx)
+    if counts[523004] > SmsOptions.corona_mountain_shines:
+        stage_ticket.activate_ticket(999999)
 
 
 def refresh_collection_counts(ctx):
     refresh_item_count(ctx, 523004, addresses.SMS_SHINE_COUNTER)
     refresh_all_items(ctx)
+
+
+def check_world_flags(byte_location, byte_pos, bool_setting):
+    if world_flags.get(byte_location):
+        byte_value = world_flags.get(byte_location)
+    else:
+        byte_value = dme.read_byte(byte_location)
+    byte_value = bit_helper.bit_flagger(byte_value, byte_pos, bool_setting)
+    world_flags.update({byte_location: byte_value})
+    return byte_value
 
 
 def enable_nozzle(nozzle_name):
@@ -38,7 +52,7 @@ def enable_nozzle(nozzle_name):
         dme.write_bytes(addresses.SMS_TURBO_UNLOCK, bytes.fromhex(addresses.SMS_TURBO_UNLOCK_VALUE))
     elif nozzle_name == "Yoshi":
         temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
-        temp = bit_helper.bit_flagger(temp, 7, True)
+        temp = check_world_flags(temp, 7, True)
         dme.write_byte(addresses.SMS_YOSHI_UNLOCK, temp)
 
 
@@ -50,7 +64,7 @@ async def disable_nozzle(nozzle_name):
     while not ap_nozzles_received.__contains__("Yoshi"):
         if nozzle_name == "Yoshi":
             temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
-            temp = bit_helper.bit_flagger(temp, 7, False)
+            temp = check_world_flags(temp, 7, False)
             dme.write_byte(addresses.SMS_YOSHI_UNLOCK, temp)
 
 
@@ -67,7 +81,7 @@ def initialize_nozzles():
 def open_stage(ticket):
     print("Opening stage " + ticket.item_name)
     byte = dme.read_double(ticket.address)
-    value = bit_helper.bit_flagger(byte, ticket.bit_position, True)
+    value = check_world_flags(byte, ticket.bit_position, True)
     print("Write value " + str(value) + " to location " + str(ticket.address))
     dme.write_byte(ticket.address, value)
     return

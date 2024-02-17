@@ -52,6 +52,9 @@ class SmsContext(CommonContext):
     command_processor: int = SmsCommandProcessor
     game = "Super Mario Sunshine"
     items_handling = 0b111  # full remote
+
+    options = Utils.get_options().get("mmbn3_options", None)
+
     hook_check = False
     hook_nagged = False
 
@@ -123,6 +126,10 @@ async def game_watcher(ctx: SmsContext):
                 logger.info("Please connect to Dolphin (may have issues, default is to start game before opening client).")
                 ctx.hook_nagged = True
 
+        if ctx.hook_check and not location_watch.dme.is_hooked():
+            logger.info("Dolphin connection lost!")
+            ctx.hook_check = False
+            ctx.hook_nagged = False
         await asyncio.sleep(0.1)
 
 

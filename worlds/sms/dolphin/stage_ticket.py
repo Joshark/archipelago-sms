@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import worlds.sms.dolphin.item_receiver as item_receiver
 from CommonClient import logger
 
+
 @dataclass
 class Ticket:
     item_name: str
@@ -17,7 +18,8 @@ TICKETS: list[Ticket] = [
     Ticket("Gelato Beach Ticket", 523007, 7, 0x805789f8),
     Ticket("Pinna Park Ticket", 523008, 1, 0x805789f9),
     Ticket("Noki Bay Ticket", 523009, 3, 0x805789fd),
-    Ticket("Sirena Beach Ticket", 523010, 3, 0x805789f9)
+    Ticket("Sirena Beach Ticket", 523010, 3, 0x805789f9),
+    Ticket("Corona Mountain Ticket", 999999, 6, 0x805789fd)
 ]
 
 
