@@ -3,6 +3,7 @@ import dolphin_memory_engine as dme
 import worlds.sms.dolphin.addresses as addresses
 import worlds.sms.dolphin.bit_helper as bit_helper
 import worlds.sms.dolphin.stage_ticket as stage_ticket
+import worlds.sms.dolphin.nozzle_item as nozzle_item
 import collections
 import asyncio
 
@@ -16,8 +17,16 @@ def refresh_item_count(ctx, item_id, targ_address):
     dme.write_byte(targ_address, temp)
 
 
+def refresh_all_items(ctx):
+    counts = collections.Counter(received_item.item for received_item in ctx.items_received)
+    for items in counts:
+        if counts[items] > 0:
+            unpack_item(items, ctx)
+
+
 def refresh_collection_counts(ctx):
     refresh_item_count(ctx, 523004, addresses.SMS_SHINE_COUNTER)
+    refresh_all_items(ctx)
 
 
 def enable_nozzle(nozzle_name):
@@ -55,32 +64,27 @@ def initialize_nozzles():
     return info
 
 
-def open_stage(ticket_id):
-    for ticket in stage_ticket.TICKETS:
-        if ticket_id == ticket.item_id:
-            bit_helper.bit_flagger(ticket.address, ticket.bit_position, True)
+def open_stage(ticket):
+    print("Opening stage " + ticket.item_name)
+    byte = dme.read_double(ticket.address)
+    value = bit_helper.bit_flagger(byte, ticket.bit_position, True)
+    print("Write value " + str(value) + " to location " + str(ticket.address))
+    dme.write_byte(ticket.address, value)
+    return
+
+
+def special_noki_handling():
+    dme.write_double(addresses.SMS_NOKI_REQ, addresses.SMS_NOKI_LO)
     return
 
 
 def unpack_item(item, ctx):
-    refresh_collection_counts(ctx)
-    if item == 523001:
-        ap_nozzles_received.append("Hover Nozzle")
-        enable_nozzle("Hover Nozzle")
-    elif item == 532002:
-        ap_nozzles_received.append("Rocket Nozzle")
-        enable_nozzle("Rocket Nozzle")
-    elif item == 523003:
-        ap_nozzles_received.append("Turbo Nozzle")
-        enable_nozzle("Turbo Nozzle")
+    if 522999 < item < 523004:
+        nozzle_item.activate_nozzle(item)
     elif item == 523013:
-        ap_nozzles_received.append("Yoshi")
-        enable_nozzle("Yoshi")
-    elif item == 523000:
-        ap_nozzles_received.append("Spray Nozzle")
+        nozzle_item.activate_yoshi()
     elif 523004 < item < 523011:
-        open_stage(item)
-        return
+        stage_ticket.activate_ticket(item)
 
 
 def check_in_game_nozzles():

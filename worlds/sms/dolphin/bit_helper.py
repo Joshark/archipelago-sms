@@ -36,5 +36,6 @@ def bit_flagger(input_byte, flag_position, bool_setting):
 
 
 def change_endian(byte):
+    byte = int(byte)
     byte = byte.to_bytes(2, "big")
-    return int.from_bytes(byte)
+    return int.from_bytes(byte, "big")
