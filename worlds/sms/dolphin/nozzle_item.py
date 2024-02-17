@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from CommonClient import logger
 
 
 @dataclass
@@ -21,12 +22,12 @@ NOZZLES: list[NozzleItem] = [
 def activate_nozzle(id):
     for nozzles in NOZZLES:
         if id == nozzles.ap_item_id:
-            print("Activating " + nozzles.nozzle_name)
+            logger.info("Activating " + nozzles.nozzle_name)
     return
 
 
 def activate_yoshi():
     for nozzles in NOZZLES:
         if id == nozzles.ap_item_id:
-            print("Activating " + nozzles.nozzle_name)
+            logger.info("Activating " + nozzles.nozzle_name)
     return

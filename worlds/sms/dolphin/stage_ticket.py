@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import worlds.sms.dolphin.item_receiver as item_receiver
-
+from CommonClient import logger
 
 @dataclass
 class Ticket:
@@ -24,7 +24,7 @@ TICKETS: list[Ticket] = [
 def activate_ticket(id: int):
     for tickets in TICKETS:
         if id == tickets.item_id:
-            print("Activating " + tickets.item_name)
+            logger.info("Activating " + tickets.item_name)
             tickets.active = True
             handle_ticket(tickets)
 

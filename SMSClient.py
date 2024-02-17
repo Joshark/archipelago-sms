@@ -24,6 +24,10 @@ class SmsCommandProcessor(ClientCommandProcessor):
 
     def _cmd_connect(self, address: str = "") -> bool:
         temp = super()._cmd_connect()
+        if location_watch.dme.is_hooked():
+            logger.info("Already connected to Dolphin!")
+        else:
+            logger.info("Please connect to Dolphin (may have issues, default is to start game before opening client).")
         if temp:
             self._cmd_resync()
             return True
@@ -33,7 +37,7 @@ class SmsCommandProcessor(ClientCommandProcessor):
     def _cmd_resync(self):
         """Manually trigger a resync."""
         if item_receiver.initialize_nozzles():
-            self.output(text="Connected to Dolphin.")
+            logger.info("Connected to Dolphin.")
         self.output(f"Syncing items.")
         self.ctx.syncing = True
         item_receiver.refresh_collection_counts(self.ctx)
@@ -48,6 +52,8 @@ class SmsContext(CommonContext):
     command_processor: int = SmsCommandProcessor
     game = "Super Mario Sunshine"
     items_handling = 0b111  # full remote
+    hook_check = False
+    hook_nagged = False
 
     def __init__(self, server_address, password):
         super(SmsContext, self).__init__(server_address, password)
@@ -106,6 +112,17 @@ async def game_watcher(ctx: SmsContext):
         if not ctx.finished_game and victory:
             await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
             ctx.finished_game = True
+        if not ctx.hook_check:
+            if not ctx.hook_nagged:
+                logger.info("Checking Dolphin hookup...")
+            location_watch.dme.hook()
+            if location_watch.dme.is_hooked():
+                logger.info("Hooked to Dolphin!")
+                ctx.hook_check = True
+            elif not ctx.hook_nagged:
+                logger.info("Please connect to Dolphin (may have issues, default is to start game before opening client).")
+                ctx.hook_nagged = True
+
         await asyncio.sleep(0.1)
 
 
@@ -117,8 +134,10 @@ if __name__ == '__main__':
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
-        if location_watch.game_start():
-            print("Hooked to Dolphin, will change this part later")
+
+        location_watch.game_start()
+        if location_watch.dme.is_hooked():
+            logger.info("Hooked to Dolphin!")
         loc_watch = asyncio.create_task(location_watch.location_watcher(ctx))
         item_locker = asyncio.create_task(item_receiver.disable_nozzle("Hover Nozzle"))
         progression_watcher = asyncio.create_task(
@@ -126,7 +145,6 @@ if __name__ == '__main__':
 
         await ctx.exit_event.wait()
         ctx.server_address = None
-
         await loc_watch
         await item_locker
         await progression_watcher
