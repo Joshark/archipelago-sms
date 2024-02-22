@@ -1,6 +1,6 @@
 import dolphin_memory_engine as dme
-import worlds.sms.dolphin.addresses as addresses
-import worlds.sms.dolphin.bit_helper as bit_helper
+import sms.dolphin.addresses as addresses
+import sms.dolphin.bit_helper as bit_helper
 from SMSClient import SmsContext
 import asyncio
 

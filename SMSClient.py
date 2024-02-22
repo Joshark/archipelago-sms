@@ -1,13 +1,8 @@
 from __future__ import annotations
-import os
-import sys
 import asyncio
-import shutil
 
-import typing
-
-from worlds.sms.dolphin import location_watch
-from worlds.sms.dolphin import item_receiver
+from worlds.sms import location_watch
+from worlds.sms import item_receiver
 
 import ModuleUpdate
 ModuleUpdate.update()
@@ -16,7 +11,7 @@ import Utils
 if __name__ == "__main__":
     Utils.init_logging("SMSClient", exception_logger="Client")
 
-from NetUtils import NetworkItem, ClientStatus
+from NetUtils import ClientStatus
 from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
     CommonContext, server_loop
 
@@ -99,7 +94,6 @@ class SmsContext(CommonContext):
 
 
 async def game_watcher(ctx: SmsContext):
-    from worlds.sms.locations import ALL_LOCATIONS_TABLE
     while not ctx.exit_event.is_set():
         if ctx.syncing:
             sync_msg = [{'cmd': 'Sync'}]

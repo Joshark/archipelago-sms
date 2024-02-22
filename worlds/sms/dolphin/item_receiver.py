@@ -1,10 +1,10 @@
 import dolphin_memory_engine as dme
 
-import worlds.sms.dolphin.addresses as addresses
-import worlds.sms.dolphin.bit_helper as bit_helper
-import worlds.sms.dolphin.stage_ticket as stage_ticket
-import worlds.sms.dolphin.nozzle_item as nozzle_item
-from worlds.sms.options import SmsOptions
+import sms.dolphin.addresses as addresses
+import sms.dolphin.bit_helper as bit_helper
+import sms.dolphin.stage_ticket as stage_ticket
+import sms.dolphin.nozzle_item as nozzle_item
+from sms.options import SmsOptions
 import collections
 import asyncio
 
@@ -166,10 +166,13 @@ def set_nozzle_assignment(nozzle_name):
     return assign_id
 
 
+def disable_shadow_mario():
+    dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
+
+
 def enforce_nozzles(primary_nozzle, secondary_nozzle):
     primary_id = set_nozzle_assignment(primary_nozzle)
     secondary_id = set_nozzle_assignment(secondary_nozzle)
     dme.write_double(addresses.SMS_PRIMARY_NOZZLE_ADDRESS, primary_id)
     dme.write_double(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, secondary_id)
-
     return

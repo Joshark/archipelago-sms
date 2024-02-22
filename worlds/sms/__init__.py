@@ -3,10 +3,10 @@ Archipelago init file for Super Mario Sunshine
 """
 from BaseClasses import ItemClassification
 from worlds.AutoWorld import WebWorld, World
-from worlds.sms.items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, TICKET_ITEMS, ALL_PROGRESSION_ITEMS, SmsItem
-from worlds.sms.locations import ALL_LOCATIONS_TABLE
-from worlds.sms.options import SmsOptions, LevelAccess
-from worlds.sms.regions import create_regions
+from sms.items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, TICKET_ITEMS, ALL_PROGRESSION_ITEMS, SmsItem
+from sms.locations import ALL_LOCATIONS_TABLE
+from sms.options import SmsOptions, LevelAccess
+from sms.regions import create_regions
 
 
 class SmsWebWorld(WebWorld):

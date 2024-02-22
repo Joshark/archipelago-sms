@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-import worlds.sms.dolphin.item_receiver as item_receiver
+import sms.dolphin.item_receiver as item_receiver
 from CommonClient import logger
 
 
