@@ -5,56 +5,57 @@ requires:
   plando: items
  
 Super Mario Sunshine:
-  level_access: 1
+  # Please do not change the level_access setting at this time, as the ticketing system is currently on hiatus.
+  level_access: 0
   enable_coin_shines: false
   corona_mountain_shines: 50
-  amount_of_shines: 70
+  amount_of_shines: 80
 
   plando_items:
   - item:
       Hover Nozzle: 1
     world: Tester
     location: Get Hover Nozzle
-    force: true
+    force: silent
   
   - item:
       Rocket Nozzle: 1
     world: Tester
     location: Get Rocket Nozzle
-    force: true
+    force: silent
   
   - item:
       Turbo Nozzle: 1
     world: Tester
     location: Get Turbo Nozzle
-    force: true
+    force: silent
   
   - item:
       Yoshi: 1
     world: Tester
     location: Get Yoshi
-    force: true
+    force: silent
   
   - item:
       Bianco Hills Ticket: 1
     world: Tester
     location: To Bianco Hills
-    force: true
+    force: silent
   
   - item:
       Ricco Harbor Ticket: 1
     world: Tester
     location: To Ricco Harbor
-    force: true
+    force: silent
   
   - item:
       Gelato Beach Ticket: 1
     world: Tester
     location: To Gelato Beach
-    force: true
+    force: silent
   
   - item:
       Sirena Beach Ticket: 1
     world: Tester
     location: To Sirena Beach
-    force: true
+    force: silent
