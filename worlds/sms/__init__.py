@@ -3,6 +3,7 @@ Archipelago init file for Super Mario Sunshine
 """
 from BaseClasses import ItemClassification
 from worlds.AutoWorld import WebWorld, World
+from worlds.LauncherComponents import Component, components, launch_subprocess
 from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, TICKET_ITEMS, ALL_PROGRESSION_ITEMS, SmsItem
 from .locations import ALL_LOCATIONS_TABLE
 from .options import SmsOptions, LevelAccess
@@ -61,3 +62,25 @@ class SmsWorld(World):
 
     def set_rules(self):
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
+
+
+def launch_client(*args):
+    from .SMSClient import main
+    launch_subprocess(main, name="SMS client")
+
+
+def add_client_to_launcher() -> None:
+    version = "0.2.0"
+    found = False
+    for c in components:
+        if c.display_name == "Super Mario Sunshine Client":
+            found = True
+            if getattr(c, "version", 0) < version:
+                c.version = version
+                c.func = launch_client
+                return
+    if not found:
+        components.append(Component("Super Mario Sunshine Client", "SMSClient", func=launch_client, file_identifier='SMSClient.py'))
+
+
+add_client_to_launcher()

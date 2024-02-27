@@ -1,7 +1,7 @@
 import dolphin_memory_engine as dme
-import addresses
-import bit_helper
-from SMSClient import SmsContext
+from .addresses import addresses
+from .bit_helper import extract_bits
+from .SMSClient import SmsContext
 import asyncio
 
 storedShines = []
@@ -22,7 +22,7 @@ def memory_changed(ctx: SmsContext):
     bit_list = []
     for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
         if curShines[x] > storedShines[x]:
-            bit_found = bit_helper.extract_bits((curShines[x]), x)
+            bit_found = extract_bits((curShines[x]), x)
             bit_list.extend(bit_found)
             storedShines[x] = curShines[x]
     parse_bits(bit_list, ctx)

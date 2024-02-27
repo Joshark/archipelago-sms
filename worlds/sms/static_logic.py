@@ -35,21 +35,21 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Delfino Airstrip Dilemma", 523086, Requirements([NozzleType.spray])),
         Shine("Red Coin Waterworks", 523087, Requirements(corona=True))]),
     SmsRegion("Delfino Plaza", Requirements([NozzleType.spray]), [
-        Shine("Shine Sprite in the Sand", 523117, Requirements([NozzleType.spray | NozzleType.hover])),
+        Shine("Shine Sprite in the Sand", 523117, Requirements([NozzleType.hover])),
         Shine("Boxing Clever 1", 523094),
         Shine("Boxing Clever 2", 523095),
-        Shine("Clean the West Bell", 523096, Requirements([NozzleType.hover | NozzleType.rocket])),
+        Shine("Clean the West Bell", 523096, Requirements([NozzleType.hover | NozzleType.rocket], shines=10)),
         Shine("Chuckster", 523098),
         Shine("Super Slide", 523090),
         Shine("The Gold Bird", 523118, Requirements([NozzleType.spray])),
-        Shine("Turbo Dash!", 523116, Requirements([NozzleType.turbo])),
-        Shine("Lighthouse Roof", 523093, Requirements([NozzleType.rocket])),
-        Shine("Clean the East Bell", 523097, Requirements([NozzleType.rocket])),
-        Shine("Shine Gate", 523099, Requirements([NozzleType.rocket])),
-        Shine("Pachinko Game", 523089, Requirements([NozzleType.hover | NozzleType.rocket])),
+        Shine("Turbo Dash!", 523116, Requirements([NozzleType.turbo], shines=10)),
+        Shine("Lighthouse Roof", 523093, Requirements([NozzleType.rocket], shines=10)),
+        Shine("Clean the East Bell", 523097, Requirements([NozzleType.rocket], shines=10)),
+        Shine("Shine Gate", 523099, Requirements([NozzleType.rocket], shines=10)),
+        Shine("Pachinko Game", 523089, Requirements([NozzleType.hover | NozzleType.rocket], shines=10)),
         Shine("Lily Pad Ride", 523091, Requirements([NozzleType.hover], yoshi=True)),
-        Shine("Turbo Track", 523088, Requirements([NozzleType.turbo])),
-        Shine("Red Coin Field", 523092, Requirements([NozzleType.rocket])),
+        Shine("Turbo Track", 523088, Requirements([NozzleType.turbo], shines=10)),
+        Shine("Red Coin Field", 523092, Requirements([NozzleType.rocket], shines=10)),
         Shine("100 Coins", 523107, Requirements([NozzleType.hover | NozzleType.rocket]), hundred=True)
     ]),
     SmsRegion("Bianco Hills", Requirements([NozzleType.spray]), [
@@ -145,7 +145,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Red Coins on the Half Shell", 523059, Requirements([NozzleType.hover])),
         Shine("100 Coins", 523105, Requirements([NozzleType.hover]), hundred=True)
     ], ticketed=False),
-    SmsRegion("Pianta Village", Requirements([NozzleType.rocket]), [
+    SmsRegion("Pianta Village", Requirements([NozzleType.rocket], shines=10), [
         Shine("Chain Chomplets Unchained", 523060, Requirements([NozzleType.spray | NozzleType.hover])),
         Shine("Il Piantissimo's Crazy Climb", 523061, Requirements([NozzleType.spray | NozzleType.hover])),
         Shine("The Goopy Inferno", 523062, Requirements([NozzleType.spray | NozzleType.hover])),

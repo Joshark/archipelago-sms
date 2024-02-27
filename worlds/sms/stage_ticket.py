@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-import item_receiver
+from .item_receiver import open_stage, special_noki_handling
 from CommonClient import logger
 
 
@@ -35,8 +35,8 @@ def handle_ticket(tick: Ticket):
     if not tick.active:
         return
     if tick.item_name == "Noki Bay Ticket":
-        item_receiver.special_noki_handling()
-    item_receiver.open_stage(tick)
+        special_noki_handling()
+    open_stage(tick)
     return
 
 

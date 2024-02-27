@@ -1,10 +1,10 @@
 import dolphin_memory_engine as dme
 
-import addresses
-import bit_helper
-import stage_ticket
-import nozzle_item
-from options import SmsOptions
+from .addresses import addresses
+from .bit_helper import change_endian, bit_flagger
+from .stage_ticket import activate_ticket
+from .nozzle_item import activate_nozzle, activate_yoshi
+from .options import SmsOptions
 import collections
 import asyncio
 
@@ -15,7 +15,7 @@ world_flags = {}
 
 def refresh_item_count(ctx, item_id, targ_address):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
-    temp = bit_helper.change_endian(counts[item_id])
+    temp = change_endian(counts[item_id])
     dme.write_byte(targ_address, temp)
 
 
@@ -25,7 +25,7 @@ def refresh_all_items(ctx):
         if counts[items] > 0:
             unpack_item(items, ctx)
     if counts[523004] > SmsOptions.corona_mountain_shines:
-        stage_ticket.activate_ticket(999999)
+        activate_ticket(999999)
 
 
 def refresh_collection_counts(ctx):
@@ -38,7 +38,7 @@ def check_world_flags(byte_location, byte_pos, bool_setting):
         byte_value = world_flags.get(byte_location)
     else:
         byte_value = dme.read_byte(byte_location)
-    byte_value = bit_helper.bit_flagger(byte_value, byte_pos, bool_setting)
+    byte_value = bit_flagger(byte_value, byte_pos, bool_setting)
     world_flags.update({byte_location: byte_value})
     return byte_value
 
@@ -94,11 +94,11 @@ def special_noki_handling():
 
 def unpack_item(item, ctx):
     if 522999 < item < 523004:
-        nozzle_item.activate_nozzle(item)
+        activate_nozzle(item)
     elif item == 523013:
-        nozzle_item.activate_yoshi()
+        activate_yoshi()
     elif 523004 < item < 523011:
-        stage_ticket.activate_ticket(item)
+        activate_ticket(item)
 
 
 def check_in_game_nozzles():
