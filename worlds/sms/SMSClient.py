@@ -14,9 +14,6 @@ ModuleUpdate.update()
 
 import Utils
 
-if __name__ == "__main__":
-    Utils.init_logging("SMSClient", exception_logger="Client")
-
 from NetUtils import ClientStatus
 from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
     CommonContext, server_loop
@@ -215,39 +212,6 @@ async def disable_nozzle(nozzle_name):
             temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
             temp = check_world_flags(temp, 7, False)
             dme.write_byte(addresses.SMS_YOSHI_UNLOCK, temp)
-
-
-async def main(args):
-    ctx = SmsContext(args.connect, args.password)
-    ctx.server_task = asyncio.create_task(server_loop(ctx), name="server loop")
-    if gui_enabled:
-        ctx.run_gui()
-    ctx.run_cli()
-
-    game_start()
-    if dme.is_hooked():
-        logger.info("Hooked to Dolphin!")
-    loc_watch = asyncio.create_task(location_watcher(ctx))
-    item_locker = asyncio.create_task(disable_nozzle("Hover Nozzle"))
-    progression_watcher = asyncio.create_task(
-        game_watcher(ctx), name="SmsProgressionWatcher")
-
-    await ctx.exit_event.wait()
-    ctx.server_address = None
-    await loc_watch
-    await item_locker
-    await progression_watcher
-    await ctx.shutdown()
-
-
-import colorama
-
-parser = get_base_parser(description="Super Mario Sunshine Client, for text interfacing.")
-
-args, rest = parser.parse_known_args()
-colorama.init()
-asyncio.run(main(args))
-colorama.deinit()
 
 
 def memory_changed(ctx: SmsContext):
@@ -507,3 +471,43 @@ def activate_yoshi():
         if id == nozzles.ap_item_id:
             logger.info("Activating " + nozzles.nozzle_name)
     return
+
+
+def main(connect= None, password= None):
+    Utils.init_logging("SMSClient", exception_logger="Client")
+
+    async def _main(connect, password):
+        ctx = SmsContext(connect, password)
+        ctx.server_task = asyncio.create_task(server_loop(ctx), name="server loop")
+        if gui_enabled:
+            ctx.run_gui()
+        ctx.run_cli()
+        await asyncio.sleep(1)
+
+        game_start()
+        if dme.is_hooked():
+            logger.info("Hooked to Dolphin!")
+        loc_watch = asyncio.create_task(location_watcher(ctx))
+        item_locker = asyncio.create_task(disable_nozzle("Hover Nozzle"))
+        progression_watcher = asyncio.create_task(
+            game_watcher(ctx), name="SmsProgressionWatcher")
+
+        await ctx.exit_event.wait()
+        ctx.server_address = None
+
+        await ctx.shutdown()
+
+        await loc_watch
+        await item_locker
+        await progression_watcher
+
+    import colorama
+    colorama.init()
+    asyncio.run(_main(connect, password))
+    colorama.deinit()
+
+
+if __name__ == "__main__":
+    parser = get_base_parser(description="Super Mario Sunshine Client, for text interfacing.")
+    args, rest = parser.parse_known_args()
+    main(args.connect, args.password)

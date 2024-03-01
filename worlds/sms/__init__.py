@@ -66,7 +66,7 @@ class SmsWorld(World):
 
 def launch_client(*args):
     from .SMSClient import main
-    launch_subprocess(main, name="SMS client")
+    launch_subprocess(main(args), name="SMS client")
 
 
 def add_client_to_launcher() -> None:
