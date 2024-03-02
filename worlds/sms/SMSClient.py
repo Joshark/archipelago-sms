@@ -29,10 +29,10 @@ class SmsCommandProcessor(ClientCommandProcessor):
         temp = super()._cmd_connect()
         if dme.is_hooked():
             logger.info("Already connected to Dolphin!")
+            self._cmd_resync()
         else:
             logger.info("Please connect to Dolphin (may have issues, default is to start game before opening client).")
         if temp:
-            self._cmd_resync()
             return True
         else:
             return False
@@ -50,9 +50,12 @@ class SmsCommandProcessor(ClientCommandProcessor):
             unpack_item(self.ctx.items_received[item.item], self.ctx)
         return super()._cmd_received()
 
+    def force_resync(self):
+        self._cmd_resync()
+
 
 class SmsContext(CommonContext):
-    command_processor: int = SmsCommandProcessor
+    command_processor: SmsCommandProcessor
     game = "Super Mario Sunshine"
     items_handling = 0b111  # full remote
 
@@ -84,7 +87,7 @@ class SmsContext(CommonContext):
         self.send_msgs([{"cmd": "LocationChecks", "locations": [check_ids]}])
 
     def force_resync(self):
-        self.syncing = True
+        SmsCommandProcessor.force_resync(self.command_processor)
         return
 
     def run_gui(self):
@@ -125,6 +128,11 @@ class addresses:
 
     SMS_TURBO_UNLOCK = 0x80294440
     SMS_TURBO_UNLOCK_VALUE = "4E800020"
+
+    NEW_NOZZLE_UNLOCK = 0x805789f4
+    NEW_ROCKET_VALUE = "01555500"
+    NEW_TURBO_VALUE = "02AA2A00"
+    NEW_TOTAL_VALUE = "03FF7F00"
 
     SMS_YOSHI_UNLOCK = 0x805789f9
 
