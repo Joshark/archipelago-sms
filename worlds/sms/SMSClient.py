@@ -144,6 +144,7 @@ class addresses:
 
     SMS_SHADOW_MARIO_STATE = 0x80578A88
 
+
 storedShines = []
 curShines = []
 delaySeconds = .25
@@ -155,6 +156,7 @@ def game_start():
         curShines.append(0x00)
     dme.hook()
     return dme.is_hooked()
+
 
 async def game_watcher(ctx: SmsContext):
     while not ctx.exit_event.is_set():
@@ -190,6 +192,7 @@ async def game_watcher(ctx: SmsContext):
             ctx.hook_nagged = False
         await asyncio.sleep(0.1)
 
+
 async def location_watcher(ctx):
     def _sub():
         for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
@@ -209,6 +212,7 @@ async def location_watcher(ctx):
         else:
             _sub()
         await asyncio.sleep(delaySeconds)
+
 
 async def disable_nozzle(nozzle_name):
     while not ap_nozzles_received.__contains__("Hover Nozzle"):
@@ -247,8 +251,6 @@ def get_shine_id(location, value):
     temp = location + value - addresses.SMS_SHINE_LOCATION_OFFSET
     shine_id = int(temp)
     return shine_id
-
-
 
 
 def refresh_item_count(ctx, item_id, targ_address):
@@ -292,8 +294,6 @@ def enable_nozzle(nozzle_name):
         temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
         temp = check_world_flags(temp, 7, True)
         dme.write_byte(addresses.SMS_YOSHI_UNLOCK, temp)
-
-
 
 
 def initialize_nozzles():
@@ -404,8 +404,6 @@ def enforce_nozzles(primary_nozzle, secondary_nozzle):
     dme.write_double(addresses.SMS_PRIMARY_NOZZLE_ADDRESS, primary_id)
     dme.write_double(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, secondary_id)
     return
-
-
 
 
 @dataclass

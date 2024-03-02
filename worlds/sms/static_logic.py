@@ -23,6 +23,12 @@ class Shine(NamedTuple):
     hundred: bool = False
 
 
+class BlueCoin(NamedTuple):
+    name: str
+    id: int
+    requirements: Requirements = Requirements()
+
+
 class SmsRegion(NamedTuple):
     name: str
     requirements: Requirements
@@ -33,23 +39,23 @@ class SmsRegion(NamedTuple):
 ALL_REGIONS: list[SmsRegion] = [
     SmsRegion("Delfino Airstrip", Requirements(), [
         Shine("Delfino Airstrip Dilemma", 523086, Requirements([NozzleType.spray])),
-        Shine("Red Coin Waterworks", 523087, Requirements(corona=True))]),
+        Shine("Red Coin Waterworks", 523087, Requirements([NozzleType.turbo], corona=True))]),
     SmsRegion("Delfino Plaza", Requirements([NozzleType.spray]), [
         Shine("Shine Sprite in the Sand", 523117, Requirements([NozzleType.hover])),
         Shine("Boxing Clever 1", 523094),
         Shine("Boxing Clever 2", 523095),
         Shine("Clean the West Bell", 523096, Requirements([NozzleType.hover | NozzleType.rocket], shines=10)),
         Shine("Chuckster", 523098),
-        Shine("Super Slide", 523090),
+        Shine("Super Slide", 523090, Requirements([NozzleType.hover | NozzleType.rocket])),
         Shine("The Gold Bird", 523118, Requirements([NozzleType.spray])),
         Shine("Turbo Dash!", 523116, Requirements([NozzleType.turbo], shines=10)),
         Shine("Lighthouse Roof", 523093, Requirements([NozzleType.rocket], shines=10)),
-        Shine("Clean the East Bell", 523097, Requirements([NozzleType.rocket], shines=10)),
+        Shine("Clean the East Bell", 523097, Requirements([NozzleType.rocket, NozzleType.spray], shines=10)),
         Shine("Shine Gate", 523099, Requirements([NozzleType.rocket], shines=10)),
         Shine("Pachinko Game", 523089, Requirements([NozzleType.hover | NozzleType.rocket], shines=10)),
-        Shine("Lily Pad Ride", 523091, Requirements([NozzleType.hover], yoshi=True)),
+        Shine("Lily Pad Ride", 523091, Requirements([NozzleType.hover, NozzleType.spray], yoshi=True)),
         Shine("Turbo Track", 523088, Requirements([NozzleType.turbo], shines=10)),
-        Shine("Red Coin Field", 523092, Requirements([NozzleType.rocket], shines=10)),
+        Shine("Red Coin Field", 523092, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover], shines=10)),
         Shine("100 Coins", 523107, Requirements([NozzleType.hover | NozzleType.rocket]), hundred=True)
     ]),
     SmsRegion("Bianco Hills", Requirements([NozzleType.spray]), [
@@ -61,18 +67,18 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Red Coins of Windmill Village", 52303,
               Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket])),
         Shine("Petey Piranha Strikes Back", 523004,
-              Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket])),
+              Requirements([NozzleType.spray, NozzleType.rocket])),
         Shine("The Secret of the Dirty Lake", 523005,
-              Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket])),
+              Requirements([NozzleType.spray, NozzleType.hover, NozzleType.rocket])),
         Shine("Shadow Mario on the Loose", 523006,
-              Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket])),
+              Requirements([NozzleType.spray, NozzleType.hover, NozzleType.rocket])),
         Shine("The Red Coins of the Lake", 523007,
-              Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket])),
+              Requirements([NozzleType.spray, NozzleType.hover, NozzleType.rocket])),
         Shine("Red Coins of the Hillside Cave", 523008,
-              Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket])),
+              Requirements([NozzleType.spray, NozzleType.hover, NozzleType.rocket])),
         Shine("Red Coins of the Dirty Lake", 523009,
-              Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket])),
-        Shine("100 Coins", 523100, Requirements([NozzleType.spray]), hundred=True)
+              Requirements([NozzleType.spray, NozzleType.hover, NozzleType.rocket])),
+        Shine("100 Coins", 523100, Requirements([NozzleType.spray, NozzleType.hover]), hundred=True)
     ], ticketed=True),
     SmsRegion("Ricco Harbor", Requirements([NozzleType.spray], shines=3), [
         Shine("Gooper Blooper Breaks Out", 523010, Requirements([NozzleType.hover])),
@@ -133,32 +139,32 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("100 Coins", 523104, Requirements([NozzleType.spray], yoshi=True), hundred=True)
     ], ticketed=True),
     SmsRegion("Noki Bay", Requirements(shines=20), [
-        Shine("Uncork the Waterfall", 523050, Requirements([NozzleType.spray | NozzleType.hover])),
-        Shine("The Boss of Tricky Ruins", 523051, Requirements([NozzleType.spray | NozzleType.hover])),
-        Shine("Red Coins in a Bottle", 523052, Requirements([NozzleType.hover])),
-        Shine("Eely-Mouth's Dentist", 523053, Requirements([NozzleType.hover])),
-        Shine("Il Piantissimo's Surf Swim", 523054, Requirements([NozzleType.hover])),
-        Shine("The Shell's Secret", 523055, Requirements([NozzleType.hover])),
-        Shine("Hold It, Shadow Mario!", 523056, Requirements([NozzleType.hover])),
-        Shine("The Red Coin Fish", 523057, Requirements([NozzleType.hover])),
+        Shine("Uncork the Waterfall", 523050, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("The Boss of Tricky Ruins", 523051, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("Red Coins in a Bottle", 523052, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("Eely-Mouth's Dentist", 523053, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("Il Piantissimo's Surf Swim", 523054, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("The Shell's Secret", 523055, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("Hold It, Shadow Mario!", 523056, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("The Red Coin Fish", 523057, Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("A Golden Bird", 523058, Requirements([NozzleType.hover, NozzleType.spray])),
-        Shine("Red Coins on the Half Shell", 523059, Requirements([NozzleType.hover])),
+        Shine("Red Coins on the Half Shell", 523059, Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("100 Coins", 523105, Requirements([NozzleType.hover]), hundred=True)
     ], ticketed=False),
     SmsRegion("Pianta Village", Requirements([NozzleType.rocket], shines=10), [
-        Shine("Chain Chomplets Unchained", 523060, Requirements([NozzleType.spray | NozzleType.hover])),
-        Shine("Il Piantissimo's Crazy Climb", 523061, Requirements([NozzleType.spray | NozzleType.hover])),
-        Shine("The Goopy Inferno", 523062, Requirements([NozzleType.spray | NozzleType.hover])),
-        Shine("Chain Chomp's Bath", 523063, Requirements([NozzleType.spray | NozzleType.hover])),
+        Shine("Chain Chomplets Unchained", 523060, Requirements([NozzleType.spray])),
+        Shine("Il Piantissimo's Crazy Climb", 523061, Requirements([NozzleType.spray])),
+        Shine("The Goopy Inferno", 523062, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
+        Shine("Chain Chomp's Bath", 523063, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
         Shine("Secret of the Village Underside", 523064,
-              Requirements([NozzleType.spray | NozzleType.hover], yoshi=True)),
-        Shine("Piantas in Need", 523065, Requirements([NozzleType.spray | NozzleType.hover], yoshi=True)),
-        Shine("Shadow Mario Runs Wild", 523066, Requirements([NozzleType.spray | NozzleType.hover], yoshi=True)),
+              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover], yoshi=True)),
+        Shine("Piantas in Need", 523065, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover], yoshi=True)),
+        Shine("Shadow Mario Runs Wild", 523066, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover], yoshi=True)),
         Shine("Fluff Festival Coin Hunt", 523067,
-              Requirements([NozzleType.spray | NozzleType.hover, NozzleType.rocket], yoshi=True)),
-        Shine("Red Coin Chucksters", 523068, Requirements([NozzleType.spray | NozzleType.hover], yoshi=True)),
-        Shine("Soak the Sun", 523069, Requirements([NozzleType.spray | NozzleType.hover], yoshi=True)),
-        Shine("100 Coins", 523106, Requirements([NozzleType.spray | NozzleType.hover], yoshi=True), hundred=True)
+              Requirements([NozzleType.spray, NozzleType.rocket], yoshi=True)),
+        Shine("Red Coin Chucksters", 523068, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover], yoshi=True)),
+        Shine("Soak the Sun", 523069, Requirements([NozzleType.spray, NozzleType.hover], yoshi=True)),
+        Shine("100 Coins", 523106, Requirements([NozzleType.spray, NozzleType.hover], yoshi=True), hundred=True)
     ], ticketed=False),
-    SmsRegion("Corona Mountain", Requirements(corona=True), []),
+    SmsRegion("Corona Mountain", Requirements([NozzleType.spray, NozzleType.hover, NozzleType.rocket], corona=True), []),
 ]
