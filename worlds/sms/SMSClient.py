@@ -5,7 +5,7 @@ import collections
 from dataclasses import dataclass
 
 import ModuleUpdate
-from worlds.sms import SmsOptions
+from .options import SmsOptions
 from .bit_helper import change_endian, bit_flagger
 from .bit_helper import extract_bits
 from .packages import dolphin_memory_engine as dme

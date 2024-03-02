@@ -64,9 +64,9 @@ class SmsWorld(World):
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 
 
-def launch_client(*args):
+def launch_client():
     from .SMSClient import main
-    launch_subprocess(main(args), name="SMS client")
+    launch_subprocess(main, name="SMS client")
 
 
 def add_client_to_launcher() -> None:
