@@ -19,8 +19,10 @@ from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProc
     CommonContext, server_loop
 
 ap_nozzles_received = ["Spray Nozzle"]
-in_game_nozzles_avail = ["Spray Nozzle"]
+in_game_nozzles_avail = ["Spray Nozzle", "Hover Nozzle", "Rocket Nozzle", "Turbo Nozzle"]
 world_flags = {}
+corona_goal = 50
+debug = False
 
 
 class SmsCommandProcessor(ClientCommandProcessor):
@@ -39,8 +41,6 @@ class SmsCommandProcessor(ClientCommandProcessor):
 
     def _cmd_resync(self):
         """Manually trigger a resync."""
-        if initialize_nozzles():
-            logger.info("Connected to Dolphin.")
         self.output(f"Syncing items.")
         self.ctx.syncing = True
         refresh_collection_counts(self.ctx)
@@ -59,10 +59,12 @@ class SmsContext(CommonContext):
     game = "Super Mario Sunshine"
     items_handling = 0b111  # full remote
 
-    options = Utils.get_options().get("sms_options", None)
+    options: SmsOptions
 
     hook_check = False
     hook_nagged = False
+    lives_given = 0
+    lives_switch = False
 
     def __init__(self, server_address, password):
         super(SmsContext, self).__init__(server_address, password)
@@ -84,10 +86,13 @@ class SmsContext(CommonContext):
             return []
 
     def send_location_checks(self, check_ids):
-        self.send_msgs([{"cmd": "LocationChecks", "locations": [check_ids]}])
+        # msg = self.send_msgs([{"cmd": "LocationChecks", "locations": [check_ids]}])
+        # loop = asyncio.get_event_loop()
+        # loop.run_until_complete(msg)
+        return
 
     def force_resync(self):
-        SmsCommandProcessor.force_resync(self.command_processor)
+        # SmsCommandProcessor.force_resync(self.command_processor)
         return
 
     def run_gui(self):
@@ -106,7 +111,7 @@ class SmsContext(CommonContext):
 
 class addresses:
     SMS_SHINE_COUNTER = 0x80578A5b
-    SMS_BLUECOIN_COUNTER = 0x80578a60
+    SMS_BLUECOIN_COUNTER = 0x80578a5F
 
     SMS_SHINE_LOCATION_OFFSET = 0x80578988
     SMS_SHINE_BYTE_COUNT = 15
@@ -130,9 +135,9 @@ class addresses:
     SMS_TURBO_UNLOCK_VALUE = "4E800020"
 
     NEW_NOZZLE_UNLOCK = 0x805789f4
-    NEW_ROCKET_VALUE = "01555500"
-    NEW_TURBO_VALUE = "02AA2A00"
-    NEW_TOTAL_VALUE = "03FF7F00"
+    NEW_ROCKET_VALUE = 22369536 # 40
+    NEW_TURBO_VALUE = 44706304
+    NEW_TOTAL_VALUE = 67075840
 
     SMS_YOSHI_UNLOCK = 0x805789f9
 
@@ -144,11 +149,14 @@ class addresses:
 
     SMS_SHADOW_MARIO_STATE = 0x80578A88
 
+    SMS_LIVES_COUNTER = 0x80578a04
+
 
 storedShines = []
 curShines = []
-delaySeconds = .25
+delaySeconds = .5
 location_offset = 523000
+
 
 def game_start():
     for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
@@ -160,17 +168,18 @@ def game_start():
 
 async def game_watcher(ctx: SmsContext):
     while not ctx.exit_event.is_set():
-        if ctx.syncing:
-            sync_msg = [{'cmd': 'Sync'}]
-            if ctx.locations_checked:
-                sync_msg.append({"cmd": "LocationChecks", "locations": list(ctx.locations_checked)})
-            await ctx.send_msgs(sync_msg)
-            ctx.syncing = False
-        sending = []
+        if debug: logger.info("game_watcher tick")
+
+        sync_msg = [{'cmd': 'Sync'}]
+        if ctx.locations_checked:
+            sync_msg.append({"cmd": "LocationChecks", "locations": list(ctx.locations_checked)})
+        await ctx.send_msgs(sync_msg)
+
         victory = False
-        # ctx.locations_checked = sending
-        message = [{"cmd": 'LocationChecks', "locations": sending}]
-        await ctx.send_msgs(message)
+
+        refresh_collection_counts(ctx)
+        ctx.lives_switch = True
+
         if not ctx.finished_game and victory:
             await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
             ctx.finished_game = True
@@ -186,11 +195,8 @@ async def game_watcher(ctx: SmsContext):
                     "Please connect to Dolphin (may have issues, default is to start game before opening client).")
                 ctx.hook_nagged = True
 
-        if ctx.hook_check and not dme.is_hooked():
-            logger.info("Dolphin connection lost!")
-            ctx.hook_check = False
-            ctx.hook_nagged = False
         await asyncio.sleep(0.1)
+        ctx.lives_switch = False
 
 
 async def location_watcher(ctx):
@@ -214,29 +220,33 @@ async def location_watcher(ctx):
         await asyncio.sleep(delaySeconds)
 
 
-async def disable_nozzle(nozzle_name):
-    while not ap_nozzles_received.__contains__("Hover Nozzle"):
-        if nozzle_name == "Hover Nozzle":
+async def disable_nozzle(ctx):
+
+    while not ctx.exit_event.is_set:
+        if ap_nozzles_received.__contains__("Hover Nozzle"):
+            dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, addresses.SMS_NOZZLE_RELEASE)
+        elif ap_nozzles_received.__contains__("Rocket Nozzle"):
+            dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_ROCKET_NOZZLE_VALUE))
+        elif ap_nozzles_received.__contains__("Turbo Nozzle"):
+            dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_TURBO_NOZZLE_VALUE))
+        else:
             dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_SPRAY_NOZZLE_VALUE))
         await asyncio.sleep(0.1)
-    while not ap_nozzles_received.__contains__("Yoshi"):
-        if nozzle_name == "Yoshi":
-            temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
-            temp = check_world_flags(temp, 7, False)
-            dme.write_byte(addresses.SMS_YOSHI_UNLOCK, temp)
 
 
 def memory_changed(ctx: SmsContext):
+    if debug: logger.info("memory_changed: " + str(curShines))
     bit_list = []
     for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
-        if curShines[x] > storedShines[x]:
-            bit_found = extract_bits((curShines[x]), x)
-            bit_list.extend(bit_found)
-            storedShines[x] = curShines[x]
+        bit_found = extract_bits((curShines[x]), x)
+        bit_list.extend(bit_found)
+        storedShines[x] = curShines[x]
+    if debug: logger.info("bit_list: " + str(bit_list))
     parse_bits(bit_list, ctx)
 
 
 def parse_bits(all_bits, ctx: SmsContext):
+    if debug: logger.info("parse_bits: " + str(all_bits))
     if len(all_bits) == 0:
         return
 
@@ -245,6 +255,7 @@ def parse_bits(all_bits, ctx: SmsContext):
             temp = x + location_offset
             ctx.locations_checked.add(temp)
             ctx.send_location_checks(temp)
+            if debug: logger.info("checks to send: " + str(temp))
 
 
 def get_shine_id(location, value):
@@ -255,6 +266,7 @@ def get_shine_id(location, value):
 
 def refresh_item_count(ctx, item_id, targ_address):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
+    if debug: logger.info("refresh_item_count (Shine): " + str(counts[item_id]))
     temp = change_endian(counts[item_id])
     dme.write_byte(targ_address, temp)
 
@@ -263,12 +275,13 @@ def refresh_all_items(ctx):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
     for items in counts:
         if counts[items] > 0:
-            unpack_item(items, ctx)
-    if counts[523004] > SmsOptions.corona_mountain_shines:
+            unpack_item(items, ctx, counts[items])
+    if counts[523004] > corona_goal:
         activate_ticket(999999)
 
 
 def refresh_collection_counts(ctx):
+    if debug: logger.info("refresh_collection_counts")
     refresh_item_count(ctx, 523004, addresses.SMS_SHINE_COUNTER)
     refresh_all_items(ctx)
 
@@ -296,21 +309,8 @@ def enable_nozzle(nozzle_name):
         dme.write_byte(addresses.SMS_YOSHI_UNLOCK, temp)
 
 
-def initialize_nozzles():
-    info = False
-    if not dme.is_hooked():
-        dme.hook()
-        info = True
-    disable_nozzle("Hover Nozzle")
-    disable_nozzle("Yoshi")
-    return info
-
-
 def open_stage(ticket):
-    print("Opening stage " + ticket.item_name)
-    byte = dme.read_double(ticket.address)
-    value = check_world_flags(byte, ticket.bit_position, True)
-    print("Write value " + str(value) + " to location " + str(ticket.address))
+    value = check_world_flags(ticket.address, ticket.bit_position, True)
     dme.write_byte(ticket.address, value)
     return
 
@@ -320,30 +320,27 @@ def special_noki_handling():
     return
 
 
-def unpack_item(item, ctx):
+def give_1_up(amt, ctx):
+    if amt <= ctx.lives_given:
+        return
+    elif ctx.lives_switch:
+        return
+    else:
+        val = dme.read_double(addresses.SMS_LIVES_COUNTER)
+        dme.write_double(addresses.SMS_LIVES_COUNTER, val+(amt-ctx.lives_given))
+        ctx.lives_given += amt
+    return
+
+
+def unpack_item(item, ctx, amt=0):
     if 522999 < item < 523004:
         activate_nozzle(item)
     elif item == 523013:
         activate_yoshi()
     elif 523004 < item < 523011:
         activate_ticket(item)
-
-
-def check_in_game_nozzles():
-    list.clear(in_game_nozzles_avail)
-
-    primary_nozzle = dme.read_double(addresses.SMS_PRIMARY_NOZZLE_ADDRESS)
-    if primary_nozzle == addresses.SMS_SPRAY_NOZZLE_VALUE:
-        in_game_nozzles_avail.append("Spray Nozzle")
-
-    secondary_nozzle = dme.read_double(addresses.SMS_SECONDARY_NOZZLE_ADDRESS)
-    if secondary_nozzle == addresses.SMS_HOVER_NOZZLE_VALUE:
-        in_game_nozzles_avail.append("Hover Nozzle")
-    elif secondary_nozzle == addresses.SMS_ROCKET_NOZZLE_VALUE:
-        in_game_nozzles_avail.append("Rocket Nozzle")
-    elif secondary_nozzle == addresses.SMS_TURBO_NOZZLE_VALUE:
-        in_game_nozzles_avail.append("Turbo Nozzle")
-    return
+    elif item == 523012:
+        give_1_up(amt, ctx)
 
 
 def nozzle_assignment():
@@ -399,6 +396,7 @@ def disable_shadow_mario():
 
 
 def enforce_nozzles(primary_nozzle, secondary_nozzle):
+    primary_nozzle, secondary_nozzle = nozzle_assignment()
     primary_id = set_nozzle_assignment(primary_nozzle)
     secondary_id = set_nozzle_assignment(secondary_nozzle)
     dme.write_double(addresses.SMS_PRIMARY_NOZZLE_ADDRESS, primary_id)
@@ -429,7 +427,6 @@ TICKETS: list[Ticket] = [
 def activate_ticket(id: int):
     for tickets in TICKETS:
         if id == tickets.item_id:
-            logger.info("Activating " + tickets.item_name)
             tickets.active = True
             handle_ticket(tickets)
 
@@ -465,17 +462,51 @@ NOZZLES: list[NozzleItem] = [
 ]
 
 
+def extra_unlocks_needed():
+    dme.write_byte(addresses.SMS_YOSHI_UNLOCK-1, 240)
+
+
 def activate_nozzle(id):
-    for nozzles in NOZZLES:
-        if id == nozzles.ap_item_id:
-            logger.info("Activating " + nozzles.nozzle_name)
+    if id == 523001:
+        if not ap_nozzles_received.__contains__("Hover Nozzle"):
+            ap_nozzles_received.append("Hover Nozzle")
+            logger.info(str(ap_nozzles_received))
+    if id == 523002 or id == 523003:
+        temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
+        if temp < 2:
+            dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 2)
+        extra_unlocks_needed()
+    if id == 523002:
+        if not ap_nozzles_received.__contains__("Rocket Nozzle"):
+            ap_nozzles_received.append("Rocket Nozzle")
+            logger.info(str(ap_nozzles_received))
+        if ap_nozzles_received.__contains__("Turbo Nozzle"):
+            dme.write_word(addresses.NEW_NOZZLE_UNLOCK, addresses.NEW_TOTAL_VALUE)
+        else:
+            dme.write_word(addresses.NEW_NOZZLE_UNLOCK, addresses.NEW_ROCKET_VALUE)
+        # rocket nozzle
+    elif id == 5230003:
+        if not ap_nozzles_received.__contains__("Turbo Nozzle"):
+            ap_nozzles_received.append("Turbo Nozzle")
+            logger.info(str(ap_nozzles_received))
+        if ap_nozzles_received.__contains__("Rocket Nozzle"):
+            dme.write_word(addresses.NEW_NOZZLE_UNLOCK, addresses.NEW_TOTAL_VALUE)
+        else:
+            dme.write_word(addresses.NEW_NOZZLE_UNLOCK, addresses.NEW_TURBO_VALUE)
+        # turbo nozzle
     return
 
 
 def activate_yoshi():
-    for nozzles in NOZZLES:
-        if id == nozzles.ap_item_id:
-            logger.info("Activating " + nozzles.nozzle_name)
+    temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
+    if temp<130:
+        dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 130)
+    extra_unlocks_needed()
+
+
+    if not ap_nozzles_received.__contains__("Yoshi"):
+        ap_nozzles_received.append("Yoshi")
+        logger.info(str(ap_nozzles_received))
     return
 
 
@@ -493,19 +524,23 @@ def main(connect= None, password= None):
         game_start()
         if dme.is_hooked():
             logger.info("Hooked to Dolphin!")
-        loc_watch = asyncio.create_task(location_watcher(ctx))
-        item_locker = asyncio.create_task(disable_nozzle("Hover Nozzle"))
+
         progression_watcher = asyncio.create_task(
             game_watcher(ctx), name="SmsProgressionWatcher")
+        loc_watch = asyncio.create_task(location_watcher(ctx))
+        item_locker = asyncio.create_task(disable_nozzle(ctx))
+
+        await progression_watcher
+        await loc_watch
+        await item_locker
+        await asyncio.sleep(.25)
 
         await ctx.exit_event.wait()
         ctx.server_address = None
 
         await ctx.shutdown()
 
-        await loc_watch
-        await item_locker
-        await progression_watcher
+        await asyncio.sleep(.5)
 
     import colorama
     colorama.init()
