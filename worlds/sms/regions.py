@@ -72,6 +72,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
 
         event_item = SmsItem("Victory", ItemClassification.progression, None, world.player)
         new_location.place_locked_item(event_item)
+        world.multiworld.completion_condition[world.player] = lambda state: state.has("Victory", world.player)
 
     return new_region
 

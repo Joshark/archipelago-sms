@@ -135,9 +135,9 @@ class addresses:
     SMS_TURBO_UNLOCK_VALUE = "4E800020"
 
     NEW_NOZZLE_UNLOCK = 0x805789f4
-    NEW_ROCKET_VALUE = 22369536 # 40
-    NEW_TURBO_VALUE = 44706304
-    NEW_TOTAL_VALUE = 67075840
+    NEW_ROCKET_VALUE = "41555500"
+    NEW_TURBO_VALUE = "80AAAA00"
+    NEW_TOTAL_VALUE = "c3ffff00"
 
     SMS_YOSHI_UNLOCK = 0x805789f9
 
@@ -245,17 +245,23 @@ def memory_changed(ctx: SmsContext):
     parse_bits(bit_list, ctx)
 
 
+def send_victory(ctx: SmsContext):
+    return
+
+
 def parse_bits(all_bits, ctx: SmsContext):
     if debug: logger.info("parse_bits: " + str(all_bits))
     if len(all_bits) == 0:
         return
 
     for x in all_bits:
-        if x < 120:
+        if x < 119:
             temp = x + location_offset
             ctx.locations_checked.add(temp)
             ctx.send_location_checks(temp)
             if debug: logger.info("checks to send: " + str(temp))
+        elif x == 119:
+            send_victory(ctx)
 
 
 def get_shine_id(location, value):
@@ -340,7 +346,8 @@ def unpack_item(item, ctx, amt=0):
     elif 523004 < item < 523011:
         activate_ticket(item)
     elif item == 523012:
-        give_1_up(amt, ctx)
+        # give_1_up(amt, ctx)
+        return
 
 
 def nozzle_assignment():
@@ -471,28 +478,30 @@ def activate_nozzle(id):
         if not ap_nozzles_received.__contains__("Hover Nozzle"):
             ap_nozzles_received.append("Hover Nozzle")
             logger.info(str(ap_nozzles_received))
-    if id == 523002 or id == 523003:
+    if id == 523013:
         temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
         if temp < 2:
             dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 2)
         extra_unlocks_needed()
     if id == 523002:
+        extra_unlocks_needed()
         if not ap_nozzles_received.__contains__("Rocket Nozzle"):
             ap_nozzles_received.append("Rocket Nozzle")
             logger.info(str(ap_nozzles_received))
         if ap_nozzles_received.__contains__("Turbo Nozzle"):
-            dme.write_word(addresses.NEW_NOZZLE_UNLOCK, addresses.NEW_TOTAL_VALUE)
+            dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_TOTAL_VALUE))
         else:
-            dme.write_word(addresses.NEW_NOZZLE_UNLOCK, addresses.NEW_ROCKET_VALUE)
+            dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_ROCKET_VALUE))
         # rocket nozzle
-    elif id == 5230003:
+    if id == 523003:
+        extra_unlocks_needed()
         if not ap_nozzles_received.__contains__("Turbo Nozzle"):
             ap_nozzles_received.append("Turbo Nozzle")
             logger.info(str(ap_nozzles_received))
         if ap_nozzles_received.__contains__("Rocket Nozzle"):
-            dme.write_word(addresses.NEW_NOZZLE_UNLOCK, addresses.NEW_TOTAL_VALUE)
+            dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_TOTAL_VALUE))
         else:
-            dme.write_word(addresses.NEW_NOZZLE_UNLOCK, addresses.NEW_TURBO_VALUE)
+            dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_TURBO_VALUE))
         # turbo nozzle
     return
 
