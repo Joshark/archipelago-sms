@@ -23,6 +23,7 @@ in_game_nozzles_avail = ["Spray Nozzle", "Hover Nozzle", "Rocket Nozzle", "Turbo
 world_flags = {}
 corona_goal = 50
 debug = False
+debug_b = False
 
 
 class SmsCommandProcessor(ClientCommandProcessor):
@@ -221,15 +222,20 @@ async def location_watcher(ctx):
 
 
 async def disable_nozzle(ctx):
-
-    while not ctx.exit_event.is_set:
+    if debug_b: logger.info("disable nozzle was called")
+    while True:
+        if debug_b: logger.info("we're in the while loop")
         if ap_nozzles_received.__contains__("Hover Nozzle"):
+            if debug_b: logger.info("hover nozzle open??")
             dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, addresses.SMS_NOZZLE_RELEASE)
         elif ap_nozzles_received.__contains__("Rocket Nozzle"):
+            if debug_b: logger.info("rocket nozzle write")
             dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_ROCKET_NOZZLE_VALUE))
         elif ap_nozzles_received.__contains__("Turbo Nozzle"):
+            if debug_b: logger.info("turbo nozzle write")
             dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_TURBO_NOZZLE_VALUE))
         else:
+            if debug_b: logger.info("reached spray nozzle write")
             dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_SPRAY_NOZZLE_VALUE))
         await asyncio.sleep(0.1)
 
