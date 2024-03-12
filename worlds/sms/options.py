@@ -34,9 +34,18 @@ class AmountOfShines(Range):
     default = 84
 
 
+class BlueCoinSanity(Choice):
+    """Whether to add all the Blue Coins to the pool."""
+    display_name = "Blue Coinsanity"
+    option_no_blue_coins = 0
+    option_full_shuffle = 1
+    option_trade_shines_only = 2
+    default = 0
+
 @dataclass
 class SmsOptions(PerGameCommonOptions):
     level_access: LevelAccess
     enable_coin_shines: EnableCoinShines
     corona_mountain_shines: CoronaMountainShines
     amount_of_shines: AmountOfShines
+    blue_coin_sanity: BlueCoinSanity

@@ -221,13 +221,13 @@ async def location_watcher(ctx):
         await asyncio.sleep(delaySeconds)
 
 
-async def disable_nozzle(ctx):
+async def modify_nozzles(ctx):
     if debug_b: logger.info("disable nozzle was called")
     while True:
         if debug_b: logger.info("we're in the while loop")
         if ap_nozzles_received.__contains__("Hover Nozzle"):
             if debug_b: logger.info("hover nozzle open??")
-            dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, addresses.SMS_NOZZLE_RELEASE)
+            dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_NOZZLE_RELEASE))
         elif ap_nozzles_received.__contains__("Rocket Nozzle"):
             if debug_b: logger.info("rocket nozzle write")
             dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_ROCKET_NOZZLE_VALUE))
@@ -306,19 +306,6 @@ def check_world_flags(byte_location, byte_pos, bool_setting):
     byte_value = bit_flagger(byte_value, byte_pos, bool_setting)
     world_flags.update({byte_location: byte_value})
     return byte_value
-
-
-def enable_nozzle(nozzle_name):
-    if nozzle_name == "Hover Nozzle":
-        dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_NOZZLE_RELEASE))
-    elif nozzle_name == "Rocket Nozzle":
-        dme.write_bytes(addresses.SMS_ROCKET_UNLOCK, bytes.fromhex(addresses.SMS_ROCKET_UNLOCK_VALUE))
-    elif nozzle_name == "Turbo Nozzle":
-        dme.write_bytes(addresses.SMS_TURBO_UNLOCK, bytes.fromhex(addresses.SMS_TURBO_UNLOCK_VALUE))
-    elif nozzle_name == "Yoshi":
-        temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
-        temp = check_world_flags(temp, 7, True)
-        dme.write_byte(addresses.SMS_YOSHI_UNLOCK, temp)
 
 
 def open_stage(ticket):
@@ -477,6 +464,8 @@ NOZZLES: list[NozzleItem] = [
 
 def extra_unlocks_needed():
     dme.write_byte(addresses.SMS_YOSHI_UNLOCK-1, 240)
+    val = bit_flagger((dme.read_byte(addresses.SMS_YOSHI_UNLOCK)), 1, True)
+    dme.write_byte(addresses.SMS_YOSHI_UNLOCK, val)
 
 
 def activate_nozzle(id):
@@ -490,7 +479,6 @@ def activate_nozzle(id):
             dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 2)
         extra_unlocks_needed()
     if id == 523002:
-        extra_unlocks_needed()
         if not ap_nozzles_received.__contains__("Rocket Nozzle"):
             ap_nozzles_received.append("Rocket Nozzle")
             logger.info(str(ap_nozzles_received))
@@ -498,9 +486,10 @@ def activate_nozzle(id):
             dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_TOTAL_VALUE))
         else:
             dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_ROCKET_VALUE))
+        extra_unlocks_needed()
         # rocket nozzle
     if id == 523003:
-        extra_unlocks_needed()
+
         if not ap_nozzles_received.__contains__("Turbo Nozzle"):
             ap_nozzles_received.append("Turbo Nozzle")
             logger.info(str(ap_nozzles_received))
@@ -508,6 +497,7 @@ def activate_nozzle(id):
             dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_TOTAL_VALUE))
         else:
             dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_TURBO_VALUE))
+        extra_unlocks_needed()
         # turbo nozzle
     return
 
@@ -543,7 +533,7 @@ def main(connect= None, password= None):
         progression_watcher = asyncio.create_task(
             game_watcher(ctx), name="SmsProgressionWatcher")
         loc_watch = asyncio.create_task(location_watcher(ctx))
-        item_locker = asyncio.create_task(disable_nozzle(ctx))
+        item_locker = asyncio.create_task(modify_nozzles(ctx))
 
         await progression_watcher
         await loc_watch

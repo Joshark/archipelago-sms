@@ -46,6 +46,10 @@ class SmsWorld(World):
         for i in range(0, total_shines):
             pool.append(self.create_item("Shine Sprite"))
 
+        if self.options.blue_coin_sanity.option_full_shuffle:
+            for i in range(0, 240):
+                pool.append((self.create_item("Blue Coin")))
+
         # Assume for now that all locations are real
         for i in range(0, len(ALL_LOCATIONS_TABLE) - len(pool)):
             pool.append(self.create_item("1-UP"))

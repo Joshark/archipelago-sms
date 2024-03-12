@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from BaseClasses import CollectionState, Region, ItemClassification
 from .items import SmsItem
 from .locations import SmsLocation
-from .options import LevelAccess
-from .static_logic import ALL_REGIONS, SmsRegion, Shine, Requirements, NozzleType
+from .options import LevelAccess, BlueCoinSanity
+from .static_logic import ALL_REGIONS, SmsRegion, Shine, BlueCoin, Requirements, NozzleType
 
 if TYPE_CHECKING:
     from . import SmsWorld
@@ -26,6 +26,9 @@ def sms_requirements_satisfied(state: CollectionState, requirements: Requirement
     if requirements.shines is not None and not state.has("Shine Sprite", world.player, requirements.shines):
         return False
 
+    if requirements.blues is not None and not state.has("Blue Coin", world.player, requirements.blues):
+        return False
+
     if requirements.yoshi and not state.has("Yoshi", world.player):
         return False
 
@@ -39,6 +42,10 @@ def sms_can_get_shine(state: CollectionState, shine: Shine, world: "SmsWorld"):
     return sms_requirements_satisfied(state, shine.requirements, world)
 
 
+def sms_can_get_blue_coin(state: CollectionState, blue_coin: BlueCoin, world: "SmsWorld"):
+    return sms_requirements_satisfied(state, blue_coin.requirements, world)
+
+
 def sms_can_use_entrance(state: CollectionState, region: SmsRegion, world: "SmsWorld"):
     if region.ticketed and world.options.level_access == LevelAccess.option_tickets:
         return state.has(f"{region.name} Ticket", world.player)
@@ -48,6 +55,10 @@ def sms_can_use_entrance(state: CollectionState, region: SmsRegion, world: "SmsW
 
 def make_shine_lambda(shine: Shine, world: "SmsWorld"):
     return lambda state: sms_can_get_shine(state, shine, world)
+
+
+def make_blue_coin_lambda(blue_coin: BlueCoin, world: "SmsWorld"):
+    return lambda state: sms_can_get_blue_coin(state, blue_coin, world)
 
 
 def make_entrance_lambda(region: SmsRegion, world: "SmsWorld"):
@@ -63,6 +74,12 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         new_location = SmsLocation(world.player, f"{region.name} - {shine.name}", shine.id, new_region)
         new_location.access_rule = make_shine_lambda(shine, world)
         new_region.locations.append(new_location)
+    if world.options.blue_coin_sanity == BlueCoinSanity.option_full_shuffle:
+        for blue_coin in region.blue_coins:
+            new_location = SmsLocation(
+                world.player, f"{region.name} - {blue_coin.name} Blue Coin", blue_coin.id, new_region)
+            new_location.access_rule = make_blue_coin_lambda(blue_coin, world)
+            new_region.locations.append(new_location)
 
     if region.name == "Corona Mountain":
         new_location = SmsLocation(world.player, "Corona Mountain - Father and Son Shine!", None, new_region)

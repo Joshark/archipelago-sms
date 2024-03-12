@@ -14,6 +14,7 @@ class Requirements(NamedTuple):
     shines: Optional[int] = None  # number of shine sprites needed
     yoshi: bool = False  # is yoshi needed
     corona: bool = False  # is corona access needed (configurable)
+    blues: int = 0
 
 
 class Shine(NamedTuple):
@@ -33,6 +34,7 @@ class SmsRegion(NamedTuple):
     name: str
     requirements: Requirements
     shines: list[Shine]
+    blue_coins: list[BlueCoin]
     ticketed: bool = False
 
 
