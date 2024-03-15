@@ -7,6 +7,7 @@ class NozzleType(Flag):
     hover = auto()
     rocket = auto()
     turbo = auto()
+    splasher = auto()
 
 
 class Requirements(NamedTuple):
@@ -32,10 +33,13 @@ class BlueCoin(NamedTuple):
 
 class SmsRegion(NamedTuple):
     name: str
+    display: str
     requirements: Requirements
     shines: list[Shine]
     blue_coins: list[BlueCoin]
     ticketed: bool = False
+    trade: bool = False
+    parent_region: str = "Menu"
 
 
 ALL_REGIONS: list[SmsRegion] = [

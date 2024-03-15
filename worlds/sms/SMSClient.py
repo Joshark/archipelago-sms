@@ -278,7 +278,6 @@ def get_shine_id(location, value):
 
 def refresh_item_count(ctx, item_id, targ_address):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
-    if debug: logger.info("refresh_item_count (Shine): " + str(counts[item_id]))
     temp = change_endian(counts[item_id])
     dme.write_byte(targ_address, temp)
 
@@ -295,6 +294,7 @@ def refresh_all_items(ctx):
 def refresh_collection_counts(ctx):
     if debug: logger.info("refresh_collection_counts")
     refresh_item_count(ctx, 523004, addresses.SMS_SHINE_COUNTER)
+    refresh_item_count(ctx, 523014, addresses.SMS_BLUECOIN_COUNTER)
     refresh_all_items(ctx)
 
 

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 def sms_requirements_satisfied(state: CollectionState, requirements: Requirements, world: "SmsWorld"):
     my_nozzles: NozzleType = NozzleType.spray
+    my_nozzles |= NozzleType.splasher
     if state.has("Hover Nozzle", world.player):
         my_nozzles |= NozzleType.hover
     if state.has("Rocket Nozzle", world.player):
@@ -70,14 +71,16 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     for shine in region.shines:
         if shine.hundred and not world.options.enable_coin_shines.value:
             continue
+        if region.trade and world.options.blue_coin_sanity.option_no_blue_coins:
+            continue
 
-        new_location = SmsLocation(world.player, f"{region.name} - {shine.name}", shine.id, new_region)
+        new_location = SmsLocation(world.player, f"{region.display} - {shine.name}", shine.id, new_region)
         new_location.access_rule = make_shine_lambda(shine, world)
         new_region.locations.append(new_location)
     if world.options.blue_coin_sanity == BlueCoinSanity.option_full_shuffle:
         for blue_coin in region.blue_coins:
             new_location = SmsLocation(
-                world.player, f"{region.name} - {blue_coin.name} Blue Coin", blue_coin.id, new_region)
+                world.player, f"{region.display} - {blue_coin.name} Blue Coin", blue_coin.id, new_region)
             new_location.access_rule = make_blue_coin_lambda(blue_coin, world)
             new_region.locations.append(new_location)
 
@@ -101,7 +104,6 @@ def create_regions(world: "SmsWorld"):
 
     for region in ALL_REGIONS:
         regions[region.name] = create_region(region, world)
-
-        regions["Menu"].connect(regions[region.name], None, make_entrance_lambda(region, world))
+        regions[region.parent_region].connect(regions[region.name], None, make_entrance_lambda(region, world))
 
     world.multiworld.regions += regions.values()

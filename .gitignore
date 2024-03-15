@@ -240,3 +240,4 @@ Thumbs.db
 /settings.py
 /setup.py
 *.apworld
+worlds/sms/test_bit_helper.py
