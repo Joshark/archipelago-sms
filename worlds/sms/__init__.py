@@ -36,23 +36,16 @@ class SmsWorld(World):
     def create_items(self):
         pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
 
-        if self.options.level_access == LevelAccess.option_tickets:
-            pool += [self.create_item(name) for name in TICKET_ITEMS.keys()]
-
-        total_shines = self.options.amount_of_shines.value
-        if not self.options.enable_coin_shines.value:
-            total_shines -= 8
-
-        for i in range(0, total_shines):
-            pool.append(self.create_item("Shine Sprite"))
+        # if self.options.level_access == LevelAccess.option_tickets:
+            #    pool += [self.create_item(name) for name in TICKET_ITEMS.keys()]
 
         if self.options.blue_coin_sanity.option_full_shuffle:
-            for i in range(0, 240):
+            for i in range(0, self.options.blue_coin_maximum):
                 pool.append((self.create_item("Blue Coin")))
 
         # Assume for now that all locations are real
         for i in range(0, len(ALL_LOCATIONS_TABLE) - len(pool)):
-            pool.append(self.create_item("1-UP"))
+            pool.append(self.create_item("Shine Sprite"))
 
         self.multiworld.itempool += pool
 

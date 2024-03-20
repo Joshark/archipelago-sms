@@ -8,7 +8,7 @@ class LevelAccess(Choice):
     If on "tickets", each level has a ticket item that must be acquired to access the level."""
     display_name = "Level Access"
     option_vanilla = 0
-    option_tickets = 1
+#    option_tickets = 1
 
 
 class EnableCoinShines(DefaultOnToggle):
@@ -35,12 +35,21 @@ class AmountOfShines(Range):
 
 
 class BlueCoinSanity(Choice):
-    """Whether to add all the Blue Coins to the pool."""
+    """Full shuffle: adds Blue Coins to the pool and makes Blue Coins locations."""
     display_name = "Blue Coinsanity"
     option_no_blue_coins = 0
     option_full_shuffle = 1
-    option_trade_shines_only = 2
+#    option_trade_shines_only = 2
     default = 0
+
+
+class BlueCoinMaximum(Range):
+    """How many Blue coins to include in the pool if Blue Coinsanity is on."""
+    display_name = "Blue Coin Maximum"
+    range_start = 0
+    range_end = 240
+    default = 240
+
 
 @dataclass
 class SmsOptions(PerGameCommonOptions):
@@ -49,3 +58,4 @@ class SmsOptions(PerGameCommonOptions):
     corona_mountain_shines: CoronaMountainShines
     amount_of_shines: AmountOfShines
     blue_coin_sanity: BlueCoinSanity
+    blue_coin_maximum: BlueCoinMaximum

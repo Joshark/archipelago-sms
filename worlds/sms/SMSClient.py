@@ -252,6 +252,8 @@ def memory_changed(ctx: SmsContext):
 
 
 def send_victory(ctx: SmsContext):
+    ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
+    ctx.finished_game = True
     return
 
 

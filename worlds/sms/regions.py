@@ -36,6 +36,9 @@ def sms_requirements_satisfied(state: CollectionState, requirements: Requirement
     if requirements.corona and not state.has("Shine Sprite", world.player, world.options.corona_mountain_shines.value):
         return False
 
+    if requirements.location != "" and not state.can_reach(requirements.location, "Location", world.player):
+        return False
+
     return True
 
 
@@ -49,7 +52,7 @@ def sms_can_get_blue_coin(state: CollectionState, blue_coin: BlueCoin, world: "S
 
 def sms_can_use_entrance(state: CollectionState, region: SmsRegion, world: "SmsWorld"):
     if region.ticketed and world.options.level_access == LevelAccess.option_tickets:
-        return state.has(f"{region.name} Ticket", world.player)
+        return state.has(f"{region.display} Ticket", world.player)
     else:
         return sms_requirements_satisfied(state, region.requirements, world)
 
