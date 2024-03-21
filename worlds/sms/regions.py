@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from BaseClasses import CollectionState, Region, ItemClassification
 from .items import SmsItem
 from .locations import SmsLocation
-from .options import LevelAccess, BlueCoinSanity
+from .options import BlueCoinSanity
 from .static_logic import ALL_REGIONS, SmsRegion, Shine, BlueCoin, Requirements, NozzleType
 
 if TYPE_CHECKING:
@@ -51,9 +51,6 @@ def sms_can_get_blue_coin(state: CollectionState, blue_coin: BlueCoin, world: "S
 
 
 def sms_can_use_entrance(state: CollectionState, region: SmsRegion, world: "SmsWorld"):
-    if region.ticketed and world.options.level_access == LevelAccess.option_tickets:
-        return state.has(f"{region.display} Ticket", world.player)
-    else:
         return sms_requirements_satisfied(state, region.requirements, world)
 
 

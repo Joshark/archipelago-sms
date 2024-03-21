@@ -4,9 +4,9 @@ Archipelago init file for Super Mario Sunshine
 from BaseClasses import ItemClassification
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, components, launch_subprocess
-from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, TICKET_ITEMS, ALL_PROGRESSION_ITEMS, SmsItem
+from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, SmsItem
 from .locations import ALL_LOCATIONS_TABLE
-from .options import SmsOptions, LevelAccess
+from .options import SmsOptions
 from .regions import create_regions
 
 
@@ -36,11 +36,8 @@ class SmsWorld(World):
     def create_items(self):
         pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
 
-        # if self.options.level_access == LevelAccess.option_tickets:
-            #    pool += [self.create_item(name) for name in TICKET_ITEMS.keys()]
-
         if self.options.blue_coin_sanity.option_full_shuffle:
-            for i in range(0, self.options.blue_coin_maximum):
+            for i in range(0, self.options.blue_coin_maximum.value):
                 pool.append((self.create_item("Blue Coin")))
 
         # Assume for now that all locations are real
@@ -77,7 +74,8 @@ def add_client_to_launcher() -> None:
                 c.func = launch_client
                 return
     if not found:
-        components.append(Component("Super Mario Sunshine Client", "SMSClient", func=launch_client, file_identifier='SMSClient.py'))
+        components.append(Component("Super Mario Sunshine Client", "SMSClient",
+                                    func=launch_client, file_identifier='SMSClient.py'))
 
 
 add_client_to_launcher()

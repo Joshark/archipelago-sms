@@ -26,14 +26,6 @@ class CoronaMountainShines(Range):
     default = 50
 
 
-class AmountOfShines(Range):
-    """How many Shine Sprites exist."""
-    display_name = "Amount of Shines"
-    range_start = 0
-    range_end = 84
-    default = 84
-
-
 class BlueCoinSanity(Choice):
     """Full shuffle: adds Blue Coins to the pool and makes Blue Coins locations."""
     display_name = "Blue Coinsanity"
@@ -56,6 +48,5 @@ class SmsOptions(PerGameCommonOptions):
     level_access: LevelAccess
     enable_coin_shines: EnableCoinShines
     corona_mountain_shines: CoronaMountainShines
-    amount_of_shines: AmountOfShines
     blue_coin_sanity: BlueCoinSanity
     blue_coin_maximum: BlueCoinMaximum

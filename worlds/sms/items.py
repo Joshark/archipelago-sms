@@ -6,7 +6,7 @@ class SmsItem(Item):
 
 
 REGULAR_PROGRESSION_ITEMS: dict[str, int] = {
-    #"Spray Nozzle": 523000,
+    # "Spray Nozzle": 523000,
     "Hover Nozzle": 523001,
     "Rocket Nozzle": 523002,
     "Turbo Nozzle": 523003,
@@ -18,9 +18,9 @@ TICKET_ITEMS: dict[str, int] = {
     "Ricco Harbor Ticket": 523006,
     "Gelato Beach Ticket": 523007,
     "Pinna Park Ticket": 523008,
-    #"Noki Bay Ticket": 523009,
+    # "Noki Bay Ticket": 523009,
     "Sirena Beach Ticket": 523010,
-#    "Pianta Village Ticket": 523011,
+    #  "Pianta Village Ticket": 523011,
 }
 
 ALL_PROGRESSION_ITEMS: dict[str, int] = {
