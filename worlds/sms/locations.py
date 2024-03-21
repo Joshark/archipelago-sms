@@ -1,6 +1,6 @@
 from BaseClasses import Location
 from .static_logic import ALL_REGIONS
-from .options import BlueCoinSanity, BlueCoinMaximum
+from .options import BlueCoinSanity
 
 
 class SmsLocation(Location):
@@ -13,11 +13,8 @@ for region in ALL_REGIONS:
     if region.trade:
         if BlueCoinSanity.option_no_blue_coins:
             continue
-        elif region.requirements.blues > BlueCoinMaximum.value:
-            continue
 
     for shine in region.shines:
-        ALL_LOCATIONS_TABLE[f"{region.name} - {shine.name}"] = shine.id
-    if BlueCoinSanity.option_full_shuffle:
-        for blue_coin in region.blue_coins:
-            ALL_LOCATIONS_TABLE[f"{region.name} - {blue_coin.name} Blue Coin"] = blue_coin.id
+        ALL_LOCATIONS_TABLE[f"{region.display} - {shine.name}"] = shine.id
+    for blue_coin in region.blue_coins:
+        ALL_LOCATIONS_TABLE[f"{region.display} - {blue_coin.name} Blue Coin"] = blue_coin.id

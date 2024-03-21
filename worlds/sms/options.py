@@ -35,18 +35,9 @@ class BlueCoinSanity(Choice):
     default = 0
 
 
-class BlueCoinMaximum(Range):
-    """How many Blue coins to include in the pool if Blue Coinsanity is on."""
-    display_name = "Blue Coin Maximum"
-    range_start = 0
-    range_end = 240
-    default = 240
-
-
 @dataclass
 class SmsOptions(PerGameCommonOptions):
     level_access: LevelAccess
     enable_coin_shines: EnableCoinShines
     corona_mountain_shines: CoronaMountainShines
     blue_coin_sanity: BlueCoinSanity
-    blue_coin_maximum: BlueCoinMaximum

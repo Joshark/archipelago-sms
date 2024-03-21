@@ -115,7 +115,7 @@ class addresses:
     SMS_BLUECOIN_COUNTER = 0x80578a5F
 
     SMS_SHINE_LOCATION_OFFSET = 0x80578988
-    SMS_SHINE_BYTE_COUNT = 15
+    SMS_SHINE_BYTE_COUNT = 68
     SMS_BLUECOIN_LOCATION_OFFSET = 0x80578997
     SMS_BLUECOIN_BYTE_COUNT = 30
 
@@ -270,6 +270,10 @@ def parse_bits(all_bits, ctx: SmsContext):
             if debug: logger.info("checks to send: " + str(temp))
         elif x == 119:
             send_victory(ctx)
+        elif 119 < x < 549:
+            temp = x + location_offset
+            ctx.locations_checked.add(temp)
+            ctx.send_location_checks(temp)
 
 
 def get_shine_id(location, value):

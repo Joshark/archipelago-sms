@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from BaseClasses import CollectionState, Region, ItemClassification
 from .items import SmsItem
 from .locations import SmsLocation
-from .options import BlueCoinSanity
 from .static_logic import ALL_REGIONS, SmsRegion, Shine, BlueCoin, Requirements, NozzleType
 
 if TYPE_CHECKING:
@@ -51,7 +50,7 @@ def sms_can_get_blue_coin(state: CollectionState, blue_coin: BlueCoin, world: "S
 
 
 def sms_can_use_entrance(state: CollectionState, region: SmsRegion, world: "SmsWorld"):
-        return sms_requirements_satisfied(state, region.requirements, world)
+    return sms_requirements_satisfied(state, region.requirements, world)
 
 
 def make_shine_lambda(shine: Shine, world: "SmsWorld"):
@@ -77,12 +76,12 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         new_location = SmsLocation(world.player, f"{region.display} - {shine.name}", shine.id, new_region)
         new_location.access_rule = make_shine_lambda(shine, world)
         new_region.locations.append(new_location)
-    if world.options.blue_coin_sanity == BlueCoinSanity.option_full_shuffle:
-        for blue_coin in region.blue_coins:
-            new_location = SmsLocation(
-                world.player, f"{region.display} - {blue_coin.name} Blue Coin", blue_coin.id, new_region)
-            new_location.access_rule = make_blue_coin_lambda(blue_coin, world)
-            new_region.locations.append(new_location)
+    # if world.options.blue_coin_sanity.option_full_shuffle:
+    for blue_coin in region.blue_coins:
+        new_location = SmsLocation(
+            world.player, f"{region.display} - {blue_coin.name} Blue Coin", blue_coin.id, new_region)
+        new_location.access_rule = make_blue_coin_lambda(blue_coin, world)
+        new_region.locations.append(new_location)
 
     if region.name == "Corona Mountain":
         new_location = SmsLocation(world.player, "Corona Mountain - Father and Son Shine!", None, new_region)

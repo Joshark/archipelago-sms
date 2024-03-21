@@ -67,10 +67,6 @@ ALL_REGIONS: list[SmsRegion] = [
     SmsRegion(AIRSTRIP, AIRSTRIP, Requirements(), [
         Shine("Delfino Airstrip Dilemma", 523086, Requirements([NozzleType.spray]))
         ], []),
-    SmsRegion("Delfino Airstrip Revisit", "Delfino Airstrip Revisit", Requirements(corona=True), [
-        Shine("Red Coin Waterworks", 523088, Requirements([NozzleType.turbo]))], [
-        BlueCoin("Ice Cube", 523120, Requirements([NozzleType.turbo, NozzleType.spray]))
-    ], parent_region=STATUE),
 
 
     # Delfino Plaza
@@ -104,7 +100,7 @@ ALL_REGIONS: list[SmsRegion] = [
     ],
         parent_region=AIRSTRIP),
 
-    SmsRegion(STATUE, PLAZA, Requirements([NozzleType.splasher], shines=1), [
+    SmsRegion(STATUE, PLAZA, Requirements([NozzleType.splasher]), [
         Shine("Boxing Clever 1", 523094),
         Shine("Boxing Clever 2", 523095),
         Shine("Chuckster", 523098),
@@ -137,7 +133,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("River End", 523191),
         BlueCoin("X Between Walls", 523197, Requirements([NozzleType.spray])),
         BlueCoin("Sail Platform", 523198, Requirements([NozzleType.hover]))
-    ], ticketed=True, parent_region="Plaza With Statue"),
+    ], ticketed=True, parent_region=STATUE),
 
     SmsRegion("Bianco 3", BIANCO, Requirements(location="Bianco Hills - Down with Petey Piranha!"), [
         Shine("The Hillside Cave Secret", 523002,
@@ -289,7 +285,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Far Underwater", 523285),
         BlueCoin("Blue Fish", 523286, Requirements([NozzleType.turbo])),
         BlueCoin("Red Fish", 523287, Requirements([NozzleType.turbo]))
-    ]),
+    ], parent_region="Gelato Entrance"),
 
     SmsRegion("Gelato 2 and 4-8", GELATO, Requirements(location="Gelato Beach - Dune Bud Sand Castle Secret"), [], [
         BlueCoin("Big Sand Shine", 523292, Requirements([NozzleType.spray]))
@@ -312,7 +308,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Blue Cataquack", 523273, Requirements([NozzleType.spray]))
     ], parent_region="Gelato Entrance"),
 
-    SmsRegion("Gelato 6 Only", GELATO, Requirements(location="Il Piantissimo's Sand Sprint"),  [], [
+    SmsRegion("Gelato 6 Only", GELATO, Requirements(location="Gelato Beach - Il Piantissimo's Sand Sprint"),  [], [
         BlueCoin("Yellow Goo Dune Bud", 523279, Requirements(yoshi=True)),
         BlueCoin("Beehive", 523295, Requirements(yoshi=True))
     ], parent_region="Gelato 5-8"),
@@ -351,7 +347,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Stackin Stus", 523339, Requirements([NozzleType.spray | NozzleType.hover])),
     ], parent_region="Pinna Entrance"),
 
-    SmsRegion("Pinna 2 Only", PINNA, Requirements(location="Mecha-Bowser Appears!"), [
+    SmsRegion("Pinna 2 Only", PINNA, Requirements(location="Pinna Park - Mecha-Bowser Appears!"), [
         Shine("The Beach Cannon's Secret", 523031, Requirements([NozzleType.spray])),
         Shine("Red Coins in the Cannon", 523038, Requirements([NozzleType.spray, NozzleType.hover]))], [
         BlueCoin("Spawn Basket", 523340),
@@ -362,7 +358,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Sunflower Basket", 523347)
     ], parent_region="Pinna Entrance"),
 
-    SmsRegion("Pinna 5-8", PINNA, Requirements(location="The Wilted Sunflowers"), [
+    SmsRegion("Pinna 5-8", PINNA, Requirements(location="Pinna Park - The Wilted Sunflowers"), [
         Shine("The Runaway Ferris Wheel", 523034,
               Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("Shadow Mario in the Park", 523036,
@@ -373,7 +369,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Beach Butterfly B", 523344, Requirements(yoshi=True))
     ], parent_region="Pinna 2 Only"),
 
-    SmsRegion("Pinna 6 Only", PINNA, Requirements(location="The Runaway Ferris Wheel"), [
+    SmsRegion("Pinna 6 Only", PINNA, Requirements(location="Pinna Park - The Runaway Ferris Wheel"), [
         Shine("The Yoshi-Go-Round's Secret", 523035,
               Requirements([NozzleType.spray, NozzleType.hover], yoshi=True)),
         Shine("Red Coins in the Yoshi-Go-Round", 523039,
@@ -503,7 +499,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Deep Sea Far Left Pillar", 523499, Requirements([NozzleType.hover]))
     ], parent_region="Noki 2 and 4-8"),
 
-    SmsRegion("Noki 6-8", NOKI, Requirements(location="Il Piantissimo's Surf Swim"), [], [
+    SmsRegion("Noki 6-8", NOKI, Requirements(location="Noki Bay - Il Piantissimo's Surf Swim"), [], [
         BlueCoin("Spawn O", 523494, Requirements([NozzleType.spray, NozzleType.hover, NozzleType.turbo])),
         BlueCoin("Boathouse O", 523498, Requirements([NozzleType.spray, NozzleType.hover, NozzleType.turbo])),
     ], parent_region="Noki 4 and 8"),
@@ -547,22 +543,22 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Statue's Nose", 523429)
     ], parent_region="Pianta Entrance"),
 
-    SmsRegion("Pianta 2/4/6/8", PIANTA, Requirements(location="Chain Chomplets Unchained"), [], [
+    SmsRegion("Pianta 2/4/6/8", PIANTA, Requirements(location="Pianta Village - Chain Chomplets Unchained"), [], [
         BlueCoin("Sign", 523431, Requirements([NozzleType.spray]))
     ], parent_region="Pianta 1/3/5/7"),
 
-    SmsRegion("Pianta 3 Only", PIANTA, Requirements(location="Il Piantissimo's Crazy Climb"), [], [
+    SmsRegion("Pianta 3 Only", PIANTA, Requirements(location="Pianta Village - Il Piantissimo's Crazy Climb"), [], [
         BlueCoin("Burning Pianta", 523442, Requirements([NozzleType.spray])),
         BlueCoin("FLUDD M", 523449, Requirements([NozzleType.spray]))
     ], parent_region="Pianta 2/4/6/8"),
 
-    SmsRegion("Pianta 5 Only", PIANTA, Requirements(location="Chain Chomp's Bath"), [], [
+    SmsRegion("Pianta 5 Only", PIANTA, Requirements(location="Pianta Village - Chain Chomp's Bath"), [], [
         BlueCoin("Back Beehive", 523436, Requirements(yoshi=True)),
         BlueCoin("Front Beehive", 523437, Requirements(yoshi=True)),
         BlueCoin("Butterflies", 523440, Requirements(yoshi=True))
     ], parent_region="Pianta 3 Only"),
 
-    SmsRegion("Pianta 6 Only", PIANTA, Requirements(location="Secret of the Village Underside"), [], [
+    SmsRegion("Pianta 6 Only", PIANTA, Requirements(location="Pianta Village - Secret of the Village Underside"), [], [
         BlueCoin("Pianta in Need A", 523421, Requirements([NozzleType.spray])),
         BlueCoin("Pianta in Need B", 523422, Requirements([NozzleType.spray])),
         BlueCoin("Pianta in Need C", 523423, Requirements([NozzleType.spray])),
@@ -573,7 +569,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Pianta in Need H", 523428, Requirements([NozzleType.spray]))
     ], parent_region="Pianta 5 Only"),
 
-    SmsRegion("Pianta 8 Only", PIANTA, Requirements(location="Shadow Mario Runs Wild"), [], [
+    SmsRegion("Pianta 8 Only", PIANTA, Requirements(location="Pianta Village - Shadow Mario Runs Wild"), [], [
         BlueCoin("Bird", 523441, Requirements([NozzleType.spray, NozzleType.hover]))
     ], parent_region="Pianta 6 Only"),
 
@@ -591,6 +587,11 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Far Back Right Lava", 523548, Requirements([NozzleType.spray, NozzleType.hover])),
         BlueCoin("Right Lava", 523549, Requirements([NozzleType.spray, NozzleType.hover]))
         ]),
+
+    SmsRegion("Delfino Airstrip Revisit", "Delfino Airstrip Revisit", Requirements(corona=True), [
+        Shine("Red Coin Waterworks", 523088, Requirements([NozzleType.turbo]))], [
+                  BlueCoin("Ice Cube", 523120, Requirements([NozzleType.turbo, NozzleType.spray]))
+              ], parent_region=STATUE),
 
     # Blue Coin Trades
     SmsRegion("Boathouse Traders", "Boathouse Traders", Requirements(shines=3), [
