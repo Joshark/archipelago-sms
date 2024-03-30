@@ -39,11 +39,11 @@ class SmsWorld(World):
     def create_items(self):
         pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
 
-        if self.options.blue_coin_sanity.option_full_shuffle:
-            for i in range(0, 240):
+        if self.options.blue_coin_sanity == "full_shuffle":
+            for i in range(0, self.options.blue_coin_maximum):
                 pool.append((self.create_item("Blue Coin")))
 
-        for i in range(0, len(self.location_names) - len(pool)):
+        for i in range(0, len(self.multiworld.get_locations(self.player)) - len(pool) - 1):
             pool.append(self.create_item("Shine Sprite"))
             self.possible_shines += 1
 

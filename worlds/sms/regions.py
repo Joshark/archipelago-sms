@@ -72,14 +72,14 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         if shine.hundred and not world.options.enable_coin_shines.value:
             continue
         if region.trade:
-            if world.options.blue_coin_sanity == "option_no_blue_coins" or coin_counter < 10:
+            if world.options.blue_coin_sanity == "no_blue_coins" or coin_counter < 10:
                 continue
             coin_counter -= 10
 
         new_location = SmsLocation(world.player, f"{region.display} - {shine.name}", shine.id, new_region)
         new_location.access_rule = make_shine_lambda(shine, world)
         new_region.locations.append(new_location)
-    if world.options.blue_coin_sanity == "option_full_shuffle":
+    if world.options.blue_coin_sanity == "full_shuffle":
         for blue_coin in region.blue_coins:
             new_location = SmsLocation(
                 world.player, f"{region.display} - {blue_coin.name} Blue Coin", blue_coin.id, new_region)
