@@ -10,10 +10,6 @@ class SmsLocation(Location):
 ALL_LOCATIONS_TABLE: dict[str, int] = {}
 
 for region in ALL_REGIONS:
-    if region.trade:
-        if not BlueCoinSanity.value:
-            continue
-
     for shine in region.shines:
         ALL_LOCATIONS_TABLE[f"{region.display} - {shine.name}"] = shine.id
     for blue_coin in region.blue_coins:

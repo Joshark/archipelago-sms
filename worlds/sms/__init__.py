@@ -30,19 +30,22 @@ class SmsWorld(World):
     item_name_to_id = ALL_ITEMS_TABLE
     location_name_to_id = ALL_LOCATIONS_TABLE
 
+    corona_goal = 50
+    possible_shines = 0
+
     def create_regions(self):
         create_regions(self)
 
     def create_items(self):
         pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
 
-        if self.options.blue_coin_sanity.value:
+        if self.options.blue_coin_sanity.option_full_shuffle:
             for i in range(0, 240):
                 pool.append((self.create_item("Blue Coin")))
 
-        # Assume for now that all locations are real
-        for i in range(0, len(ALL_LOCATIONS_TABLE) - len(pool) - 8):
+        for i in range(0, len(self.location_names) - len(pool)):
             pool.append(self.create_item("Shine Sprite"))
+            self.possible_shines += 1
 
         self.multiworld.itempool += pool
 
@@ -56,6 +59,9 @@ class SmsWorld(World):
 
     def set_rules(self):
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
+        self.corona_goal = self.options.corona_mountain_shines.value
+        if self.corona_goal > self.possible_shines:
+            self.corona_goal = self.possible_shines
 
 
 def launch_client():

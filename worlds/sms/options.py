@@ -15,22 +15,36 @@ class LevelAccess(Choice):
 class EnableCoinShines(Toggle):
     """Turn off to ignore the 100 coin Shine Sprites, which removes 8 Shine Sprites from the pool.
     You can still collect them, but they don't do anything.
-    CURRENTLY HARDCODED OFF."""
+    CURRENTLY HARDCODED OFF due to the coin Gecko code issue."""
     display_name = "Enable 100 Coin Shines"
 
 
 class CoronaMountainShines(Range):
     """How many Shine Sprites are required to access Corona Mountain and the Delfino Airstrip revisit.
-    Must be at least one less than the total number of shines, due to the Delfino Airstrip red coins shine."""
+    If less than this number of Shines exist in the pool, it will be adjusted to the total Shine count."""
     display_name = "Corona Mountain Shines"
     range_start = 0
-    range_end = 83
+    range_end = 360
     default = 50
 
 
-class BlueCoinSanity(DefaultOnToggle):
+class BlueCoinSanity(Choice):
     """Full shuffle: adds Blue Coins to the pool and makes Blue Coins locations."""
     display_name = "Blue Coinsanity"
+    option_no_blue_coins = 0
+    option_full_shuffle = 1
+    option_trade_shines_only = 2
+    default = 0
+
+
+class BlueCoinMaximum(Range):
+    """How many Blue Coins to include in the pool if Blue Coinsanity is on. Does nothing if Blue Coinsanity is off.
+    Corresponding trade shines will be removed from locations.
+    Removed Blue Coins will be replaced by extra Shine Sprites."""
+    display_name = "Blue Coin Maximum"
+    range_start = 0
+    range_end = 240
+    default = 240
 
 
 @dataclass
@@ -39,3 +53,4 @@ class SmsOptions(PerGameCommonOptions):
     enable_coin_shines: EnableCoinShines
     corona_mountain_shines: CoronaMountainShines
     blue_coin_sanity: BlueCoinSanity
+    blue_coin_maximum: BlueCoinMaximum
