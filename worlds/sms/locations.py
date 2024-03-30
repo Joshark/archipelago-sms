@@ -11,7 +11,7 @@ ALL_LOCATIONS_TABLE: dict[str, int] = {}
 
 for region in ALL_REGIONS:
     if region.trade:
-        if BlueCoinSanity.option_no_blue_coins:
+        if not BlueCoinSanity.value:
             continue
 
     for shine in region.shines:

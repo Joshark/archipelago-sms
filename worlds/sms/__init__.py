@@ -36,7 +36,7 @@ class SmsWorld(World):
     def create_items(self):
         pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
 
-        if self.options.blue_coin_sanity.option_full_shuffle:
+        if self.options.blue_coin_sanity.value:
             for i in range(0, 240):
                 pool.append((self.create_item("Blue Coin")))
 

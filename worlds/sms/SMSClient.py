@@ -8,7 +8,7 @@ import ModuleUpdate
 from .options import SmsOptions
 from .bit_helper import change_endian, bit_flagger
 from .bit_helper import extract_bits
-from .packages import dolphin_memory_engine as dme
+import dolphin_memory_engine as dme
 
 ModuleUpdate.update()
 
@@ -112,7 +112,7 @@ class SmsContext(CommonContext):
 
 class addresses:
     SMS_SHINE_COUNTER = 0x80578A5b
-    SMS_BLUECOIN_COUNTER = 0x80578a5F
+    SMS_BLUECOIN_COUNTER = 0x80578a5f
 
     SMS_SHINE_LOCATION_OFFSET = 0x80578988
     SMS_SHINE_BYTE_COUNT = 68
@@ -148,9 +148,22 @@ class addresses:
     SMS_NOKI_HI = 0x2c030099
     SMS_NOKI_LO = 0x2c030000
 
+    SMS_CURRENT_STAGE = 0x803e970e
+    SMS_CURRENT_EPISODE = 0x803e970f
+
+    SMS_NEXT_STAGE = 0x803e9712
+
     SMS_SHADOW_MARIO_STATE = 0x80578A88
 
     SMS_LIVES_COUNTER = 0x80578a04
+
+    QOL_NOP = 0x60000000
+    QOL_COIN_COUNT = 0x80294864
+    QOL_COIN_SAVE = 0x8029A73C
+    QOL_HP_METER = 0x8003FD94
+    QOL_CUTSCENE_A = 0x802B5EF4
+    QOL_CUTSCENE_B = 0x802B5E8C
+    QOL_CUTSCENE_VAL = 0x38600001
 
 
 storedShines = []
@@ -223,7 +236,7 @@ async def location_watcher(ctx):
 
 async def modify_nozzles(ctx):
     if debug_b: logger.info("disable nozzle was called")
-    while True:
+    while dme.is_hooked():
         if debug_b: logger.info("we're in the while loop")
         if ap_nozzles_received.__contains__("Hover Nozzle"):
             if debug_b: logger.info("hover nozzle open??")
@@ -514,11 +527,27 @@ def activate_yoshi():
         dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 130)
     extra_unlocks_needed()
 
-
     if not ap_nozzles_received.__contains__("Yoshi"):
         ap_nozzles_received.append("Yoshi")
         logger.info(str(ap_nozzles_received))
     return
+
+
+async def handle_stages(ctx):
+    stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
+    if stage == 0x01: # Delfino Plaza
+        dme.write_byte(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
+    return
+
+
+async def qol_writes():
+    dme.write_double(addresses.QOL_COIN_COUNT, addresses.QOL_NOP)
+    dme.write_double(addresses.QOL_COIN_SAVE, addresses.QOL_NOP)
+
+    dme.write_double(addresses.QOL_CUTSCENE_A, addresses.QOL_CUTSCENE_VAL)
+    dme.write_double(addresses.QOL_CUTSCENE_B, addresses.QOL_CUTSCENE_VAL)
+
+    dme.write_double(addresses.QOL_HP_METER, addresses.QOL_NOP)
 
 
 def main(connect= None, password= None):
@@ -540,10 +569,13 @@ def main(connect= None, password= None):
             game_watcher(ctx), name="SmsProgressionWatcher")
         loc_watch = asyncio.create_task(location_watcher(ctx))
         item_locker = asyncio.create_task(modify_nozzles(ctx))
+        stage_watch = asyncio.create_task(handle_stages(ctx))
+        # qol = asyncio.create_task(qol_writes())
 
         await progression_watcher
         await loc_watch
         await item_locker
+        # await qol
         await asyncio.sleep(.25)
 
         await ctx.exit_event.wait()

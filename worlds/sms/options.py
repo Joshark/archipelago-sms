@@ -5,15 +5,17 @@ from Options import Choice, DefaultOnToggle, PerGameCommonOptions, Range, Toggle
 
 class LevelAccess(Choice):
     """If on "vanilla", the main levels are accessed in the way they are in the base game (e.g. Ricco Harbor is accessible after collecting 3 Shine Sprites).
-    If on "tickets", each level has a ticket item that must be acquired to access the level."""
+    If on "tickets", each level has a ticket item that must be acquired to access the level.
+    CURRENTLY HARDCODED OFF."""
     display_name = "Level Access"
     option_vanilla = 0
 #    option_tickets = 1
 
 
-class EnableCoinShines(DefaultOnToggle):
+class EnableCoinShines(Toggle):
     """Turn off to ignore the 100 coin Shine Sprites, which removes 8 Shine Sprites from the pool.
-    You can still collect them, but they don't do anything."""
+    You can still collect them, but they don't do anything.
+    CURRENTLY HARDCODED OFF."""
     display_name = "Enable 100 Coin Shines"
 
 
@@ -26,13 +28,9 @@ class CoronaMountainShines(Range):
     default = 50
 
 
-class BlueCoinSanity(Choice):
+class BlueCoinSanity(DefaultOnToggle):
     """Full shuffle: adds Blue Coins to the pool and makes Blue Coins locations."""
     display_name = "Blue Coinsanity"
-    option_no_blue_coins = 0
-    option_full_shuffle = 1
-#    option_trade_shines_only = 2
-    default = 0
 
 
 @dataclass

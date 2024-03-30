@@ -457,8 +457,8 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("The Shell's Secret", 523055, Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("Hold It, Shadow Mario!", 523056, Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("The Red Coin Fish", 523057, Requirements([NozzleType.spray, NozzleType.hover])),
-        Shine("A Golden Bird", 523058, Requirements([NozzleType.hover, NozzleType.spray])),
-        Shine("Red Coins on the Half Shell", 523059, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("A Golden Bird", 523059, Requirements([NozzleType.hover, NozzleType.spray])),
+        Shine("Red Coins on the Half Shell", 523058, Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("100 Coins", 523105, Requirements([NozzleType.hover]), hundred=True)],
         [], ticketed=False, parent_region=STATUE),
 
