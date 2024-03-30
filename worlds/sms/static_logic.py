@@ -386,8 +386,8 @@ ALL_REGIONS: list[SmsRegion] = [
     ], ticketed=True, parent_region=STATUE),
 
     SmsRegion("Sirena 1 and 6", SIRENA, Requirements(), [], [
-        BlueCoin("Right Male Noki", 523384, Requirements([NozzleType.spray])),
-        BlueCoin("Right Female Noki", 523390, Requirements([NozzleType.spray]))
+        BlueCoin("Right Male Noki", 523373, Requirements([NozzleType.spray])),
+        BlueCoin("Right Female Noki", 523374, Requirements([NozzleType.spray]))
     ], parent_region="Sirena Entrance"),
 
     SmsRegion("Sirena 2-8", SIRENA, Requirements(location="Sirena Beach - The Manta Storm"), [
@@ -432,8 +432,8 @@ ALL_REGIONS: list[SmsRegion] = [
     ], parent_region="Sirena 4-8"),
 
     SmsRegion("Sirena 6 Only", SIRENA, Requirements(location="Sirena Beach - King Boo Down Below"), [], [
-        BlueCoin("Left Male Noki", 523373, Requirements([NozzleType.spray])),
-        BlueCoin("Left Female Noki", 523374, Requirements([NozzleType.spray]))
+        BlueCoin("Left Male Noki", 523384, Requirements([NozzleType.spray])),
+        BlueCoin("Left Female Noki", 523390, Requirements([NozzleType.spray]))
     ], parent_region="Sirena 5 Only"),
 
     SmsRegion("Sirena 7-8", SIRENA, Requirements(location="Sirena Beach - Scrubbing Sirena Beach"), [], [
