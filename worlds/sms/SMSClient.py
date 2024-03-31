@@ -67,6 +67,8 @@ class SmsContext(CommonContext):
     lives_given = 0
     lives_switch = False
 
+    goal = 50
+
     def __init__(self, server_address, password):
         super(SmsContext, self).__init__(server_address, password)
         self.send_index: int = 0
@@ -108,6 +110,14 @@ class SmsContext(CommonContext):
 
         self.ui = SmsManager(self)
         self.ui_task = asyncio.create_task(self.ui.async_run(), name="UI")
+
+    def on_package(self, cmd: str, args: dict):
+        if cmd == "Connected":
+            slot_data = args.get("slot_data")
+            self.goal = slot_data.get("corona_mountain_shines")
+
+    def get_corona_goal(self):
+        return self.goal
 
 
 storedShines = []
@@ -180,8 +190,9 @@ async def location_watcher(ctx):
 
 async def modify_nozzles(ctx):
     if debug_b: logger.info("disable nozzle was called")
-    while dme.is_hooked():
+    while True:
         if debug_b: logger.info("we're in the while loop")
+
         if ap_nozzles_received.__contains__("Hover Nozzle"):
             if debug_b: logger.info("hover nozzle open??")
             dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_NOZZLE_RELEASE))
@@ -191,7 +202,8 @@ async def modify_nozzles(ctx):
         elif ap_nozzles_received.__contains__("Turbo Nozzle"):
             if debug_b: logger.info("turbo nozzle write")
             dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_TURBO_NOZZLE_VALUE))
-        else:
+
+        if not (("Hover Nozzle" in ap_nozzles_received) or ("Rocket Nozzle" in ap_nozzles_received) or ("Turbo Nozzle" in ap_nozzles_received)):
             if debug_b: logger.info("reached spray nozzle write")
             dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_SPRAY_NOZZLE_VALUE))
         await asyncio.sleep(0.1)
@@ -245,13 +257,12 @@ def refresh_item_count(ctx, item_id, targ_address):
     dme.write_byte(targ_address, temp)
 
 
-def refresh_all_items(ctx):
-    goal = ctx.options.corona_mountain_shines.value
+def refresh_all_items(ctx: SmsContext):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
     for items in counts:
         if counts[items] > 0:
             unpack_item(items, ctx, counts[items])
-    if counts[523004] > goal:
+    if counts[523004] > ctx.get_corona_goal():
         activate_ticket(999999)
 
 
@@ -359,13 +370,13 @@ def disable_shadow_mario():
     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
 
 
-def enforce_nozzles(primary_nozzle, secondary_nozzle):
-    primary_nozzle, secondary_nozzle = nozzle_assignment()
-    primary_id = set_nozzle_assignment(primary_nozzle)
-    secondary_id = set_nozzle_assignment(secondary_nozzle)
-    dme.write_double(addresses.SMS_PRIMARY_NOZZLE_ADDRESS, primary_id)
-    dme.write_double(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, secondary_id)
-    return
+async def enforce_nozzles():
+    while True:
+        primary_nozzle, secondary_nozzle = nozzle_assignment()
+        primary_id = set_nozzle_assignment(primary_nozzle)
+        secondary_id = set_nozzle_assignment(secondary_nozzle)
+        dme.write_double(addresses.SMS_PRIMARY_NOZZLE_ADDRESS, primary_id)
+        dme.write_double(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, secondary_id)
 
 
 @dataclass
@@ -514,12 +525,14 @@ def main(connect= None, password= None):
             game_watcher(ctx), name="SmsProgressionWatcher")
         loc_watch = asyncio.create_task(location_watcher(ctx))
         item_locker = asyncio.create_task(modify_nozzles(ctx))
+        # item_locker = asyncio.create_task(enforce_nozzles())
         stage_watch = asyncio.create_task(handle_stages(ctx))
         # qol = asyncio.create_task(qol_writes())
 
         await progression_watcher
         await loc_watch
         await item_locker
+        await stage_watch
         # await qol
         await asyncio.sleep(.25)
 

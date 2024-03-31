@@ -1,6 +1,8 @@
 """
 Archipelago init file for Super Mario Sunshine
 """
+from typing import Dict, Any
+
 from BaseClasses import ItemClassification
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, components, launch_subprocess
@@ -62,6 +64,9 @@ class SmsWorld(World):
         self.corona_goal = self.options.corona_mountain_shines.value
         if self.corona_goal > self.possible_shines:
             self.corona_goal = self.possible_shines
+
+    def fill_slot_data(self) -> Dict[str, Any]:
+        return self.options.as_dict("corona_mountain_shines")
 
 
 def launch_client():
