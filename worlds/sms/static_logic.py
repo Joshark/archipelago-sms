@@ -65,7 +65,7 @@ class SmsRegion(NamedTuple):
 ALL_REGIONS: list[SmsRegion] = [
     # Delfino Airstrip
     SmsRegion(AIRSTRIP, AIRSTRIP, Requirements(), [
-        Shine("Delfino Airstrip Dilemma", 523086, Requirements([NozzleType.spray]))
+        Shine("Delfino Airstrip Dilemma", 523086, Requirements([NozzleType.splasher]))
         ], []),
 
 
@@ -148,7 +148,7 @@ ALL_REGIONS: list[SmsRegion] = [
         ], parent_region="Bianco Entrance"),
 
     SmsRegion("Bianco 4", BIANCO, Requirements(location="Bianco Hills - The Hillside Cave Secret"), [
-        Shine("Red Coins of Windmill Village", 52303,
+        Shine("Red Coins of Windmill Village", 523003,
               Requirements([NozzleType.hover | NozzleType.rocket]))], [
         BlueCoin("Hillside Pokey", 523178, Requirements([NozzleType.hover])),
         BlueCoin("Bridge Underside", 523183)

@@ -479,7 +479,7 @@ def activate_nozzle(id):
 
 def activate_yoshi():
     temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
-    if temp<130:
+    if temp < 130:
         dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 130)
     extra_unlocks_needed()
 
@@ -490,10 +490,14 @@ def activate_yoshi():
 
 
 async def handle_stages(ctx):
-    stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
-    if stage == 0x01: # Delfino Plaza
-        dme.write_byte(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
-    return
+    while True:
+        if dme.is_hooked():
+            stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
+            if stage == 0x01: # Delfino Plaza
+                episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+                if not episode == 0x01:
+                    dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
+        await asyncio.sleep(0.1)
 
 
 async def qol_writes():

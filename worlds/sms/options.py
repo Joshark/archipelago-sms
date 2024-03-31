@@ -47,6 +47,14 @@ class BlueCoinMaximum(Range):
     default = 240
 
 
+class TradeShineMaximum(Range):
+    """The number of Shines from the boathouse trades that will be shuffled. If the Blue Coin Maximum is not enough
+    to obtain this amount, it will decrease automatically.
+    Keep in mind that if this value is too high, there is a chance you will have to nearly 100% the game."""
+    range_start = 0
+    range_end = 24
+    default = 12
+
 @dataclass
 class SmsOptions(PerGameCommonOptions):
     level_access: LevelAccess
@@ -54,3 +62,4 @@ class SmsOptions(PerGameCommonOptions):
     corona_mountain_shines: CoronaMountainShines
     blue_coin_sanity: BlueCoinSanity
     blue_coin_maximum: BlueCoinMaximum
+    trade_shine_maximum: TradeShineMaximum
