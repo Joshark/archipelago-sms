@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import collections
+import time
 from dataclasses import dataclass
 
 import ModuleUpdate
@@ -68,6 +69,8 @@ class SmsContext(CommonContext):
     lives_switch = False
 
     goal = 50
+    blue_status = "no_blue_coins"
+    victory = False
 
     def __init__(self, server_address, password):
         super(SmsContext, self).__init__(server_address, password)
@@ -115,6 +118,7 @@ class SmsContext(CommonContext):
         if cmd == "Connected":
             slot_data = args.get("slot_data")
             self.goal = slot_data.get("corona_mountain_shines")
+            self.blue_status = slot_data.get("blue_coin_sanity")
 
     def get_corona_goal(self):
         return self.goal
@@ -143,12 +147,10 @@ async def game_watcher(ctx: SmsContext):
             sync_msg.append({"cmd": "LocationChecks", "locations": list(ctx.locations_checked)})
         await ctx.send_msgs(sync_msg)
 
-        victory = False
-
         refresh_collection_counts(ctx)
         ctx.lives_switch = True
 
-        if not ctx.finished_game and victory:
+        if ctx.victory and not ctx.finished_game:
             await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
             ctx.finished_game = True
         if not ctx.hook_check:
@@ -221,8 +223,36 @@ def memory_changed(ctx: SmsContext):
 
 
 def send_victory(ctx: SmsContext):
+    if ctx.victory:
+        return
+
+    ctx.victory = True
     ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
-    ctx.finished_game = True
+    logger.info("Congratulations on completing your seed!")
+    time.sleep(.05)
+    logger.info("ARCHIPELAGO SUPER MARIO SUNSHINE CREDITS:")
+    time.sleep(.05)
+    logger.info("MrsMarinaRose - Client, Modding and Patching")
+    time.sleep(.05)
+    logger.info("Hatkirby - APworld")
+    time.sleep(.05)
+    logger.info("ScorelessPine - Original Manual")
+    time.sleep(.05)
+    logger.info("Fedora - Logic and testing")
+    time.sleep(.05)
+    logger.info("J2Slow - Logic and testing")
+    time.sleep(.05)
+    logger.info("Quizzeh - Extra testing")
+    time.sleep(.05)
+    logger.info("Spicynun - Additional research")
+    time.sleep(.05)
+    logger.info("JoshuaMKW - Sunshine Toolset")
+    time.sleep(.05)
+    logger.info("All Archipelago core devs")
+    time.sleep(.05)
+    logger.info("Nintendo EAD")
+    time.sleep(.05)
+    logger.info("...and you. Thanks for playing!")
     return
 
 
@@ -232,17 +262,17 @@ def parse_bits(all_bits, ctx: SmsContext):
         return
 
     for x in all_bits:
-        if x < 119:
+        if x <= 119:
             temp = x + location_offset
             ctx.locations_checked.add(temp)
             ctx.send_location_checks(temp)
             if debug: logger.info("checks to send: " + str(temp))
-        elif x == 119:
-            send_victory(ctx)
         elif 119 < x < 549:
             temp = x + location_offset
             ctx.locations_checked.add(temp)
             ctx.send_location_checks(temp)
+        if x == 119:
+            send_victory(ctx)
 
 
 def get_shine_id(location, value):
@@ -269,7 +299,8 @@ def refresh_all_items(ctx: SmsContext):
 def refresh_collection_counts(ctx):
     if debug: logger.info("refresh_collection_counts")
     refresh_item_count(ctx, 523004, addresses.SMS_SHINE_COUNTER)
-    refresh_item_count(ctx, 523014, addresses.SMS_BLUECOIN_COUNTER)
+    if ctx.blue_status == "full_shuffle":
+        refresh_item_count(ctx, 523014, addresses.SMS_BLUECOIN_COUNTER)
     refresh_all_items(ctx)
 
 

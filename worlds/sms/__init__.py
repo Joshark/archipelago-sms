@@ -66,7 +66,7 @@ class SmsWorld(World):
             self.corona_goal = self.possible_shines
 
     def fill_slot_data(self) -> Dict[str, Any]:
-        return self.options.as_dict("corona_mountain_shines")
+        return self.options.as_dict("corona_mountain_shines", "blue_coin_sanity")
 
 
 def launch_client():
