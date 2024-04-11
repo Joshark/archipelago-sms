@@ -350,7 +350,7 @@ def unpack_item(item, ctx, amt=0):
     if 522999 < item < 523004:
         activate_nozzle(item)
     elif item == 523013:
-        activate_yoshi(ctx)
+        activate_yoshi()
     elif 523004 < item < 523011:
         activate_ticket(item)
     elif item == 523012:
@@ -517,8 +517,11 @@ def activate_nozzle(id):
     return
 
 
-def activate_yoshi(ctx):
-    ctx.yoshi_check = True
+def activate_yoshi():
+    temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
+    if temp < 130:
+        dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 130)
+    extra_unlocks_needed()
 
     if not ap_nozzles_received.__contains__("Yoshi"):
         ap_nozzles_received.append("Yoshi")
@@ -532,14 +535,7 @@ async def handle_stages(ctx):
             stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
             if stage == 0x01: # Delfino Plaza
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-                if ctx.yoshi_check:
-                    temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
-                    if temp < 130:
-                        dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
-                        dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x1)
-                    else:
-                        ctx.yoshi_check = False
-                elif not episode == 0x01:
+                if not episode == 0x01:
                     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
         await asyncio.sleep(0.1)
 
