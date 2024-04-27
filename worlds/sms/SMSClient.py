@@ -48,8 +48,8 @@ class SmsCommandProcessor(ClientCommandProcessor):
         refresh_collection_counts(self.ctx)
 
     def _cmd_received(self) -> bool:
-        for index, item in enumerate(self.ctx.items_received, 1):
-            unpack_item(self.ctx.items_received[item.item], self.ctx)
+        # for index, item in enumerate(self.ctx.items_received, 1):
+            # unpack_item(self.ctx.items_received[item.item], self.ctx)
         return super()._cmd_received()
 
     def force_resync(self):
@@ -72,7 +72,7 @@ class SmsContext(CommonContext):
 
     goal = 50
     corona_message_given = False
-    blue_status = "full_shuffle"
+    blue_status = 1
     victory = False
 
     def __init__(self, server_address, password):
@@ -126,7 +126,10 @@ class SmsContext(CommonContext):
                 self.blue_status = temp
 
     def get_corona_goal(self):
-        return self.goal
+        if self.goal:
+            return self.goal
+        else:
+            return 50
 
 
 storedShines = []
@@ -170,7 +173,7 @@ async def game_watcher(ctx: SmsContext):
                     "Please connect to Dolphin (may have issues, default is to start game before opening client).")
                 ctx.hook_nagged = True
 
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.2)
         ctx.lives_switch = False
 
 
@@ -297,7 +300,7 @@ def refresh_all_items(ctx: SmsContext):
     for items in counts:
         if counts[items] > 0:
             unpack_item(items, ctx, counts[items])
-    if counts[523004] > ctx.get_corona_goal():
+    if counts[523004] >= ctx.get_corona_goal():
         if counts[523002] > 0:
             activate_ticket(999999)
             if not ctx.corona_message_given:
@@ -308,7 +311,7 @@ def refresh_all_items(ctx: SmsContext):
 def refresh_collection_counts(ctx):
     if debug: logger.info("refresh_collection_counts")
     refresh_item_count(ctx, 523004, addresses.SMS_SHINE_COUNTER)
-    if ctx.blue_status == "full_shuffle":
+    if ctx.blue_status == 1:
         refresh_item_count(ctx, 523014, addresses.SMS_BLUECOIN_COUNTER)
     refresh_all_items(ctx)
 
@@ -521,6 +524,11 @@ def activate_yoshi():
     temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
     if temp < 130:
         dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 130)
+        # BEGIN YOSHI BANDAID
+    flag = dme.read_byte(0x8057898c)
+    new_flag = bit_flagger(flag, 1, True)
+    dme.write_byte(new_flag, 0x8057898c)
+    # END YOSHI BANDAID
     extra_unlocks_needed()
 
     if not ap_nozzles_received.__contains__("Yoshi"):
@@ -537,6 +545,12 @@ async def handle_stages(ctx):
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
                 if not episode == 0x01:
                     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
+                    # BEGIN YOSHI BANDAID
+            elif stage == 0x05: # Pinna Park
+                episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+                if episode == 0x03:
+                    dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
+                    # END YOSHI BANDAID
         await asyncio.sleep(0.1)
 
 
@@ -568,14 +582,14 @@ def main(connect= None, password= None):
         progression_watcher = asyncio.create_task(
             game_watcher(ctx), name="SmsProgressionWatcher")
         loc_watch = asyncio.create_task(location_watcher(ctx))
-        item_locker = asyncio.create_task(modify_nozzles(ctx))
+        # item_locker = asyncio.create_task(modify_nozzles(ctx))
         # item_locker = asyncio.create_task(enforce_nozzles())
         stage_watch = asyncio.create_task(handle_stages(ctx))
         # qol = asyncio.create_task(qol_writes())
 
         await progression_watcher
         await loc_watch
-        await item_locker
+        # await item_locker
         await stage_watch
         # await qol
         await asyncio.sleep(.25)

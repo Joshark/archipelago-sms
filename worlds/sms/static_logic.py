@@ -318,7 +318,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Mecha-Bowser Appears!", 523030, Requirements([NozzleType.spray])),
         Shine("Red Coins of the Pirate Ships", 523032,
               Requirements([NozzleType.spray, NozzleType.hover])),
-        Shine("The Wilted Sunflowers", 523033, Requirements([NozzleType.spray, NozzleType.hover])),
+        # Shine("The Wilted Sunflowers", 523033, Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("100 Coins", 523103, Requirements([NozzleType.spray]), hundred=True)],
         [
         BlueCoin("Tree Sand Shine", 523348, Requirements([NozzleType.spray])),
@@ -358,7 +358,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Sunflower Basket", 523347)
     ], parent_region="Pinna Entrance"),
 
-    SmsRegion("Pinna 5-8", PINNA, Requirements(location="Pinna Park - The Wilted Sunflowers"), [
+    SmsRegion("Pinna 5-8", PINNA, Requirements(location="Pinna Park - Red Coins of the Pirate Ships"), [
         Shine("The Runaway Ferris Wheel", 523034,
               Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("Shadow Mario in the Park", 523036,
@@ -484,7 +484,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Spawn", 523490, Requirements([NozzleType.hover | NozzleType.turbo])),
         BlueCoin("Coast", 523491, Requirements([NozzleType.hover | NozzleType.turbo])),
         BlueCoin("Underwater", 523492),
-        BlueCoin("Top Secret Path", 523493, Requirements([NozzleType.spray, NozzleType.hover]))
+        BlueCoin("Unnamed", 523493, Requirements([NozzleType.spray, NozzleType.hover]))
     ], parent_region="Noki Entrance"),
 
     SmsRegion("Noki 2 and 4-8", NOKI, Requirements(location="Noki Bay - Uncork the Waterfall"), [], [
@@ -507,12 +507,12 @@ ALL_REGIONS: list[SmsRegion] = [
     # Pianta Village
     SmsRegion("Pianta Entrance", "Pianta Village", Requirements([NozzleType.rocket], shines=10), [
         Shine("Chain Chomplets Unchained", 523060, Requirements([NozzleType.spray])),
-        Shine("Il Piantissimo's Crazy Climb", 523061, Requirements([NozzleType.spray])),
+        Shine("Il Piantissimo's Crazy Climb", 523063, Requirements([NozzleType.spray])),
         Shine("The Goopy Inferno", 523062, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
-        Shine("Chain Chomp's Bath", 523063, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
+        Shine("Chain Chomp's Bath", 523065, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
         Shine("Secret of the Village Underside", 523064,
               Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover], yoshi=True)),
-        Shine("Piantas in Need", 523065,
+        Shine("Piantas in Need", 523061,
               Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover], yoshi=True)),
         Shine("Shadow Mario Runs Wild", 523066,
               Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover], yoshi=True)),
@@ -523,7 +523,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Soak the Sun", 523069, Requirements([NozzleType.spray, NozzleType.hover], yoshi=True)),
         Shine("100 Coins", 523106, Requirements([NozzleType.spray, NozzleType.hover], yoshi=True), hundred=True)],
         [
-        BlueCoin("Giant M", 523420, Requirements([NozzleType.spray])),
+        BlueCoin("Giant M", 523430, Requirements([NozzleType.spray])),
         BlueCoin("River End", 523432),
         BlueCoin("Grass", 523433),
         BlueCoin("Back Tree", 523434, Requirements([NozzleType.hover])),

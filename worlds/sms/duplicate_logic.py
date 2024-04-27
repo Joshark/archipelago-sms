@@ -74,7 +74,8 @@ ALL_REGIONS: list[SmsRegion] = [
 
     # Delfino Plaza
     SmsRegion(INIT, PLAZA, normal=Requirements([NozzleType.splasher]), shines=[
-        Shine("Shine Sprite in the Sand", 523117, normal=Requirements([NozzleType.hover])),
+        Shine("Shine Sprite in the Sand", 523117, normal=Requirements([NozzleType.hover]),
+              hard=Requirements([NozzleType.splasher])),
         Shine("Clean the West Bell", 523096, Requirements([NozzleType.hover | NozzleType.rocket])),
         Shine("Super Slide", 523090, Requirements([NozzleType.hover | NozzleType.rocket])),
         Shine("The Gold Bird", 523118, Requirements([NozzleType.spray, NozzleType.hover])),
@@ -197,9 +198,9 @@ ALL_REGIONS: list[SmsRegion] = [
 
 
     # Ricco Harbor
-    SmsRegion("Ricco Entrance", "Ricco Harbor", Requirements([NozzleType.spray], shines=3), [
+    SmsRegion("Ricco Entrance", "Ricco Harbor", Requirements([NozzleType.spray], shines=3), shines=[
         Shine("100 Coins", 523101, Requirements([NozzleType.hover]), hundred=True)],
-        [
+        blue_coins=[
         BlueCoin("Tower Wall", 523221, Requirements([NozzleType.spray])),
         BlueCoin("Outer Ship M", 523222, Requirements([NozzleType.spray])),
         BlueCoin("Spawn Building Top M", 523223, Requirements([NozzleType.hover])),
@@ -219,17 +220,17 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Tower Crate", 523248)
     ], ticketed=True, parent_region=STATUE),
 
-    SmsRegion("Ricco 1 Only", RICCO, Requirements(), [
-        Shine("Gooper Blooper Breaks Out", 523010, Requirements([NozzleType.hover]))], [
+    SmsRegion("Ricco 1 Only", RICCO, Requirements(), shines=[
+        Shine("Gooper Blooper Breaks Out", 523010, Requirements([NozzleType.hover]))], blue_coins=[
         BlueCoin("Tower Ground M", 523227, Requirements([NozzleType.spray])),
         BlueCoin("Spawn Building Side M", 523241, Requirements([NozzleType.spray])),
         BlueCoin("Inner Ship M", 523246, Requirements([NozzleType.spray])),
         BlueCoin("Yellow Submarine", 523249, Requirements([NozzleType.spray]))
     ], parent_region="Ricco Entrance"),
 
-    SmsRegion("Ricco 2 Only", RICCO, Requirements(location="Ricco Harbor - Gooper Blooper Breaks Out"), [
+    SmsRegion("Ricco 2 Only", RICCO, Requirements(location="Ricco Harbor - Gooper Blooper Breaks Out"), shines=[
         Shine("Blooper Surfing Safari", 523011),
-        Shine("Blooper-Surfing Sequel", 523019)], [
+        Shine("Blooper-Surfing Sequel", 523019)], blue_coins=[
         BlueCoin("Blooper Underground Entrance", 523236)
     ], parent_region="Ricco 1 Only"),
 

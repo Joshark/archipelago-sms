@@ -241,3 +241,4 @@ Thumbs.db
 /setup.py
 *.apworld
 worlds/sms/test_bit_helper.py
+/worlds/fe8
