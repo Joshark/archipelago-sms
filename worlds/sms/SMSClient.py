@@ -7,8 +7,7 @@ from dataclasses import dataclass
 
 import ModuleUpdate
 from .options import SmsOptions
-from .bit_helper import change_endian, bit_flagger
-from .bit_helper import extract_bits
+from .bit_helper import change_endian, bit_flagger, extract_bits
 import dolphin_memory_engine as dme
 from . import addresses
 
@@ -47,13 +46,6 @@ class SmsCommandProcessor(ClientCommandProcessor):
         self.ctx.syncing = True
         refresh_collection_counts(self.ctx)
 
-    def _cmd_received(self) -> bool:
-        # for index, item in enumerate(self.ctx.items_received, 1):
-            # unpack_item(self.ctx.items_received[item.item], self.ctx)
-        return super()._cmd_received()
-
-    def force_resync(self):
-        self._cmd_resync()
 
 
 class SmsContext(CommonContext):
@@ -65,6 +57,9 @@ class SmsContext(CommonContext):
 
     hook_check = False
     hook_nagged = False
+
+    believe_hooked = False
+
     lives_given = 0
     lives_switch = False
 
@@ -93,16 +88,6 @@ class SmsContext(CommonContext):
             return [self.server]
         else:
             return []
-
-    def send_location_checks(self, check_ids):
-        # msg = self.send_msgs([{"cmd": "LocationChecks", "locations": [check_ids]}])
-        # loop = asyncio.get_event_loop()
-        # loop.run_until_complete(msg)
-        return
-
-    def force_resync(self):
-        # SmsCommandProcessor.force_resync(self.command_processor)
-        return
 
     def run_gui(self):
         """Import kivy UI system and start running it as self.ui_task."""
@@ -148,7 +133,6 @@ def game_start():
 
 async def game_watcher(ctx: SmsContext):
     while not ctx.exit_event.is_set():
-        if debug: logger.info("game_watcher tick")
 
         sync_msg = [{'cmd': 'Sync'}]
         if ctx.locations_checked:
@@ -179,6 +163,9 @@ async def game_watcher(ctx: SmsContext):
 
 async def location_watcher(ctx):
     def _sub():
+        if not dme.is_hooked():
+            return
+
         for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
             targ_location = addresses.SMS_SHINE_LOCATION_OFFSET + x
             cache_byte = dme.read_byte(targ_location)
@@ -187,7 +174,6 @@ async def location_watcher(ctx):
         if storedShines != curShines:
             memory_changed(ctx)
 
-        SmsContext.force_resync(ctx)
         return
 
     while not ctx.exit_event.is_set():
@@ -200,7 +186,10 @@ async def location_watcher(ctx):
 
 async def modify_nozzles(ctx):
     if debug_b: logger.info("disable nozzle was called")
-    while True:
+    while not ctx.exit_event.is_set:
+        if not dme.is_hooked():
+            continue
+
         if debug_b: logger.info("we're in the while loop")
 
         if ap_nozzles_received.__contains__("Hover Nozzle"):
@@ -273,12 +262,10 @@ def parse_bits(all_bits, ctx: SmsContext):
         if x <= 119:
             temp = x + location_offset
             ctx.locations_checked.add(temp)
-            ctx.send_location_checks(temp)
             if debug: logger.info("checks to send: " + str(temp))
         elif 119 < x < 549:
             temp = x + location_offset
             ctx.locations_checked.add(temp)
-            ctx.send_location_checks(temp)
         if x == 119:
             send_victory(ctx)
 
@@ -292,7 +279,8 @@ def get_shine_id(location, value):
 def refresh_item_count(ctx, item_id, targ_address):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
     temp = change_endian(counts[item_id])
-    dme.write_byte(targ_address, temp)
+    if dme.is_hooked():
+        dme.write_byte(targ_address, temp)
 
 
 def refresh_all_items(ctx: SmsContext):
@@ -337,18 +325,6 @@ def special_noki_handling():
     return
 
 
-def give_1_up(amt, ctx):
-    if amt <= ctx.lives_given:
-        return
-    elif ctx.lives_switch:
-        return
-    else:
-        val = dme.read_double(addresses.SMS_LIVES_COUNTER)
-        dme.write_double(addresses.SMS_LIVES_COUNTER, val+(amt-ctx.lives_given))
-        ctx.lives_given += amt
-    return
-
-
 def unpack_item(item, ctx, amt=0):
     if 522999 < item < 523004:
         activate_nozzle(item)
@@ -356,9 +332,6 @@ def unpack_item(item, ctx, amt=0):
         activate_yoshi()
     elif 523004 < item < 523011:
         activate_ticket(item)
-    elif item == 523012:
-        # give_1_up(amt, ctx)
-        return
 
 
 def nozzle_assignment():
@@ -410,11 +383,14 @@ def set_nozzle_assignment(nozzle_name):
 
 
 def disable_shadow_mario():
-    dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
+    if dme.is_hooked():
+        dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
 
 
 async def enforce_nozzles():
     while True:
+        if not dme.is_hooked():
+            return
         primary_nozzle, secondary_nozzle = nozzle_assignment()
         primary_id = set_nozzle_assignment(primary_nozzle)
         secondary_id = set_nozzle_assignment(secondary_nozzle)
@@ -452,6 +428,8 @@ def activate_ticket(id: int):
 def handle_ticket(tick: Ticket):
     if not tick.active:
         return
+    if not dme.is_hooked():
+        return
     if tick.item_name == "Noki Bay Ticket":
         special_noki_handling()
     open_stage(tick)
@@ -481,12 +459,16 @@ NOZZLES: list[NozzleItem] = [
 
 
 def extra_unlocks_needed():
+    if not dme.is_hooked():
+        return
     dme.write_byte(addresses.SMS_YOSHI_UNLOCK-1, 240)
     val = bit_flagger((dme.read_byte(addresses.SMS_YOSHI_UNLOCK)), 1, True)
     dme.write_byte(addresses.SMS_YOSHI_UNLOCK, val)
 
 
 def activate_nozzle(id):
+    if not dme.is_hooked():
+        return
     if id == 523001:
         if not ap_nozzles_received.__contains__("Hover Nozzle"):
             ap_nozzles_received.append("Hover Nozzle")
@@ -521,6 +503,8 @@ def activate_nozzle(id):
 
 
 def activate_yoshi():
+    if not dme.is_hooked():
+        return
     temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
     if temp < 130:
         dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 130)
@@ -555,6 +539,8 @@ async def handle_stages(ctx):
 
 
 async def qol_writes():
+    if not dme.is_hooked():
+        return
     dme.write_double(addresses.QOL_COIN_COUNT, addresses.QOL_NOP)
     dme.write_double(addresses.QOL_COIN_SAVE, addresses.QOL_NOP)
 
