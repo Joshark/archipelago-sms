@@ -18,6 +18,8 @@ def sms_requirements_satisfied(state: CollectionState, requirements: Requirement
         my_nozzles |= NozzleType.rocket
     if state.has("Turbo Nozzle", world.player):
         my_nozzles |= NozzleType.turbo
+    if state.has("Yoshi", world.player):
+        my_nozzles |= NozzleType.yoshi
 
     for req in requirements.nozzles:
         if my_nozzles & req == NozzleType(0):
