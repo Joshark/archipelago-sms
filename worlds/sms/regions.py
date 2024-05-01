@@ -31,9 +31,6 @@ def sms_requirements_satisfied(state: CollectionState, requirements: Requirement
     if requirements.blues is not None and not state.has("Blue Coin", world.player, requirements.blues):
         return False
 
-    if requirements.yoshi and not state.has("Yoshi", world.player):
-        return False
-
     if requirements.corona and not state.has("Shine Sprite", world.player, world.options.corona_mountain_shines.value):
         return False
 
