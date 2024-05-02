@@ -56,11 +56,16 @@ class TradeShineMaximum(Range):
     range_end = 24
     default = 12
 
-class SpraylessMode(Toggle):
+
+class StartingNozzle(Choice):
     """If on, you will start with no Spray Nozzle, and in fact, no FLUDD at all. (Still in non-enforce mode)
     You will skip directly to Delfino Plaza, and the first Airstrip mission will be removed from locations.
     In this early version of this setting, you are expected to spray unusual things with Hover."""
-    display_name = "Sprayless Mode"
+    display_name = "Starting Nozzle"
+    option_spray = 0
+    option_hover = 1
+    option_fluddless = 2
+    default = 0
 
 @dataclass
 class SmsOptions(PerGameCommonOptions):
@@ -70,4 +75,4 @@ class SmsOptions(PerGameCommonOptions):
     blue_coin_sanity: BlueCoinSanity
     blue_coin_maximum: BlueCoinMaximum
     trade_shine_maximum: TradeShineMaximum
-    sprayless_mode: SpraylessMode
+    starting_nozzle: StartingNozzle

@@ -10,6 +10,9 @@ if TYPE_CHECKING:
 
 
 def sms_requirements_satisfied(state: CollectionState, requirements: Requirements, world: "SmsWorld"):
+    if requirements.skip_into and world.options.starting_nozzle == 2:
+        return True
+
     my_nozzles: NozzleType = NozzleType.none
     if state.has("Spray Nozzle", world.player):
         my_nozzles |= NozzleType.spray
@@ -79,7 +82,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
                 continue
             coin_counter -= 10
             shine_limiter -= 1
-        if region.skipped and world.options.sprayless_mode:
+        if region.skipped and world.options.starting_nozzle == 2:
             continue
         new_location = SmsLocation(world.player, f"{region.display} - {shine.name}", shine.id, new_region)
         new_location.access_rule = make_shine_lambda(shine, world)

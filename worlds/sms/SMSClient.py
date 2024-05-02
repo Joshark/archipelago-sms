@@ -67,7 +67,7 @@ class SmsContext(CommonContext):
     goal = 50
     corona_message_given = False
     blue_status = 1
-    sprayless = False
+    fludd_start = 0
     victory = False
 
     def __init__(self, server_address, password):
@@ -109,9 +109,9 @@ class SmsContext(CommonContext):
             temp = slot_data.get("blue_coin_sanity")
             if temp:
                 self.blue_status = temp
-            temp = slot_data.get("sprayless_mode")
+            temp = slot_data.get("starting_nozzle")
             if temp:
-                self.sprayless = temp
+                self.fludd_start = temp
 
     def get_corona_goal(self):
         if self.goal:
@@ -528,7 +528,8 @@ async def handle_stages(ctx):
     while not ctx.exit_event.is_set():
         if dme.is_hooked():
             stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
-            if ctx.sprayless and stage == 0x00: # Airstrip 1
+            if ctx.fludd_start == 2 and stage == 0x00: # Airstrip 1 skip
+                open_stage(Ticket("Bianco Hills Ticket", 523005, 5, 0x805789f8))
                 dme.write_byte(addresses.SMS_NEXT_STAGE, 0x01)
             if stage == 0x01: # Delfino Plaza
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
