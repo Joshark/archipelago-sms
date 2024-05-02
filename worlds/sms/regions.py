@@ -79,7 +79,8 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
                 continue
             coin_counter -= 10
             shine_limiter -= 1
-
+        if region.skipped and world.options.sprayless_mode:
+            continue
         new_location = SmsLocation(world.player, f"{region.display} - {shine.name}", shine.id, new_region)
         new_location.access_rule = make_shine_lambda(shine, world)
         new_region.locations.append(new_location)
