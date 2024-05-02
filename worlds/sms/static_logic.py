@@ -15,6 +15,7 @@ PIANTA = "Pianta Village"
 CORONA = "Corona Mountain"
 
 class NozzleType(Flag):
+    none = auto()
     spray = auto()
     hover = auto()
     rocket = auto()
@@ -59,6 +60,7 @@ class SmsRegion(NamedTuple):
     blue_coins: list[BlueCoin] = []
     ticketed: bool = False
     trade: bool = False
+    skipped: bool = False
     parent_region: str = "Menu"
 
 
@@ -66,7 +68,7 @@ ALL_REGIONS: list[SmsRegion] = [
     # Delfino Airstrip
     SmsRegion(AIRSTRIP, AIRSTRIP, Requirements(), [
         Shine("Delfino Airstrip Dilemma", 523086, Requirements([NozzleType.splasher]))
-        ], []),
+        ], [], skipped=True),
 
 
     # Delfino Plaza

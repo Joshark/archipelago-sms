@@ -36,6 +36,10 @@ class SmsWorld(World):
     corona_goal = 50
     possible_shines = 0
 
+    def generate_early(self):
+        if not self.options.sprayless_mode:
+            self.options.start_inventory.value["Spray Nozzle"] = 1
+
     def create_regions(self):
         create_regions(self)
 
@@ -68,7 +72,8 @@ class SmsWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {"corona_mountain_shines": self.options.corona_mountain_shines.value,
-                "blue_coin_sanity": self.options.blue_coin_sanity.value}
+                "blue_coin_sanity": self.options.blue_coin_sanity.value,
+                "sprayless_mode": self.options.sprayless_mode.value}
 
 
 def launch_client():

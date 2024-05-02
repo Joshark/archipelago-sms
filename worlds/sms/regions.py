@@ -10,10 +10,13 @@ if TYPE_CHECKING:
 
 
 def sms_requirements_satisfied(state: CollectionState, requirements: Requirements, world: "SmsWorld"):
-    my_nozzles: NozzleType = NozzleType.spray
-    my_nozzles |= NozzleType.splasher
+    my_nozzles: NozzleType = NozzleType.none
+    if state.has("Spray Nozzle", world.player):
+        my_nozzles |= NozzleType.spray
+        my_nozzles |= NozzleType.splasher
     if state.has("Hover Nozzle", world.player):
         my_nozzles |= NozzleType.hover
+        my_nozzles |= NozzleType.splasher
     if state.has("Rocket Nozzle", world.player):
         my_nozzles |= NozzleType.rocket
     if state.has("Turbo Nozzle", world.player):

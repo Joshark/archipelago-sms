@@ -6,7 +6,7 @@ class SmsItem(Item):
 
 
 REGULAR_PROGRESSION_ITEMS: dict[str, int] = {
-    # "Spray Nozzle": 523000,
+    "Spray Nozzle": 523000,
     "Hover Nozzle": 523001,
     "Rocket Nozzle": 523002,
     "Turbo Nozzle": 523003,

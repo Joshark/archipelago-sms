@@ -19,7 +19,7 @@ from NetUtils import ClientStatus
 from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
     CommonContext, server_loop
 
-ap_nozzles_received = ["Spray Nozzle"]
+ap_nozzles_received = []
 in_game_nozzles_avail = ["Spray Nozzle", "Hover Nozzle", "Rocket Nozzle", "Turbo Nozzle"]
 world_flags = {}
 debug = False
@@ -47,7 +47,6 @@ class SmsCommandProcessor(ClientCommandProcessor):
         refresh_collection_counts(self.ctx)
 
 
-
 class SmsContext(CommonContext):
     command_processor: SmsCommandProcessor
     game = "Super Mario Sunshine"
@@ -68,6 +67,7 @@ class SmsContext(CommonContext):
     goal = 50
     corona_message_given = False
     blue_status = 1
+    sprayless = False
     victory = False
 
     def __init__(self, server_address, password):
@@ -109,6 +109,9 @@ class SmsContext(CommonContext):
             temp = slot_data.get("blue_coin_sanity")
             if temp:
                 self.blue_status = temp
+            temp = slot_data.get("sprayless_mode")
+            if temp:
+                self.sprayless = temp
 
     def get_corona_goal(self):
         if self.goal:
@@ -387,8 +390,8 @@ def disable_shadow_mario():
         dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
 
 
-async def enforce_nozzles():
-    while True:
+async def enforce_nozzles(ctx):
+    while not ctx.exit_event.is_set:
         if not dme.is_hooked():
             return
         primary_nozzle, secondary_nozzle = nozzle_assignment()
@@ -522,9 +525,11 @@ def activate_yoshi():
 
 
 async def handle_stages(ctx):
-    while True:
+    while not ctx.exit_event.is_set():
         if dme.is_hooked():
             stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
+            if ctx.sprayless and stage == 0x00: # Airstrip 1
+                dme.write_byte(addresses.SMS_NEXT_STAGE, 0x01)
             if stage == 0x01: # Delfino Plaza
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
                 if not episode == 0x01:
@@ -569,7 +574,7 @@ def main(connect= None, password= None):
             game_watcher(ctx), name="SmsProgressionWatcher")
         loc_watch = asyncio.create_task(location_watcher(ctx))
         # item_locker = asyncio.create_task(modify_nozzles(ctx))
-        # item_locker = asyncio.create_task(enforce_nozzles())
+        # item_locker = asyncio.create_task(enforce_nozzles(ctx))
         stage_watch = asyncio.create_task(handle_stages(ctx))
         # qol = asyncio.create_task(qol_writes())
 
