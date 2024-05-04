@@ -41,6 +41,7 @@ class Shine(NamedTuple):
     advanced: Requirements = Requirements()
     tears: Requirements = Requirements()
     hundred: bool = False
+    bandaid: bool = False
 
 
 class BlueCoin(NamedTuple):
@@ -321,7 +322,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Mecha-Bowser Appears!", 523030, Requirements([NozzleType.spray])),
         Shine("Red Coins of the Pirate Ships", 523032,
               Requirements([NozzleType.spray, NozzleType.hover])),
-        # Shine("The Wilted Sunflowers", 523033, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("The Wilted Sunflowers", 523033, Requirements([NozzleType.spray, NozzleType.hover]), bandaid=True),
         Shine("100 Coins", 523103, Requirements([NozzleType.spray]), hundred=True)],
         [
         BlueCoin("Tree Sand Shine", 523348, Requirements([NozzleType.spray])),

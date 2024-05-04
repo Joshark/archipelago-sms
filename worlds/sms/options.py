@@ -67,6 +67,17 @@ class StartingNozzle(Choice):
     option_fluddless = 2
     default = 0
 
+
+class YoshiMode(Choice):
+    """Due to an issue with Yoshi, by default Pinna Park 4 has to be skipped in order for the egg to appear
+    in every level when receiving the item.
+    Alternatively, you can opt to have the item only apply to Delfino Plaza (may have logic errors)."""
+    display_name = "Yoshi Mode"
+    option_plaza_only = 1
+    option_skip_pinna = 0
+    default = 0
+
+
 @dataclass
 class SmsOptions(PerGameCommonOptions):
     level_access: LevelAccess
@@ -76,3 +87,4 @@ class SmsOptions(PerGameCommonOptions):
     blue_coin_maximum: BlueCoinMaximum
     trade_shine_maximum: TradeShineMaximum
     starting_nozzle: StartingNozzle
+    yoshi_mode: YoshiMode

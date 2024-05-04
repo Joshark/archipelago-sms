@@ -75,7 +75,8 @@ class SmsWorld(World):
     def fill_slot_data(self) -> Dict[str, Any]:
         return {"corona_mountain_shines": self.options.corona_mountain_shines.value,
                 "blue_coin_sanity": self.options.blue_coin_sanity.value,
-                "starting_nozzle": self.options.starting_nozzle.value}
+                "starting_nozzle": self.options.starting_nozzle.value,
+                "yoshi_mode": self.options.yoshi_mode.value}
 
 
 def launch_client():
@@ -95,7 +96,7 @@ def add_client_to_launcher() -> None:
                 return
     if not found:
         components.append(Component("Super Mario Sunshine Client", "SMSClient",
-                                    func=launch_client, file_identifier='SMSClient.py'))
+                                    func=launch_client))
 
 
 add_client_to_launcher()

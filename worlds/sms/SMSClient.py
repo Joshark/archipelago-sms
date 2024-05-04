@@ -68,6 +68,7 @@ class SmsContext(CommonContext):
     corona_message_given = False
     blue_status = 1
     fludd_start = 0
+    yoshi_mode = 0
     victory = False
 
     def __init__(self, server_address, password):
@@ -112,6 +113,9 @@ class SmsContext(CommonContext):
             temp = slot_data.get("starting_nozzle")
             if temp:
                 self.fludd_start = temp
+            temp = slot_data.get("yoshi_mode")
+            if temp:
+                self.yoshi_mode = temp
 
     def get_corona_goal(self):
         if self.goal:
@@ -332,7 +336,7 @@ def unpack_item(item, ctx, amt=0):
     if 522999 < item < 523004:
         activate_nozzle(item)
     elif item == 523013:
-        activate_yoshi()
+        activate_yoshi(ctx)
     elif 523004 < item < 523011:
         activate_ticket(item)
 
@@ -505,16 +509,17 @@ def activate_nozzle(id):
     return
 
 
-def activate_yoshi():
+def activate_yoshi(ctx):
     if not dme.is_hooked():
         return
     temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
     if temp < 130:
         dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 130)
         # BEGIN YOSHI BANDAID
-    flag = dme.read_byte(0x8057898c)
-    new_flag = bit_flagger(flag, 1, True)
-    dme.write_byte(new_flag, 0x8057898c)
+    if ctx.yoshi_mode:
+        flag = dme.read_byte(0x8057898c)
+        new_flag = bit_flagger(flag, 1, True)
+        dme.write_byte(new_flag, 0x8057898c)
     # END YOSHI BANDAID
     extra_unlocks_needed()
 
@@ -537,9 +542,11 @@ async def handle_stages(ctx):
                     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
                     # BEGIN YOSHI BANDAID
             elif stage == 0x05: # Pinna Park
-                episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-                if episode == 0x03:
-                    dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
+                if ctx.yoshi_mode:
+                    episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+                    if episode == 0x03:
+                        dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
+                        dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
                     # END YOSHI BANDAID
         await asyncio.sleep(0.1)
 
