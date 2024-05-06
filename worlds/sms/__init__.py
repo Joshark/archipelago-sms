@@ -87,7 +87,7 @@ class SmsWorld(World):
                 "blue_coin_sanity": self.options.blue_coin_sanity.value,
                 "starting_nozzle": self.options.starting_nozzle.value,
                 "yoshi_mode": self.options.yoshi_mode.value,
-                "ticket_mode": self.options.level_access}
+                "ticket_mode": self.options.level_access.value}
 
 
 def launch_client():
