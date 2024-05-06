@@ -438,7 +438,7 @@ def activate_ticket(id: int):
             handle_ticket(tickets)
             if not ticket_listing.__contains__(tickets.item_name):
                 ticket_listing.append(tickets.item_name)
-                logger.info("Current Tickets: " + str(listing))
+                logger.info("Current Tickets: " + str(ticket_listing))
 
 
 def handle_ticket(tick: Ticket):
