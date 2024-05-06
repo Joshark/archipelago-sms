@@ -449,8 +449,12 @@ def handle_ticket(tick: Ticket):
 
 
 def refresh_all_tickets():
+    listing = []
     for tickets in TICKETS:
         handle_ticket(tickets)
+        listing.append(tickets.item_name)
+    logger.info("Current Tickets: " + str(listing))
+
 
 
 @dataclass
