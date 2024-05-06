@@ -538,8 +538,8 @@ def resolve_tickets(stage, ctx):
     for tick in TICKETS:
         if tick.course_id == stage and not tick.active:
             logger.info("Entering a stage without a ticket! Initiating bootout...")
-            dme.write_byte(addresses.SMS_NEXT_STAGE, 0)
-            dme.write_byte(addresses.SMS_CURRENT_STAGE, 0)
+            dme.write_byte(addresses.SMS_NEXT_STAGE, 1)
+            dme.write_byte(addresses.SMS_CURRENT_STAGE, 1)
     return
 
 
