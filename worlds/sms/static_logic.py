@@ -60,7 +60,7 @@ class SmsRegion(NamedTuple):
     requirements: Requirements = Requirements()
     shines: list[Shine] = []
     blue_coins: list[BlueCoin] = []
-    ticketed: bool = False
+    ticketed: str = ""
     trade: bool = False
     parent_region: str = "Menu"
     skipped: bool = False
@@ -137,7 +137,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("River End", 523191),
         BlueCoin("X Between Walls", 523197, Requirements([NozzleType.spray])),
         BlueCoin("Sail Platform", 523198, Requirements([NozzleType.hover]))
-    ], ticketed=True, parent_region=STATUE),
+    ], ticketed="Bianco Hills Ticket", parent_region=STATUE),
 
     SmsRegion("Bianco 3", BIANCO, Requirements(location="Bianco Hills - Down with Petey Piranha!"), [
         Shine("The Hillside Cave Secret", 523002,
@@ -212,7 +212,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Tower X", 523239, Requirements([NozzleType.spray])),
         BlueCoin("Fountain M", 523240, Requirements([NozzleType.spray])),
         BlueCoin("Tower Crate", 523248)
-    ], ticketed=True, parent_region=STATUE),
+    ], ticketed="Ricco Harbor Ticket", parent_region=STATUE),
 
     SmsRegion("Ricco 1 Only", RICCO, Requirements(), [
         Shine("Gooper Blooper Breaks Out", 523010, Requirements([NozzleType.hover]))], [
@@ -275,7 +275,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Crevice", 523291),
         BlueCoin("Sand Cabana Roof", 523293, Requirements([NozzleType.rocket])),
         BlueCoin("Shack", 523294)
-    ], ticketed=True),
+    ], ticketed="Gelato Beach Ticket"),
 
     SmsRegion("Gelato 1/2/4 Only", GELATO, Requirements(), [], [
         BlueCoin("Red Cataquack", 523270, Requirements([NozzleType.spray]))
@@ -327,7 +327,7 @@ ALL_REGIONS: list[SmsRegion] = [
         [
         BlueCoin("Tree Sand Shine", 523348, Requirements([NozzleType.spray])),
         BlueCoin("Cannon Sand Shine", 523349, Requirements([NozzleType.spray]))
-        ], ticketed=True, parent_region=STATUE),
+        ], ticketed="Pinna Park Ticket", parent_region=STATUE),
 
     SmsRegion("Pinna 1, 3 and 5-8", PINNA, Requirements(), [], [
         BlueCoin("Orange Wall M", 523320, Requirements([NozzleType.spray])),
@@ -387,7 +387,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("White Painting", 523380, Requirements([NozzleType.spray])),
         BlueCoin("Attic Boo", 523385),
         BlueCoin("Ocean", 523387)
-    ], ticketed=True, parent_region=STATUE),
+    ], ticketed="Sirena Beach Ticket", parent_region=STATUE),
 
     SmsRegion("Sirena 1 and 6", SIRENA, Requirements(), [], [
         BlueCoin("Right Male Noki", 523373, Requirements([NozzleType.spray])),
@@ -464,7 +464,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("A Golden Bird", 523059, Requirements([NozzleType.hover, NozzleType.spray])),
         Shine("Red Coins on the Half Shell", 523058, Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("100 Coins", 523105, Requirements([NozzleType.hover]), hundred=True)],
-        [], ticketed=False, parent_region=STATUE),
+        [], ticketed="Noki Bay Ticket", parent_region=STATUE),
 
     SmsRegion("Noki All Except 3", NOKI, Requirements(), [], [
         BlueCoin("Rocket Alcove", 523470, Requirements([NozzleType.hover | NozzleType.rocket])),
@@ -530,7 +530,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Right M", 523446, Requirements([NozzleType.spray])),
         BlueCoin("Spawn M", 523447, Requirements([NozzleType.spray])),
         BlueCoin("Underside M", 523448, Requirements([NozzleType.spray]))
-    ], ticketed=False, parent_region=STATUE),
+    ], ticketed="Pianta Village Ticket", parent_region=STATUE),
 
     SmsRegion("Pianta 1/3/5/7", PIANTA, Requirements(), [], [
         BlueCoin("Moon", 523420, Requirements([NozzleType.spray, NozzleType.hover])),

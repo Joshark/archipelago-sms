@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 
 def sms_requirements_satisfied(state: CollectionState, requirements: Requirements, world: "SmsWorld"):
+
     if requirements.skip_into and world.options.starting_nozzle == 2:
         return True
 
@@ -55,7 +56,10 @@ def sms_can_get_blue_coin(state: CollectionState, blue_coin: BlueCoin, world: "S
 
 
 def sms_can_use_entrance(state: CollectionState, region: SmsRegion, world: "SmsWorld"):
-    return sms_requirements_satisfied(state, region.requirements, world)
+    if region.ticketed and world.options.level_access == 1:
+        return state.has(region.ticketed, world.player)
+    else:
+        return sms_requirements_satisfied(state, region.requirements, world)
 
 
 def make_shine_lambda(shine: Shine, world: "SmsWorld"):
