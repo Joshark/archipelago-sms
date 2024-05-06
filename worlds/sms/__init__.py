@@ -1,13 +1,14 @@
 """
 Archipelago init file for Super Mario Sunshine
 """
+import random
 from typing import Dict, Any
 import os
 
 from BaseClasses import ItemClassification
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, components, launch_subprocess
-from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, SmsItem
+from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, TICKET_ITEMS, SmsItem
 from .locations import ALL_LOCATIONS_TABLE
 from .options import SmsOptions
 from .regions import create_regions
@@ -42,11 +43,18 @@ class SmsWorld(World):
         elif self.options.starting_nozzle.value == 1:
             self.options.start_inventory.value["Hover Nozzle"] = 1
 
+        if self.options.level_access.value == 1:
+            pick = random.choice([TICKET_ITEMS.keys()])
+            self.options.start_inventory.value[pick] = 1
+
     def create_regions(self):
         create_regions(self)
 
     def create_items(self):
         pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
+
+        if self.options.level_access == SmsOptions.level_access.option_tickets:
+            pool += [self.create_item(name) for name in TICKET_ITEMS.keys()]
 
         if self.options.blue_coin_sanity == "full_shuffle":
             for i in range(0, self.options.blue_coin_maximum):
@@ -76,7 +84,8 @@ class SmsWorld(World):
         return {"corona_mountain_shines": self.options.corona_mountain_shines.value,
                 "blue_coin_sanity": self.options.blue_coin_sanity.value,
                 "starting_nozzle": self.options.starting_nozzle.value,
-                "yoshi_mode": self.options.yoshi_mode.value}
+                "yoshi_mode": self.options.yoshi_mode.value,
+                "ticket_mode": self.options.level_access}
 
 
 def launch_client():

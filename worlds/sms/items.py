@@ -20,7 +20,7 @@ TICKET_ITEMS: dict[str, int] = {
     "Pinna Park Ticket": 523008,
     "Noki Bay Ticket": 523009,
     "Sirena Beach Ticket": 523010,
-    "Pianta Village Ticket": 523011,
+    "Pianta Village Ticket": 523011
 }
 
 ALL_PROGRESSION_ITEMS: dict[str, int] = {

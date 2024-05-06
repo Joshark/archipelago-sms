@@ -6,16 +6,15 @@ from Options import Choice, DefaultOnToggle, PerGameCommonOptions, Range, Toggle
 class LevelAccess(Choice):
     """If on "vanilla", the main levels are accessed in the way they are in the base game (e.g. Ricco Harbor is accessible after collecting 3 Shine Sprites).
     If on "tickets", each level has a ticket item that must be acquired to access the level.
-    CURRENTLY HARDCODED OFF."""
+    To reduce generation failures in testing, you'll automatically receive one free ticket at the start."""
     display_name = "Level Access"
     option_vanilla = 0
-#    option_tickets = 1
+    option_tickets = 1
 
 
 class EnableCoinShines(Toggle):
     """Turn off to ignore the 100 coin Shine Sprites, which removes 8 Shine Sprites from the pool.
-    You can still collect them, but they don't do anything.
-    CURRENTLY HARDCODED OFF due to the coin Gecko code issue."""
+    You can still collect them, but they don't do anything."""
     display_name = "Enable 100 Coin Shines"
 
 

@@ -69,6 +69,7 @@ class SmsContext(CommonContext):
     blue_status = 1
     fludd_start = 0
     yoshi_mode = 0
+    ticket_mode = False
     victory = False
 
     def __init__(self, server_address, password):
@@ -116,6 +117,9 @@ class SmsContext(CommonContext):
             temp = slot_data.get("yoshi_mode")
             if temp:
                 self.yoshi_mode = temp
+            temp = slot_data.get("ticket_mode")
+            if temp:
+                self.ticket_mode = temp
 
     def get_corona_goal(self):
         if self.goal:
@@ -410,18 +414,19 @@ class Ticket:
     item_name: str
     item_id: int
     bit_position: int
+    course_id: int
     address: int = 0x805789f8
     active: bool = False
 
 
 TICKETS: list[Ticket] = [
-    Ticket("Bianco Hills Ticket", 523005, 5, 0x805789f8),
-    Ticket("Ricco Harbor Ticket", 523006, 6, 0x805789f8),
-    Ticket("Gelato Beach Ticket", 523007, 7, 0x805789f8),
-    Ticket("Pinna Park Ticket", 523008, 1, 0x805789f9),
-    Ticket("Noki Bay Ticket", 523009, 3, 0x805789fd),
-    Ticket("Sirena Beach Ticket", 523010, 3, 0x805789f9),
-    Ticket("Corona Mountain Ticket", 999999, 6, 0x805789fd)
+    Ticket("Bianco Hills Ticket", 523005, 5, 2, 0x805789f8),
+    Ticket("Ricco Harbor Ticket", 523006, 6, 3, 0x805789f8),
+    Ticket("Gelato Beach Ticket", 523007, 7, 4, 0x805789f8),
+    Ticket("Pinna Park Ticket", 523008, 1, 5, 0x805789f9),
+    Ticket("Noki Bay Ticket", 523009, 3, 9, 0x805789fd),
+    Ticket("Sirena Beach Ticket", 523010, 3, 6, 0x805789f9),
+    Ticket("Corona Mountain Ticket", 999999, 6, 34, 0x805789fd)
 ]
 
 
@@ -529,13 +534,24 @@ def activate_yoshi(ctx):
     return
 
 
+def resolve_tickets(stage, ctx):
+    for tick in TICKETS:
+        if tick.course_id == stage and not tick.active:
+            logger.info("Entering a stage without a ticket! Initiating bootout...")
+            dme.write_byte(addresses.SMS_NEXT_STAGE, 0)
+            dme.write_byte(addresses.SMS_CURRENT_STAGE, 0)
+    return
+
+
 async def handle_stages(ctx):
     while not ctx.exit_event.is_set():
         if dme.is_hooked():
             stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
+
             if ctx.fludd_start == 2 and stage == 0x00: # Airstrip 1 skip
-                open_stage(Ticket("Bianco Hills Ticket", 523005, 5, 0x805789f8))
+                open_stage(Ticket("Bianco Hills Ticket", 523005, 5, 2, 0x805789f8))
                 dme.write_byte(addresses.SMS_NEXT_STAGE, 0x01)
+
             if stage == 0x01: # Delfino Plaza
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
                 if not episode == 0x01:
@@ -548,6 +564,8 @@ async def handle_stages(ctx):
                         dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
                         dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
                     # END YOSHI BANDAID
+            if ctx.ticket_mode:
+                resolve_tickets(stage, ctx)
         await asyncio.sleep(0.1)
 
 
