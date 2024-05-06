@@ -20,6 +20,7 @@ from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProc
     CommonContext, server_loop
 
 ap_nozzles_received = []
+ticket_listing = []
 in_game_nozzles_avail = ["Spray Nozzle", "Hover Nozzle", "Rocket Nozzle", "Turbo Nozzle"]
 world_flags = {}
 debug = False
@@ -435,6 +436,9 @@ def activate_ticket(id: int):
         if id == tickets.item_id:
             tickets.active = True
             handle_ticket(tickets)
+            if not ticket_listing.__contains__(tickets.item_name):
+                ticket_listing.append(tickets.item_name)
+                logger.info("Current Tickets: " + str(listing))
 
 
 def handle_ticket(tick: Ticket):
@@ -449,11 +453,8 @@ def handle_ticket(tick: Ticket):
 
 
 def refresh_all_tickets():
-    listing = []
     for tickets in TICKETS:
         handle_ticket(tickets)
-        listing.append(tickets.item_name)
-    logger.info("Current Tickets: " + str(listing))
 
 
 
@@ -552,12 +553,14 @@ async def handle_stages(ctx):
         if dme.is_hooked():
             stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
 
-            if ctx.fludd_start == 2 and stage == 0x00: # Airstrip 1 skip
+            if ctx.fludd_start == 2 and stage == 0x00 and ctx.ticket_mode == 0: # Airstrip 1 skip
                 open_stage(Ticket("Bianco Hills Ticket", 523005, 5, 2, 0x805789f8))
                 dme.write_byte(addresses.SMS_NEXT_STAGE, 0x01)
 
             if stage == 0x01: # Delfino Plaza
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+                if episode == 0x00 and ctx.ticket_mode == 1:
+                    dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x6)
                 if not episode == 0x01:
                     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
                     # BEGIN YOSHI BANDAID
