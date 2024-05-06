@@ -44,8 +44,10 @@ class SmsWorld(World):
             self.options.start_inventory.value["Hover Nozzle"] = 1
 
         if self.options.level_access.value == 1:
-            pick = random.choice([TICKET_ITEMS.keys()])
-            self.options.start_inventory.value[pick] = 1
+            pick = random.choice(list(TICKET_ITEMS.keys()))
+            tick = str(pick)
+            print(tick)
+            self.options.start_inventory.value[tick] = 1
 
     def create_regions(self):
         create_regions(self)
@@ -53,7 +55,7 @@ class SmsWorld(World):
     def create_items(self):
         pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
 
-        if self.options.level_access == SmsOptions.level_access.option_tickets:
+        if self.options.level_access == 1:
             pool += [self.create_item(name) for name in TICKET_ITEMS.keys()]
 
         if self.options.blue_coin_sanity == "full_shuffle":
