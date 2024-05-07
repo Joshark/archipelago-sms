@@ -1,13 +1,14 @@
 """
 Archipelago init file for Super Mario Sunshine
 """
+import random
 from typing import Dict, Any
 import os
 
 from BaseClasses import ItemClassification
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, components, launch_subprocess
-from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, SmsItem
+from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, TICKET_ITEMS, SmsItem
 from .locations import ALL_LOCATIONS_TABLE
 from .options import SmsOptions
 from .regions import create_regions
@@ -36,11 +37,26 @@ class SmsWorld(World):
     corona_goal = 50
     possible_shines = 0
 
+    def generate_early(self):
+        if self.options.starting_nozzle.value == 0:
+            self.options.start_inventory.value["Spray Nozzle"] = 1
+        elif self.options.starting_nozzle.value == 1:
+            self.options.start_inventory.value["Hover Nozzle"] = 1
+
+        if self.options.level_access.value == 1:
+            pick = random.choice(list(TICKET_ITEMS.keys()))
+            tick = str(pick)
+            print(tick)
+            self.options.start_inventory.value[tick] = 1
+
     def create_regions(self):
         create_regions(self)
 
     def create_items(self):
         pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
+
+        if self.options.level_access == 1:
+            pool += [self.create_item(name) for name in TICKET_ITEMS.keys()]
 
         if self.options.blue_coin_sanity == "full_shuffle":
             for i in range(0, self.options.blue_coin_maximum):
@@ -68,7 +84,10 @@ class SmsWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {"corona_mountain_shines": self.options.corona_mountain_shines.value,
-                "blue_coin_sanity": self.options.blue_coin_sanity.value}
+                "blue_coin_sanity": self.options.blue_coin_sanity.value,
+                "starting_nozzle": self.options.starting_nozzle.value,
+                "yoshi_mode": self.options.yoshi_mode.value,
+                "ticket_mode": self.options.level_access.value}
 
 
 def launch_client():
@@ -88,7 +107,7 @@ def add_client_to_launcher() -> None:
                 return
     if not found:
         components.append(Component("Super Mario Sunshine Client", "SMSClient",
-                                    func=launch_client, file_identifier='SMSClient.py'))
+                                    func=launch_client))
 
 
 add_client_to_launcher()

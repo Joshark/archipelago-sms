@@ -10,10 +10,17 @@ if TYPE_CHECKING:
 
 
 def sms_requirements_satisfied(state: CollectionState, requirements: Requirements, world: "SmsWorld"):
-    my_nozzles: NozzleType = NozzleType.spray
-    my_nozzles |= NozzleType.splasher
+
+    if requirements.skip_into and world.options.starting_nozzle == 2:
+        return True
+
+    my_nozzles: NozzleType = NozzleType.none
+    if state.has("Spray Nozzle", world.player):
+        my_nozzles |= NozzleType.spray
+        my_nozzles |= NozzleType.splasher
     if state.has("Hover Nozzle", world.player):
         my_nozzles |= NozzleType.hover
+        my_nozzles |= NozzleType.splasher
     if state.has("Rocket Nozzle", world.player):
         my_nozzles |= NozzleType.rocket
     if state.has("Turbo Nozzle", world.player):
@@ -49,7 +56,10 @@ def sms_can_get_blue_coin(state: CollectionState, blue_coin: BlueCoin, world: "S
 
 
 def sms_can_use_entrance(state: CollectionState, region: SmsRegion, world: "SmsWorld"):
-    return sms_requirements_satisfied(state, region.requirements, world)
+    if region.ticketed and world.options.level_access == 1:
+        return state.has(region.ticketed, world.player)
+    else:
+        return sms_requirements_satisfied(state, region.requirements, world)
 
 
 def make_shine_lambda(shine: Shine, world: "SmsWorld"):
@@ -76,7 +86,8 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
                 continue
             coin_counter -= 10
             shine_limiter -= 1
-
+        if region.skipped and world.options.starting_nozzle == 2:
+            continue
         new_location = SmsLocation(world.player, f"{region.display} - {shine.name}", shine.id, new_region)
         new_location.access_rule = make_shine_lambda(shine, world)
         new_region.locations.append(new_location)

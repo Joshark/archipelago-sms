@@ -7,8 +7,7 @@ from dataclasses import dataclass
 
 import ModuleUpdate
 from .options import SmsOptions
-from .bit_helper import change_endian, bit_flagger
-from .bit_helper import extract_bits
+from .bit_helper import change_endian, bit_flagger, extract_bits
 import dolphin_memory_engine as dme
 from . import addresses
 
@@ -20,7 +19,8 @@ from NetUtils import ClientStatus
 from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
     CommonContext, server_loop
 
-ap_nozzles_received = ["Spray Nozzle"]
+ap_nozzles_received = []
+ticket_listing = []
 in_game_nozzles_avail = ["Spray Nozzle", "Hover Nozzle", "Rocket Nozzle", "Turbo Nozzle"]
 world_flags = {}
 debug = False
@@ -47,14 +47,6 @@ class SmsCommandProcessor(ClientCommandProcessor):
         self.ctx.syncing = True
         refresh_collection_counts(self.ctx)
 
-    def _cmd_received(self) -> bool:
-        # for index, item in enumerate(self.ctx.items_received, 1):
-            # unpack_item(self.ctx.items_received[item.item], self.ctx)
-        return super()._cmd_received()
-
-    def force_resync(self):
-        self._cmd_resync()
-
 
 class SmsContext(CommonContext):
     command_processor: SmsCommandProcessor
@@ -65,6 +57,9 @@ class SmsContext(CommonContext):
 
     hook_check = False
     hook_nagged = False
+
+    believe_hooked = False
+
     lives_given = 0
     lives_switch = False
 
@@ -73,6 +68,9 @@ class SmsContext(CommonContext):
     goal = 50
     corona_message_given = False
     blue_status = 1
+    fludd_start = 0
+    yoshi_mode = 0
+    ticket_mode = False
     victory = False
 
     def __init__(self, server_address, password):
@@ -94,16 +92,6 @@ class SmsContext(CommonContext):
         else:
             return []
 
-    def send_location_checks(self, check_ids):
-        # msg = self.send_msgs([{"cmd": "LocationChecks", "locations": [check_ids]}])
-        # loop = asyncio.get_event_loop()
-        # loop.run_until_complete(msg)
-        return
-
-    def force_resync(self):
-        # SmsCommandProcessor.force_resync(self.command_processor)
-        return
-
     def run_gui(self):
         """Import kivy UI system and start running it as self.ui_task."""
         from kvui import GameManager
@@ -124,6 +112,15 @@ class SmsContext(CommonContext):
             temp = slot_data.get("blue_coin_sanity")
             if temp:
                 self.blue_status = temp
+            temp = slot_data.get("starting_nozzle")
+            if temp:
+                self.fludd_start = temp
+            temp = slot_data.get("yoshi_mode")
+            if temp:
+                self.yoshi_mode = temp
+            temp = slot_data.get("ticket_mode")
+            if temp:
+                self.ticket_mode = temp
 
     def get_corona_goal(self):
         if self.goal:
@@ -148,7 +145,6 @@ def game_start():
 
 async def game_watcher(ctx: SmsContext):
     while not ctx.exit_event.is_set():
-        if debug: logger.info("game_watcher tick")
 
         sync_msg = [{'cmd': 'Sync'}]
         if ctx.locations_checked:
@@ -179,6 +175,9 @@ async def game_watcher(ctx: SmsContext):
 
 async def location_watcher(ctx):
     def _sub():
+        if not dme.is_hooked():
+            return
+
         for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
             targ_location = addresses.SMS_SHINE_LOCATION_OFFSET + x
             cache_byte = dme.read_byte(targ_location)
@@ -187,7 +186,6 @@ async def location_watcher(ctx):
         if storedShines != curShines:
             memory_changed(ctx)
 
-        SmsContext.force_resync(ctx)
         return
 
     while not ctx.exit_event.is_set():
@@ -200,7 +198,10 @@ async def location_watcher(ctx):
 
 async def modify_nozzles(ctx):
     if debug_b: logger.info("disable nozzle was called")
-    while True:
+    while not ctx.exit_event.is_set:
+        if not dme.is_hooked():
+            continue
+
         if debug_b: logger.info("we're in the while loop")
 
         if ap_nozzles_received.__contains__("Hover Nozzle"):
@@ -273,12 +274,10 @@ def parse_bits(all_bits, ctx: SmsContext):
         if x <= 119:
             temp = x + location_offset
             ctx.locations_checked.add(temp)
-            ctx.send_location_checks(temp)
             if debug: logger.info("checks to send: " + str(temp))
         elif 119 < x < 549:
             temp = x + location_offset
             ctx.locations_checked.add(temp)
-            ctx.send_location_checks(temp)
         if x == 119:
             send_victory(ctx)
 
@@ -292,7 +291,8 @@ def get_shine_id(location, value):
 def refresh_item_count(ctx, item_id, targ_address):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
     temp = change_endian(counts[item_id])
-    dme.write_byte(targ_address, temp)
+    if dme.is_hooked():
+        dme.write_byte(targ_address, temp)
 
 
 def refresh_all_items(ctx: SmsContext):
@@ -337,28 +337,13 @@ def special_noki_handling():
     return
 
 
-def give_1_up(amt, ctx):
-    if amt <= ctx.lives_given:
-        return
-    elif ctx.lives_switch:
-        return
-    else:
-        val = dme.read_double(addresses.SMS_LIVES_COUNTER)
-        dme.write_double(addresses.SMS_LIVES_COUNTER, val+(amt-ctx.lives_given))
-        ctx.lives_given += amt
-    return
-
-
 def unpack_item(item, ctx, amt=0):
     if 522999 < item < 523004:
         activate_nozzle(item)
     elif item == 523013:
-        activate_yoshi()
+        activate_yoshi(ctx)
     elif 523004 < item < 523011:
         activate_ticket(item)
-    elif item == 523012:
-        # give_1_up(amt, ctx)
-        return
 
 
 def nozzle_assignment():
@@ -410,11 +395,14 @@ def set_nozzle_assignment(nozzle_name):
 
 
 def disable_shadow_mario():
-    dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
+    if dme.is_hooked():
+        dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
 
 
-async def enforce_nozzles():
-    while True:
+async def enforce_nozzles(ctx):
+    while not ctx.exit_event.is_set:
+        if not dme.is_hooked():
+            return
         primary_nozzle, secondary_nozzle = nozzle_assignment()
         primary_id = set_nozzle_assignment(primary_nozzle)
         secondary_id = set_nozzle_assignment(secondary_nozzle)
@@ -427,18 +415,19 @@ class Ticket:
     item_name: str
     item_id: int
     bit_position: int
+    course_id: int
     address: int = 0x805789f8
     active: bool = False
 
 
 TICKETS: list[Ticket] = [
-    Ticket("Bianco Hills Ticket", 523005, 5, 0x805789f8),
-    Ticket("Ricco Harbor Ticket", 523006, 6, 0x805789f8),
-    Ticket("Gelato Beach Ticket", 523007, 7, 0x805789f8),
-    Ticket("Pinna Park Ticket", 523008, 1, 0x805789f9),
-    Ticket("Noki Bay Ticket", 523009, 3, 0x805789fd),
-    Ticket("Sirena Beach Ticket", 523010, 3, 0x805789f9),
-    Ticket("Corona Mountain Ticket", 999999, 6, 0x805789fd)
+    Ticket("Bianco Hills Ticket", 523005, 5, 2, 0x805789f8),
+    Ticket("Ricco Harbor Ticket", 523006, 6, 3, 0x805789f8),
+    Ticket("Gelato Beach Ticket", 523007, 7, 4, 0x805789f8),
+    Ticket("Pinna Park Ticket", 523008, 1, 5, 0x805789f9),
+    Ticket("Noki Bay Ticket", 523009, 3, 9, 0x805789fd),
+    Ticket("Sirena Beach Ticket", 523010, 3, 6, 0x805789f9),
+    Ticket("Corona Mountain Ticket", 999999, 6, 34, 0x805789fd)
 ]
 
 
@@ -447,10 +436,15 @@ def activate_ticket(id: int):
         if id == tickets.item_id:
             tickets.active = True
             handle_ticket(tickets)
+            if not ticket_listing.__contains__(tickets.item_name):
+                ticket_listing.append(tickets.item_name)
+                logger.info("Current Tickets: " + str(ticket_listing))
 
 
 def handle_ticket(tick: Ticket):
     if not tick.active:
+        return
+    if not dme.is_hooked():
         return
     if tick.item_name == "Noki Bay Ticket":
         special_noki_handling()
@@ -461,6 +455,7 @@ def handle_ticket(tick: Ticket):
 def refresh_all_tickets():
     for tickets in TICKETS:
         handle_ticket(tickets)
+
 
 
 @dataclass
@@ -481,12 +476,16 @@ NOZZLES: list[NozzleItem] = [
 
 
 def extra_unlocks_needed():
+    if not dme.is_hooked():
+        return
     dme.write_byte(addresses.SMS_YOSHI_UNLOCK-1, 240)
     val = bit_flagger((dme.read_byte(addresses.SMS_YOSHI_UNLOCK)), 1, True)
     dme.write_byte(addresses.SMS_YOSHI_UNLOCK, val)
 
 
 def activate_nozzle(id):
+    if not dme.is_hooked():
+        return
     if id == 523001:
         if not ap_nozzles_received.__contains__("Hover Nozzle"):
             ap_nozzles_received.append("Hover Nozzle")
@@ -520,14 +519,17 @@ def activate_nozzle(id):
     return
 
 
-def activate_yoshi():
+def activate_yoshi(ctx):
+    if not dme.is_hooked():
+        return
     temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
     if temp < 130:
         dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 130)
         # BEGIN YOSHI BANDAID
-    flag = dme.read_byte(0x8057898c)
-    new_flag = bit_flagger(flag, 1, True)
-    dme.write_byte(new_flag, 0x8057898c)
+    if ctx.yoshi_mode:
+        flag = dme.read_byte(0x8057898c)
+        new_flag = bit_flagger(flag, 1, True)
+        dme.write_byte(new_flag, 0x8057898c)
     # END YOSHI BANDAID
     extra_unlocks_needed()
 
@@ -537,24 +539,46 @@ def activate_yoshi():
     return
 
 
+def resolve_tickets(stage, ctx):
+    for tick in TICKETS:
+        if tick.course_id == stage and not tick.active:
+            logger.info("Entering a stage without a ticket! Initiating bootout...")
+            dme.write_byte(addresses.SMS_NEXT_STAGE, 1)
+            dme.write_byte(addresses.SMS_CURRENT_STAGE, 1)
+    return
+
+
 async def handle_stages(ctx):
-    while True:
+    while not ctx.exit_event.is_set():
         if dme.is_hooked():
             stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
+
+            if ctx.fludd_start == 2 and stage == 0x00 and ctx.ticket_mode == 0: # Airstrip 1 skip
+                open_stage(Ticket("Bianco Hills Ticket", 523005, 5, 2, 0x805789f8))
+                dme.write_byte(addresses.SMS_NEXT_STAGE, 0x01)
+
             if stage == 0x01: # Delfino Plaza
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+                if episode == 0x00 and ctx.ticket_mode == 1:
+                    dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x6)
                 if not episode == 0x01:
                     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
                     # BEGIN YOSHI BANDAID
             elif stage == 0x05: # Pinna Park
-                episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-                if episode == 0x03:
-                    dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
+                if ctx.yoshi_mode:
+                    episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+                    if episode == 0x03:
+                        dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
+                        dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
                     # END YOSHI BANDAID
+            if ctx.ticket_mode:
+                resolve_tickets(stage, ctx)
         await asyncio.sleep(0.1)
 
 
 async def qol_writes():
+    if not dme.is_hooked():
+        return
     dme.write_double(addresses.QOL_COIN_COUNT, addresses.QOL_NOP)
     dme.write_double(addresses.QOL_COIN_SAVE, addresses.QOL_NOP)
 
@@ -583,7 +607,7 @@ def main(connect= None, password= None):
             game_watcher(ctx), name="SmsProgressionWatcher")
         loc_watch = asyncio.create_task(location_watcher(ctx))
         # item_locker = asyncio.create_task(modify_nozzles(ctx))
-        # item_locker = asyncio.create_task(enforce_nozzles())
+        # item_locker = asyncio.create_task(enforce_nozzles(ctx))
         stage_watch = asyncio.create_task(handle_stages(ctx))
         # qol = asyncio.create_task(qol_writes())
 

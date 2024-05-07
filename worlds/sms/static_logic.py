@@ -15,6 +15,7 @@ PIANTA = "Pianta Village"
 CORONA = "Corona Mountain"
 
 class NozzleType(Flag):
+    none = auto()
     spray = auto()
     hover = auto()
     rocket = auto()
@@ -29,6 +30,7 @@ class Requirements(NamedTuple):
     corona: bool = False  # is corona access needed (configurable)
     blues: int = 0
     location: str = ""
+    skip_into: bool = False
 
 
 class Shine(NamedTuple):
@@ -39,6 +41,7 @@ class Shine(NamedTuple):
     advanced: Requirements = Requirements()
     tears: Requirements = Requirements()
     hundred: bool = False
+    bandaid: bool = False
 
 
 class BlueCoin(NamedTuple):
@@ -57,20 +60,21 @@ class SmsRegion(NamedTuple):
     requirements: Requirements = Requirements()
     shines: list[Shine] = []
     blue_coins: list[BlueCoin] = []
-    ticketed: bool = False
+    ticketed: str = ""
     trade: bool = False
     parent_region: str = "Menu"
+    skipped: bool = False
 
 
 ALL_REGIONS: list[SmsRegion] = [
     # Delfino Airstrip
     SmsRegion(AIRSTRIP, AIRSTRIP, Requirements(), [
         Shine("Delfino Airstrip Dilemma", 523086, Requirements([NozzleType.splasher]))
-        ], []),
+        ], [], skipped=True),
 
 
     # Delfino Plaza
-    SmsRegion(INIT, PLAZA, Requirements([NozzleType.splasher]), [
+    SmsRegion(INIT, PLAZA, Requirements([NozzleType.splasher], skip_into=True), [
         Shine("Shine Sprite in the Sand", 523117, Requirements([NozzleType.hover])),
         Shine("Clean the West Bell", 523096, Requirements([NozzleType.hover | NozzleType.rocket])),
         Shine("Super Slide", 523090, Requirements([NozzleType.hover | NozzleType.rocket])),
@@ -100,7 +104,7 @@ ALL_REGIONS: list[SmsRegion] = [
     ],
         parent_region=AIRSTRIP),
 
-    SmsRegion(STATUE, PLAZA, Requirements([NozzleType.splasher]), [
+    SmsRegion(STATUE, PLAZA, Requirements([NozzleType.splasher], skip_into=True), [
         Shine("Boxing Clever 1", 523094),
         Shine("Boxing Clever 2", 523095),
         Shine("Chuckster", 523098),
@@ -115,7 +119,7 @@ ALL_REGIONS: list[SmsRegion] = [
 
 
     # Bianco Hills
-    SmsRegion("Bianco Entrance", BIANCO, Requirements([NozzleType.spray]), [
+    SmsRegion("Bianco Entrance", BIANCO, Requirements([NozzleType.spray], skip_into=True), [
         Shine("Road to the Big Windmill", 523000, Requirements([NozzleType.splasher])),
         Shine("Down with Petey Piranha!", 523001,
               Requirements([NozzleType.spray, NozzleType.hover])),
@@ -133,7 +137,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("River End", 523191),
         BlueCoin("X Between Walls", 523197, Requirements([NozzleType.spray])),
         BlueCoin("Sail Platform", 523198, Requirements([NozzleType.hover]))
-    ], ticketed=True, parent_region=STATUE),
+    ], ticketed="Bianco Hills Ticket", parent_region=STATUE),
 
     SmsRegion("Bianco 3", BIANCO, Requirements(location="Bianco Hills - Down with Petey Piranha!"), [
         Shine("The Hillside Cave Secret", 523002,
@@ -208,7 +212,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Tower X", 523239, Requirements([NozzleType.spray])),
         BlueCoin("Fountain M", 523240, Requirements([NozzleType.spray])),
         BlueCoin("Tower Crate", 523248)
-    ], ticketed=True, parent_region=STATUE),
+    ], ticketed="Ricco Harbor Ticket", parent_region=STATUE),
 
     SmsRegion("Ricco 1 Only", RICCO, Requirements(), [
         Shine("Gooper Blooper Breaks Out", 523010, Requirements([NozzleType.hover]))], [
@@ -271,7 +275,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Crevice", 523291),
         BlueCoin("Sand Cabana Roof", 523293, Requirements([NozzleType.rocket])),
         BlueCoin("Shack", 523294)
-    ], ticketed=True),
+    ], ticketed="Gelato Beach Ticket"),
 
     SmsRegion("Gelato 1/2/4 Only", GELATO, Requirements(), [], [
         BlueCoin("Red Cataquack", 523270, Requirements([NozzleType.spray]))
@@ -318,12 +322,12 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Mecha-Bowser Appears!", 523030, Requirements([NozzleType.spray])),
         Shine("Red Coins of the Pirate Ships", 523032,
               Requirements([NozzleType.spray, NozzleType.hover])),
-        # Shine("The Wilted Sunflowers", 523033, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("The Wilted Sunflowers", 523033, Requirements([NozzleType.spray, NozzleType.hover]), bandaid=True),
         Shine("100 Coins", 523103, Requirements([NozzleType.spray]), hundred=True)],
         [
         BlueCoin("Tree Sand Shine", 523348, Requirements([NozzleType.spray])),
         BlueCoin("Cannon Sand Shine", 523349, Requirements([NozzleType.spray]))
-        ], ticketed=True, parent_region=STATUE),
+        ], ticketed="Pinna Park Ticket", parent_region=STATUE),
 
     SmsRegion("Pinna 1, 3 and 5-8", PINNA, Requirements(), [], [
         BlueCoin("Orange Wall M", 523320, Requirements([NozzleType.spray])),
@@ -383,7 +387,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("White Painting", 523380, Requirements([NozzleType.spray])),
         BlueCoin("Attic Boo", 523385),
         BlueCoin("Ocean", 523387)
-    ], ticketed=True, parent_region=STATUE),
+    ], ticketed="Sirena Beach Ticket", parent_region=STATUE),
 
     SmsRegion("Sirena 1 and 6", SIRENA, Requirements(), [], [
         BlueCoin("Right Male Noki", 523373, Requirements([NozzleType.spray])),
@@ -460,7 +464,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("A Golden Bird", 523059, Requirements([NozzleType.hover, NozzleType.spray])),
         Shine("Red Coins on the Half Shell", 523058, Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("100 Coins", 523105, Requirements([NozzleType.hover]), hundred=True)],
-        [], ticketed=False, parent_region=STATUE),
+        [], ticketed="Noki Bay Ticket", parent_region=STATUE),
 
     SmsRegion("Noki All Except 3", NOKI, Requirements(), [], [
         BlueCoin("Rocket Alcove", 523470, Requirements([NozzleType.hover | NozzleType.rocket])),
@@ -526,19 +530,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Right M", 523446, Requirements([NozzleType.spray])),
         BlueCoin("Spawn M", 523447, Requirements([NozzleType.spray])),
         BlueCoin("Underside M", 523448, Requirements([NozzleType.spray]))
-    ], ticketed=False, parent_region=STATUE),
-
-    SmsRegion("Pianta 5 and Beyond", PIANTA, Requirements([NozzleType.yoshi]), [
-        Shine("Secret of the Village Underside", 523064,
-              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover, NozzleType.yoshi])),
-        Shine("Piantas in Need", 523061,
-              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
-        Shine("Shadow Mario Runs Wild", 523066,
-              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
-        Shine("Fluff Festival Coin Hunt", 523067,
-              Requirements([NozzleType.spray, NozzleType.rocket])),
-        Shine("Red Coin Chucksters", 523068,
-              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover]))], parent_region="Pianta 5 Only"),
+    ], ticketed="Pianta Village Ticket", parent_region=STATUE),
 
     SmsRegion("Pianta 1/3/5/7", PIANTA, Requirements(), [], [
         BlueCoin("Moon", 523420, Requirements([NozzleType.spray, NozzleType.hover])),
@@ -559,6 +551,18 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Front Beehive", 523437, Requirements([NozzleType.yoshi])),
         BlueCoin("Butterflies", 523440, Requirements([NozzleType.yoshi]))
     ], parent_region="Pianta 3 Only"),
+
+    SmsRegion("Pianta 5 and Beyond", PIANTA, Requirements([NozzleType.yoshi]), [
+        Shine("Secret of the Village Underside", 523064,
+              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover, NozzleType.yoshi])),
+        Shine("Piantas in Need", 523061,
+              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
+        Shine("Shadow Mario Runs Wild", 523066,
+              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
+        Shine("Fluff Festival Coin Hunt", 523067,
+              Requirements([NozzleType.spray, NozzleType.rocket])),
+        Shine("Red Coin Chucksters", 523068,
+              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover]))], parent_region="Pianta 5 Only"),
 
     SmsRegion("Pianta 6 Only", PIANTA, Requirements(location="Pianta Village - Secret of the Village Underside"), [], [
         BlueCoin("Pianta in Need A", 523421, Requirements([NozzleType.spray])),
