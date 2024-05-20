@@ -19,7 +19,9 @@ class NozzleType(Flag):
     spray = auto()
     hover = auto()
     rocket = auto()
+    nobox_rocket = auto()
     turbo = auto()
+    nobox_turbo = auto()
     yoshi = auto()
     splasher = auto()  # Customizable generic, for things that are intended for spray but can be hit with others
 
