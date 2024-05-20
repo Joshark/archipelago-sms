@@ -26,6 +26,8 @@ world_flags = {}
 debug = False
 debug_b = False
 
+game_ver = 0x3a
+
 
 class SmsCommandProcessor(ClientCommandProcessor):
 
@@ -196,28 +198,12 @@ async def location_watcher(ctx):
         await asyncio.sleep(delaySeconds)
 
 
-async def modify_nozzles(ctx):
-    if debug_b: logger.info("disable nozzle was called")
-    while not ctx.exit_event.is_set:
-        if not dme.is_hooked():
-            continue
-
-        if debug_b: logger.info("we're in the while loop")
-
-        if ap_nozzles_received.__contains__("Hover Nozzle"):
-            if debug_b: logger.info("hover nozzle open??")
-            dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_NOZZLE_RELEASE))
-        elif ap_nozzles_received.__contains__("Rocket Nozzle"):
-            if debug_b: logger.info("rocket nozzle write")
-            dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_ROCKET_NOZZLE_VALUE))
-        elif ap_nozzles_received.__contains__("Turbo Nozzle"):
-            if debug_b: logger.info("turbo nozzle write")
-            dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_TURBO_NOZZLE_VALUE))
-
-        if not (("Hover Nozzle" in ap_nozzles_received) or ("Rocket Nozzle" in ap_nozzles_received) or ("Turbo Nozzle" in ap_nozzles_received)):
-            if debug_b: logger.info("reached spray nozzle write")
-            dme.write_bytes(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, bytes.fromhex(addresses.SMS_SPRAY_NOZZLE_VALUE))
-        await asyncio.sleep(0.1)
+async def arbitrary_ram_checks(ctx):
+    if not dme.is_hooked():
+        return
+    for noz in NOZZLES:
+        if ap_nozzles_received.__contains__(noz.nozzle_name):
+            dme.write_byte(noz.arb_address+0x3, 0x1)
 
 
 def memory_changed(ctx: SmsContext):
@@ -346,68 +332,9 @@ def unpack_item(item, ctx, amt=0):
         activate_ticket(item)
 
 
-def nozzle_assignment():
-    primary_nozzle = "None"
-    secondary_nozzle = "None"
-    if in_game_nozzles_avail.__contains__("Spray Nozzle"):
-        if ap_nozzles_received.__contains__("Spray Nozzle"):
-            primary_nozzle = "Spray Nozzle"
-
-    if in_game_nozzles_avail.__contains__("Hover Nozzle"):
-        if ap_nozzles_received.__contains__("Hover Nozzle"):
-            secondary_nozzle = "Hover Nozzle"
-        else:
-            secondary_nozzle = primary_nozzle
-
-    if in_game_nozzles_avail.__contains__("Rocket Nozzle"):
-        if ap_nozzles_received.__contains__("Rocket Nozzle"):
-            secondary_nozzle = "Rocket Nozzle"
-        elif ap_nozzles_received.__contains__("Hover Nozzle"):
-            secondary_nozzle = "Hover Nozzle"
-        else:
-            secondary_nozzle = primary_nozzle
-
-    if in_game_nozzles_avail.__contains__("Turbo Nozzle"):
-        if ap_nozzles_received.__contains__("Turbo Nozzle"):
-            secondary_nozzle = "Turbo Nozzle"
-        elif ap_nozzles_received.__contains__("Hover Nozzle"):
-            secondary_nozzle = "Hover Nozzle"
-        else:
-            secondary_nozzle = primary_nozzle
-
-    if not ap_nozzles_received.__contains__("Spray Nozzle"):
-        primary_nozzle = secondary_nozzle
-
-    return [primary_nozzle, secondary_nozzle]
-
-
-def set_nozzle_assignment(nozzle_name):
-    assign_id = "0"
-    if nozzle_name == "Spray Nozzle":
-        assign_id = addresses.SMS_SPRAY_NOZZLE_VALUE
-    elif nozzle_name == "Hover Nozzle":
-        assign_id = addresses.SMS_HOVER_NOZZLE_VALUE
-    elif nozzle_name == "Rocket Nozzle":
-        assign_id = addresses.SMS_ROCKET_NOZZLE_VALUE
-    elif nozzle_name == "Turbo Nozzle":
-        assign_id = addresses.SMS_TURBO_NOZZLE_VALUE
-    return assign_id
-
-
 def disable_shadow_mario():
     if dme.is_hooked():
         dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
-
-
-async def enforce_nozzles(ctx):
-    while not ctx.exit_event.is_set:
-        if not dme.is_hooked():
-            return
-        primary_nozzle, secondary_nozzle = nozzle_assignment()
-        primary_id = set_nozzle_assignment(primary_nozzle)
-        secondary_id = set_nozzle_assignment(secondary_nozzle)
-        dme.write_double(addresses.SMS_PRIMARY_NOZZLE_ADDRESS, primary_id)
-        dme.write_double(addresses.SMS_SECONDARY_NOZZLE_ADDRESS, secondary_id)
 
 
 @dataclass
@@ -462,16 +389,15 @@ def refresh_all_tickets():
 class NozzleItem:
     nozzle_name: str
     ap_item_id: int
-    unlock_address: int
-    unlock_value: str
+    arb_address: int
 
 
 NOZZLES: list[NozzleItem] = [
-    NozzleItem("Spray Nozzle", 523000, 0, "none"),
-    NozzleItem("Hover Nozzle", 523001, 0x80294438, "unknown"),
-    NozzleItem("Rocket Nozzle", 523002, 0x8029443C, "38600001"),
-    NozzleItem("Turbo Nozzle", 523003, 0x80294440, "4E800020"),
-    NozzleItem("Yoshi", 53013, 0, "none")
+    NozzleItem("Spray Nozzle", 523000, addresses.ARB_SPRAY_ENABLER),
+    NozzleItem("Hover Nozzle", 523001, addresses.ARB_HOVER_ENABLER),
+    NozzleItem("Rocket Nozzle", 523002, addresses.ARB_ROCKET_ENABLER),
+    NozzleItem("Turbo Nozzle", 523003, addresses.ARB_TURBO_ENABLER),
+    NozzleItem("Yoshi", 53013, 0)
 ]
 
 
@@ -486,6 +412,10 @@ def extra_unlocks_needed():
 def activate_nozzle(id):
     if not dme.is_hooked():
         return
+    if id == 523000:
+        if not ap_nozzles_received.__contains__("Spray Nozzle"):
+            ap_nozzles_received.append("Spray Nozzle")
+            logger.info(str(ap_nozzles_received))
     if id == 523001:
         if not ap_nozzles_received.__contains__("Hover Nozzle"):
             ap_nozzles_received.append("Hover Nozzle")
@@ -499,22 +429,12 @@ def activate_nozzle(id):
         if not ap_nozzles_received.__contains__("Rocket Nozzle"):
             ap_nozzles_received.append("Rocket Nozzle")
             logger.info(str(ap_nozzles_received))
-        if ap_nozzles_received.__contains__("Turbo Nozzle"):
-            dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_TOTAL_VALUE))
-        else:
-            dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_ROCKET_VALUE))
-        extra_unlocks_needed()
         # rocket nozzle
     if id == 523003:
 
         if not ap_nozzles_received.__contains__("Turbo Nozzle"):
             ap_nozzles_received.append("Turbo Nozzle")
             logger.info(str(ap_nozzles_received))
-        if ap_nozzles_received.__contains__("Rocket Nozzle"):
-            dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_TOTAL_VALUE))
-        else:
-            dme.write_bytes(addresses.NEW_NOZZLE_UNLOCK, bytes.fromhex(addresses.NEW_TURBO_VALUE))
-        extra_unlocks_needed()
         # turbo nozzle
     return
 
@@ -576,18 +496,6 @@ async def handle_stages(ctx):
         await asyncio.sleep(0.1)
 
 
-async def qol_writes():
-    if not dme.is_hooked():
-        return
-    dme.write_double(addresses.QOL_COIN_COUNT, addresses.QOL_NOP)
-    dme.write_double(addresses.QOL_COIN_SAVE, addresses.QOL_NOP)
-
-    dme.write_double(addresses.QOL_CUTSCENE_A, addresses.QOL_CUTSCENE_VAL)
-    dme.write_double(addresses.QOL_CUTSCENE_B, addresses.QOL_CUTSCENE_VAL)
-
-    dme.write_double(addresses.QOL_HP_METER, addresses.QOL_NOP)
-
-
 def main(connect= None, password= None):
     Utils.init_logging("SMSClient", exception_logger="Client")
 
@@ -603,19 +511,16 @@ def main(connect= None, password= None):
         if dme.is_hooked():
             logger.info("Hooked to Dolphin!")
 
+        arbitrary = asyncio.create_task(arbitrary_ram_checks(ctx))
         progression_watcher = asyncio.create_task(
             game_watcher(ctx), name="SmsProgressionWatcher")
         loc_watch = asyncio.create_task(location_watcher(ctx))
-        # item_locker = asyncio.create_task(modify_nozzles(ctx))
-        # item_locker = asyncio.create_task(enforce_nozzles(ctx))
         stage_watch = asyncio.create_task(handle_stages(ctx))
-        # qol = asyncio.create_task(qol_writes())
 
         await progression_watcher
         await loc_watch
-        # await item_locker
         await stage_watch
-        # await qol
+        await arbitrary
         await asyncio.sleep(.25)
 
         await ctx.exit_event.wait()
