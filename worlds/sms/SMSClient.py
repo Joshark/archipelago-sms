@@ -201,6 +201,8 @@ async def location_watcher(ctx):
 async def arbitrary_ram_checks(ctx):
     if not dme.is_hooked():
         return
+    if len(ap_nozzles_received)>0:
+        dme.write_byte(addresses.ARB_FLUDD_ENABLER+3, 0x1)
     for noz in NOZZLES:
         if ap_nozzles_received.__contains__(noz.nozzle_name):
             dme.write_byte(noz.arb_address+0x3, 0x1)
@@ -430,7 +432,6 @@ def activate_nozzle(id):
             logger.info(str(ap_nozzles_received))
         # rocket nozzle
     if id == 523003:
-
         if not ap_nozzles_received.__contains__("Turbo Nozzle"):
             ap_nozzles_received.append("Turbo Nozzle")
             logger.info(str(ap_nozzles_received))
