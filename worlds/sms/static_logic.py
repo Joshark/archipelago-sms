@@ -582,7 +582,7 @@ ALL_REGIONS: list[SmsRegion] = [
     ], parent_region="Pianta 6 Only"),
 
     # Corona Mountain
-    SmsRegion("Corona Mountain", "Corona Mountain", Requirements([NozzleType.spray, NozzleType.hover, NozzleType.rocket], corona=True),
+    SmsRegion("Corona Mountain", "Corona Mountain", Requirements([NozzleType.spray, NozzleType.hover], corona=True),
               [], [
         BlueCoin("Platform", 523540, Requirements([NozzleType.hover])),
         BlueCoin("Back Right Lava", 523541, Requirements([NozzleType.spray, NozzleType.hover])),

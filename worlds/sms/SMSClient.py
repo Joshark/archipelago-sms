@@ -287,11 +287,10 @@ def refresh_all_items(ctx: SmsContext):
         if counts[items] > 0:
             unpack_item(items, ctx, counts[items])
     if counts[523004] >= ctx.get_corona_goal():
-        if counts[523002] > 0:
-            activate_ticket(999999)
-            if not ctx.corona_message_given:
-                logger.info("Corona Mountain requirements reached! Reload Delfino Plaza to unlock.")
-                ctx.corona_message_given = True
+        activate_ticket(999999)
+        if not ctx.corona_message_given:
+            logger.info("Corona Mountain requirements reached! Reload Delfino Plaza to unlock.")
+            ctx.corona_message_given = True
 
 
 def refresh_collection_counts(ctx):
