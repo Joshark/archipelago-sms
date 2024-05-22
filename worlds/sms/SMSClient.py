@@ -19,14 +19,28 @@ from NetUtils import ClientStatus
 from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
     CommonContext, server_loop
 
-ap_nozzles_received = []
 ticket_listing = []
-in_game_nozzles_avail = ["Spray Nozzle", "Hover Nozzle", "Rocket Nozzle", "Turbo Nozzle"]
 world_flags = {}
 debug = False
 debug_b = False
 
 game_ver = 0x3a
+
+
+@dataclass
+class NozzleItem:
+    nozzle_name: str
+    ap_item_id: int
+    arb_address: int
+
+
+NOZZLES: list[NozzleItem] = [
+    NozzleItem("Spray Nozzle", 523000, addresses.ARB_SPRAY_ENABLER),
+    NozzleItem("Hover Nozzle", 523001, addresses.ARB_HOVER_ENABLER),
+    NozzleItem("Rocket Nozzle", 523002, addresses.ARB_ROCKET_ENABLER),
+    NozzleItem("Turbo Nozzle", 523003, addresses.ARB_TURBO_ENABLER),
+    NozzleItem("Yoshi", 53013, 0)
+]
 
 
 class SmsCommandProcessor(ClientCommandProcessor):
@@ -74,6 +88,8 @@ class SmsContext(CommonContext):
     yoshi_mode = 0
     ticket_mode = False
     victory = False
+
+    ap_nozzles_received = []
 
     def __init__(self, server_address, password):
         super(SmsContext, self).__init__(server_address, password)
@@ -199,13 +215,14 @@ async def location_watcher(ctx):
 
 
 async def arbitrary_ram_checks(ctx):
-    if not dme.is_hooked():
-        return
-    if len(ap_nozzles_received)>0:
-        dme.write_byte(addresses.ARB_FLUDD_ENABLER+3, 0x1)
-    for noz in NOZZLES:
-        if ap_nozzles_received.__contains__(noz.nozzle_name):
-            dme.write_byte(noz.arb_address+0x3, 0x1)
+    while dme.is_hooked():
+        for noz in ctx.ap_nozzles_received:
+            if noz == 4:
+                return
+            item = NOZZLES[noz]
+            dme.write_byte(item.arb_address+0x3, 0x1)
+            dme.write_byte(addresses.ARB_FLUDD_ENABLER + 0x3, 0x1)
+        await asyncio.sleep(delaySeconds)
 
 
 def memory_changed(ctx: SmsContext):
@@ -326,7 +343,7 @@ def special_noki_handling():
 
 def unpack_item(item, ctx, amt=0):
     if 522999 < item < 523004:
-        activate_nozzle(item)
+        activate_nozzle(item, ctx)
     elif item == 523013:
         activate_yoshi(ctx)
     elif 523004 < item < 523011:
@@ -385,23 +402,6 @@ def refresh_all_tickets():
         handle_ticket(tickets)
 
 
-
-@dataclass
-class NozzleItem:
-    nozzle_name: str
-    ap_item_id: int
-    arb_address: int
-
-
-NOZZLES: list[NozzleItem] = [
-    NozzleItem("Spray Nozzle", 523000, addresses.ARB_SPRAY_ENABLER),
-    NozzleItem("Hover Nozzle", 523001, addresses.ARB_HOVER_ENABLER),
-    NozzleItem("Rocket Nozzle", 523002, addresses.ARB_ROCKET_ENABLER),
-    NozzleItem("Turbo Nozzle", 523003, addresses.ARB_TURBO_ENABLER),
-    NozzleItem("Yoshi", 53013, 0)
-]
-
-
 def extra_unlocks_needed():
     if not dme.is_hooked():
         return
@@ -410,31 +410,31 @@ def extra_unlocks_needed():
     dme.write_byte(addresses.SMS_YOSHI_UNLOCK, val)
 
 
-def activate_nozzle(id):
+def activate_nozzle(id, ctx):
     if not dme.is_hooked():
         return
     if id == 523000:
-        if not ap_nozzles_received.__contains__("Spray Nozzle"):
-            ap_nozzles_received.append("Spray Nozzle")
-            logger.info(str(ap_nozzles_received))
+        if not ctx.ap_nozzles_received.__contains__(0):
+            ctx.ap_nozzles_received.append(0)
+            logger.info(str(ctx.ap_nozzles_received))
     if id == 523001:
-        if not ap_nozzles_received.__contains__("Hover Nozzle"):
-            ap_nozzles_received.append("Hover Nozzle")
-            logger.info(str(ap_nozzles_received))
+        if not ctx.ap_nozzles_received.__contains__(1):
+            ctx.ap_nozzles_received.append(1)
+            logger.info(str(ctx.ap_nozzles_received))
     if id == 523013:
         temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
         if temp < 2:
             dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 2)
         extra_unlocks_needed()
     if id == 523002:
-        if not ap_nozzles_received.__contains__("Rocket Nozzle"):
-            ap_nozzles_received.append("Rocket Nozzle")
-            logger.info(str(ap_nozzles_received))
+        if not ctx.ap_nozzles_received.__contains__(2):
+            ctx.ap_nozzles_received.append(2)
+            logger.info(str(ctx.ap_nozzles_received))
         # rocket nozzle
     if id == 523003:
-        if not ap_nozzles_received.__contains__("Turbo Nozzle"):
-            ap_nozzles_received.append("Turbo Nozzle")
-            logger.info(str(ap_nozzles_received))
+        if not ctx.ap_nozzles_received.__contains__(3):
+            ctx.ap_nozzles_received.append(3)
+            logger.info(str(ctx.ap_nozzles_received))
         # turbo nozzle
     return
 
@@ -453,9 +453,9 @@ def activate_yoshi(ctx):
     # END YOSHI BANDAID
     extra_unlocks_needed()
 
-    if not ap_nozzles_received.__contains__("Yoshi"):
-        ap_nozzles_received.append("Yoshi")
-        logger.info(str(ap_nozzles_received))
+    if not ctx.ap_nozzles_received.__contains__(4):
+        ctx.ap_nozzles_received.append(4)
+        logger.info(str(ctx.ap_nozzles_received))
     return
 
 
@@ -511,11 +511,11 @@ def main(connect= None, password= None):
         if dme.is_hooked():
             logger.info("Hooked to Dolphin!")
 
-        arbitrary = asyncio.create_task(arbitrary_ram_checks(ctx))
         progression_watcher = asyncio.create_task(
             game_watcher(ctx), name="SmsProgressionWatcher")
         loc_watch = asyncio.create_task(location_watcher(ctx))
         stage_watch = asyncio.create_task(handle_stages(ctx))
+        arbitrary = asyncio.create_task(arbitrary_ram_checks(ctx))
 
         await progression_watcher
         await loc_watch
