@@ -79,6 +79,8 @@ class SmsContext(CommonContext):
     lives_given = 0
     lives_switch = False
 
+    plaza_episode = 0
+
     yoshi_check = False
 
     goal = 50
@@ -217,11 +219,10 @@ async def location_watcher(ctx):
 async def arbitrary_ram_checks(ctx):
     while dme.is_hooked():
         for noz in ctx.ap_nozzles_received:
-            if noz == 4:
-                return
-            item = NOZZLES[noz]
-            dme.write_byte(item.arb_address+0x3, 0x1)
-            dme.write_byte(addresses.ARB_FLUDD_ENABLER + 0x3, 0x1)
+            if noz < 4:
+                item = NOZZLES[noz]
+                dme.write_byte(item.arb_address+0x3, 0x1)
+                dme.write_byte(addresses.ARB_FLUDD_ENABLER + 0x3, 0x1)
         await asyncio.sleep(delaySeconds)
 
 
@@ -416,11 +417,10 @@ def activate_nozzle(id, ctx):
     if id == 523000:
         if not ctx.ap_nozzles_received.__contains__(0):
             ctx.ap_nozzles_received.append(0)
-            logger.info(str(ctx.ap_nozzles_received))
     if id == 523001:
         if not ctx.ap_nozzles_received.__contains__(1):
             ctx.ap_nozzles_received.append(1)
-            logger.info(str(ctx.ap_nozzles_received))
+
     if id == 523013:
         temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
         if temp < 2:
@@ -429,12 +429,10 @@ def activate_nozzle(id, ctx):
     if id == 523002:
         if not ctx.ap_nozzles_received.__contains__(2):
             ctx.ap_nozzles_received.append(2)
-            logger.info(str(ctx.ap_nozzles_received))
         # rocket nozzle
     if id == 523003:
         if not ctx.ap_nozzles_received.__contains__(3):
             ctx.ap_nozzles_received.append(3)
-            logger.info(str(ctx.ap_nozzles_received))
         # turbo nozzle
     return
 
@@ -455,7 +453,6 @@ def activate_yoshi(ctx):
 
     if not ctx.ap_nozzles_received.__contains__(4):
         ctx.ap_nozzles_received.append(4)
-        logger.info(str(ctx.ap_nozzles_received))
     return
 
 
@@ -465,6 +462,8 @@ def resolve_tickets(stage, ctx):
             logger.info("Entering a stage without a ticket! Initiating bootout...")
             dme.write_byte(addresses.SMS_NEXT_STAGE, 1)
             dme.write_byte(addresses.SMS_CURRENT_STAGE, 1)
+            dme.write_byte(addresses.SMS_NEXT_STAGE, ctx.plaza_episode)
+            dme.write_byte(addresses.SMS_CURRENT_STAGE, ctx.plaza_episode)
     return
 
 
@@ -479,6 +478,7 @@ async def handle_stages(ctx):
 
             if stage == 0x01: # Delfino Plaza
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+                ctx.plaza_episode = episode
                 if episode == 0x00 and ctx.ticket_mode == 1:
                     dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x6)
                 if not episode == 0x01:
