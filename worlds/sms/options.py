@@ -72,8 +72,8 @@ class YoshiMode(Choice):
     in every level when receiving the item.
     Alternatively, you can opt to have the item only apply to Delfino Plaza (may have logic errors)."""
     display_name = "Yoshi Mode"
-    option_plaza_only = 1
-    option_skip_pinna = 0
+    option_plaza_only = 0
+    option_skip_pinna = 1
     default = 0
 
 
