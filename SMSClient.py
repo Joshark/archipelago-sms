@@ -21,10 +21,6 @@ from NetUtils import ClientStatus
 from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
     CommonContext, server_loop
 
-# This is the address that holds the player's slot name.
-# This way, the player does not have to manually authenticate their slot name.
-SLOT_NAME_ADDR = 0x803FE8A0
-
 CONNECTION_REFUSED_GAME_STATUS = (
     "Dolphin failed to connect. Please load a randomized ROM for Super Mario Sunshine. Trying again in 5 seconds..."
 )
@@ -49,15 +45,14 @@ game_ver = 0x3a
 class NozzleItem:
     nozzle_name: str
     ap_item_id: int
-    arb_address: int
 
 
 NOZZLES: list[NozzleItem] = [
-    NozzleItem("Spray Nozzle", 523000, addresses.ARB_SPRAY_ENABLER),
-    NozzleItem("Hover Nozzle", 523001, addresses.ARB_HOVER_ENABLER),
-    NozzleItem("Rocket Nozzle", 523002, addresses.ARB_ROCKET_ENABLER),
-    NozzleItem("Turbo Nozzle", 523003, addresses.ARB_TURBO_ENABLER),
-    NozzleItem("Yoshi", 53013, 0)
+    NozzleItem("Spray Nozzle", 523000),
+    NozzleItem("Hover Nozzle", 523001),
+    NozzleItem("Rocket Nozzle", 523002),
+    NozzleItem("Turbo Nozzle", 523003),
+    NozzleItem("Yoshi", 53013)
 ]
 
 
@@ -186,23 +181,13 @@ async def game_watcher(ctx: SmsContext):
             sync_msg.append({"cmd": "LocationChecks", "locations": list(ctx.locations_checked)})
         await ctx.send_msgs(sync_msg)
 
-        refresh_collection_counts(ctx)
+        if dme.is_hooked():
+            refresh_collection_counts(ctx)
         ctx.lives_switch = True
 
         if ctx.victory and not ctx.finished_game:
             await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
             ctx.finished_game = True
-        # if not ctx.hook_check:
-        #     if not ctx.hook_nagged:
-        #         logger.info("Checking Dolphin hookup...")
-        #     dme.hook()
-        #     if dme.is_hooked():
-        #         logger.info("Hooked to Dolphin!")
-        #         ctx.hook_check = True
-        #     elif not ctx.hook_nagged:
-        #         logger.info(
-        #             "Please connect to Dolphin (may have issues, default is to start game before opening client).")
-        #         ctx.hook_nagged = True
 
         await asyncio.sleep(0.2)
         ctx.lives_switch = False
@@ -241,8 +226,6 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                 #     # await check_current_stage_changed(ctx)
                 #     # self._cmd_resync()
                 # else:
-                if not ctx.auth:
-                    ctx.auth = read_string(SLOT_NAME_ADDR, 0x40)
                 if ctx.awaiting_rom:
                     await ctx.server_auth()
                 await asyncio.sleep(0.1)
@@ -280,12 +263,17 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
         
 
 async def arbitrary_ram_checks(ctx):
+    bit = 1
+    activated_bits = dme.read_byte(addresses.ARB_NOZZLES_ENABLER)
+
     while dme.is_hooked():
         for noz in ctx.ap_nozzles_received:
             if noz < 4:
-                item = NOZZLES[noz]
-                dme.write_byte(item.arb_address+0x3, 0x1)
-                dme.write_byte(addresses.ARB_FLUDD_ENABLER + 0x3, 0x1)
+                logger.info(noz)
+                bit <<= noz
+                activated_bits |= bit
+                dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
+                dme.write_byte(addresses.ARB_FLUDD_ENABLER, 0x1)
         await asyncio.sleep(delaySeconds)
 
 
@@ -360,8 +348,7 @@ def get_shine_id(location, value):
 def refresh_item_count(ctx, item_id, targ_address):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
     temp = change_endian(counts[item_id])
-    if dme.is_hooked():
-        dme.write_byte(targ_address, temp)
+    dme.write_byte(targ_address, temp)
 
 
 def refresh_all_items(ctx: SmsContext):
@@ -454,8 +441,6 @@ def activate_ticket(id: int):
 def handle_ticket(tick: Ticket):
     if not tick.active:
         return
-    if not dme.is_hooked():
-        return
     if tick.item_name == "Noki Bay Ticket":
         special_noki_handling()
     open_stage(tick)
@@ -476,8 +461,6 @@ def extra_unlocks_needed():
 
 
 def activate_nozzle(id, ctx):
-    if not dme.is_hooked():
-        return
     if id == 523000:
         if not ctx.ap_nozzles_received.__contains__(0):
             ctx.ap_nozzles_received.append(0)
@@ -502,16 +485,14 @@ def activate_nozzle(id, ctx):
 
 
 def activate_yoshi(ctx):
-    if not dme.is_hooked():
-        return
     temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
     if temp < 130:
-        dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 130)
+        dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 0x80)
         # BEGIN YOSHI BANDAID
     if ctx.yoshi_mode:
         flag = dme.read_byte(0x8057898c)
         new_flag = bit_flagger(flag, 1, True)
-        dme.write_byte(new_flag, 0x8057898c)
+        dme.write_byte(0x8057898c, new_flag)
     # END YOSHI BANDAID
     extra_unlocks_needed()
 
@@ -526,8 +507,8 @@ def resolve_tickets(stage, ctx):
             logger.info("Entering a stage without a ticket! Initiating bootout...")
             # Byte 1 should correspond to Delfino Plaza
             dme.write_byte(addresses.SMS_NEXT_STAGE, 1)
-            dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
-            #dme.write_byte(addresses.SMS_CURRENT_STAGE, 1)
+            #dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
+            dme.write_byte(addresses.SMS_CURRENT_STAGE, 1)
             #dme.write_byte(addresses.SMS_CURRENT_STAGE, ctx.plaza_episode)
     return
 
@@ -536,6 +517,7 @@ async def handle_stages(ctx):
     while not ctx.exit_event.is_set():
         if dme.is_hooked():
             stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
+            cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
             if ctx.fludd_start == 2 and stage == 0x00: # Airstrip 1 skip
                 dme.write_byte(addresses.SMS_NEXT_STAGE, 0x01)
                 #if ctx.ticket_mode == 1:
@@ -556,7 +538,7 @@ async def handle_stages(ctx):
                         dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
                         #dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
                     # END YOSHI BANDAID
-            if ctx.ticket_mode:
+            if ctx.ticket_mode and cur_stage != stage:
                 resolve_tickets(stage, ctx)
         await asyncio.sleep(0.1)
 
