@@ -44,9 +44,7 @@ class SmsWorld(World):
             self.options.start_inventory.value["Hover Nozzle"] = 1
 
         if self.options.level_access.value == 1:
-            #pick = random.choice(list(TICKET_ITEMS.keys()))
-            pick = list(TICKET_ITEMS.keys())
-            pick = pick[4]
+            pick = random.choice(list(TICKET_ITEMS.keys()))
             tick = str(pick)
             print(tick)
             self.options.start_inventory.value[tick] = 1

@@ -101,8 +101,8 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Police Station Yellow Goo", 523135, Requirements([NozzleType.yoshi])),
         BlueCoin("Shine Gate Sewer", 523136),
         BlueCoin("Canal Sewer", 523137),
-        BlueCoin("Blue Bird Near Sirena Pipe", 523138, Requirements([NozzleType.spray])),
-        BlueCoin("Blue Bird Near Crate Guy", 523139, Requirements([NozzleType.spray]))
+        BlueCoin("Blue Bird Near Sirena Pipe", 523138, Requirements([NozzleType.spray | NozzleType.yoshi])),
+        BlueCoin("Blue Bird Near Crate Guy", 523139, Requirements([NozzleType.spray | NozzleType.yoshi]))
     ],
         parent_region=AIRSTRIP),
 
@@ -121,11 +121,11 @@ ALL_REGIONS: list[SmsRegion] = [
 
 
     # Bianco Hills
-    SmsRegion("Bianco Entrance", BIANCO, Requirements([NozzleType.spray], skip_into=True), [
+    SmsRegion("Bianco Entrance", BIANCO, Requirements([NozzleType.spray]), [
         Shine("Road to the Big Windmill", 523000, Requirements([NozzleType.splasher])),
         Shine("Down with Petey Piranha!", 523001,
               Requirements([NozzleType.spray, NozzleType.hover])),
-        Shine("100 Coins", 523100, Requirements([NozzleType.spray, NozzleType.hover]), hundred=True)], [
+        Shine("100 Coins", 523100, Requirements([NozzleType.yoshi, NozzleType.spray, NozzleType.hover]), hundred=True)], [
         BlueCoin("Windmill M", 523170, Requirements([NozzleType.hover])),
         BlueCoin("Windmill Pillar", 523171, Requirements([NozzleType.spray])),
         BlueCoin("Towers House M", 523188, Requirements([NozzleType.spray])),
@@ -162,7 +162,7 @@ ALL_REGIONS: list[SmsRegion] = [
 
     SmsRegion("Bianco 5", BIANCO, Requirements(location="Bianco Hills - Red Coins of Windmill Village"), [
         Shine("Petey Piranha Strikes Back", 523004,
-              Requirements([NozzleType.spray, NozzleType.rocket])),], [
+              Requirements([NozzleType.spray])),], [
         BlueCoin("Wall Tower Pianta", 523177, Requirements([NozzleType.hover])),
         BlueCoin("Platforms Cross", 523185, Requirements([NozzleType.hover | NozzleType.rocket]))
     ], parent_region="Bianco 4"),
@@ -201,7 +201,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Outer Ship M", 523222, Requirements([NozzleType.spray])),
         BlueCoin("Spawn Building Top M", 523223, Requirements([NozzleType.hover])),
         BlueCoin("Fruit Machine X", 523224, Requirements([NozzleType.spray])),
-        BlueCoin("Rooftop M", 523226, Requirements([NozzleType.spray])),
+        BlueCoin("Rooftop M", 523226, Requirements([NozzleType.spray | NozzleType.hover])),
         BlueCoin("Far Ledge", 523228, Requirements([NozzleType.spray, NozzleType.rocket])),
         BlueCoin("Short Beam", 523229, Requirements([NozzleType.hover])),
         BlueCoin("Tower Platform", 523230, Requirements([NozzleType.hover])),
@@ -261,7 +261,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Wiggler Ahoy! Full Steam Ahead!", 523022, Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("Red Coins in the Sand Castle", 523028, Requirements([NozzleType.hover])),
         Shine("Sandy Shine Sprite", 523029, Requirements([NozzleType.splasher])),
-        Shine("100 Coins", 523102, Requirements([NozzleType.spray | NozzleType.hover]), hundred=True)],
+        Shine("100 Coins", 523102, Requirements([NozzleType.yoshi, NozzleType.spray | NozzleType.hover]), hundred=True)],
         [
         BlueCoin("Juicer", 523275),
         BlueCoin("Rocket M", 523276, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
@@ -336,7 +336,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Sand M", 523321, Requirements([NozzleType.spray])),
         BlueCoin("Green Clam", 523322, Requirements([NozzleType.spray])),
         BlueCoin("Left O", 523323, Requirements([NozzleType.spray])),
-        BlueCoin("Entrance Bird", 523324, Requirements([NozzleType.spray])),
+        BlueCoin("Entrance Bird", 523324, Requirements([NozzleType.spray ])),
         BlueCoin("Pineapple Bird", 523325, Requirements([NozzleType.spray])),
         BlueCoin("Ship Peak", 523326, Requirements([NozzleType.hover])),
         BlueCoin("Cage Platform", 523327, Requirements([NozzleType.hover])),
@@ -387,7 +387,6 @@ ALL_REGIONS: list[SmsRegion] = [
     SmsRegion("Sirena Entrance", SIRENA, Requirements([NozzleType.yoshi]), [
         Shine("The Manta Storm", 523040, Requirements([NozzleType.spray | NozzleType.hover]))], [
         BlueCoin("White Painting", 523380, Requirements([NozzleType.spray])),
-        BlueCoin("Attic Boo", 523385),
         BlueCoin("Ocean", 523387)
     ], ticketed="Sirena Beach Ticket", parent_region=STATUE),
 
@@ -404,7 +403,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Outside Torch", 523372, Requirements([NozzleType.spray])),
         BlueCoin("Hotel Ledge", 523375, Requirements([NozzleType.hover])),
         BlueCoin("Flowers", 523386, Requirements([NozzleType.spray])),
-        BlueCoin("Second Floor Lamp", 523392, Requirements([NozzleType.spray]))
+        BlueCoin("Third Floor Lamp", 523392, Requirements([NozzleType.spray]))
     ], parent_region="Sirena 1 and 6"),
 
     SmsRegion("Sirena 3-8", SIRENA, Requirements([NozzleType.yoshi], location="Sirena Beach - The Hotel Lobby's Secret"), [
@@ -430,7 +429,8 @@ ALL_REGIONS: list[SmsRegion] = [
     ], parent_region="Sirena 3-8"),
 
     SmsRegion("Sirena 4-8", SIRENA, Requirements(location="Sirena Beach - Mysterious Hotel Delfino"), [], [
-        BlueCoin("Crate", 523377)
+        BlueCoin("Crate", 523377),
+        BlueCoin("Attic Boo", 523385)
     ], parent_region="Sirena 3-8"),
 
     SmsRegion("Sirena 5 Only", SIRENA, Requirements(location="Sirena Beach - The Secret of Casino Delfino"), [], [
@@ -490,7 +490,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Spawn", 523490, Requirements([NozzleType.hover | NozzleType.turbo])),
         BlueCoin("Coast", 523491, Requirements([NozzleType.hover | NozzleType.turbo])),
         BlueCoin("Underwater", 523492),
-        BlueCoin("Unnamed", 523493, Requirements([NozzleType.spray, NozzleType.hover]))
+        BlueCoin("Top Secret Path M", 523493, Requirements([NozzleType.spray, NozzleType.hover]))
     ], parent_region="Noki Entrance"),
 
     SmsRegion("Noki 2 and 4-8", NOKI, Requirements(location="Noki Bay - Uncork the Waterfall"), [], [
@@ -517,7 +517,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("The Goopy Inferno", 523062, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])),
         Shine("Chain Chomp's Bath", 523063, Requirements([NozzleType.spray | NozzleType.hover])),
         Shine("Soak the Sun", 523069, Requirements([NozzleType.spray, NozzleType.hover])),
-        Shine("100 Coins", 523106, Requirements([NozzleType.spray, NozzleType.hover]), hundred=True)],
+        Shine("100 Coins", 523106, Requirements([NozzleType.yoshi, NozzleType.spray, NozzleType.hover]), hundred=True)],
         [
         BlueCoin("Giant M", 523430, Requirements([NozzleType.spray])),
         BlueCoin("River End", 523432),
