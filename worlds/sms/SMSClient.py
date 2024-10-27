@@ -263,15 +263,12 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
         
 
 async def arbitrary_ram_checks(ctx):
-    bit = 1
     activated_bits = dme.read_byte(addresses.ARB_NOZZLES_ENABLER)
 
     while dme.is_hooked():
         for noz in ctx.ap_nozzles_received:
             if noz < 4:
-                logger.info(noz)
-                bit <<= noz
-                activated_bits |= bit
+                activated_bits = bit_flagger(activated_bits, noz, True)
                 dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
                 dme.write_byte(addresses.ARB_FLUDD_ENABLER, 0x1)
         await asyncio.sleep(delaySeconds)
