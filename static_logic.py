@@ -516,7 +516,6 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Il Piantissimo's Crazy Climb", 523065, Requirements([NozzleType.spray])), # Req. None
         Shine("The Goopy Inferno", 523062, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])), 
         Shine("Chain Chomp's Bath", 523063, Requirements([NozzleType.splasher])),
-        Shine("Soak the Sun", 523069, Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket])),
         Shine("100 Coins", 523106, Requirements([NozzleType.yoshi, NozzleType.spray, NozzleType.hover]), hundred=True)],
         [
         BlueCoin("Giant M", 523430, Requirements([NozzleType.spray])),
@@ -578,6 +577,7 @@ ALL_REGIONS: list[SmsRegion] = [
     ], parent_region="Pianta 5 Only"),
 
     SmsRegion("Pianta 8 Only", PIANTA, Requirements(location="Pianta Village - Shadow Mario Runs Wild"), [], [
+        Shine("Soak the Sun", 523069, Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket])),
         BlueCoin("Bird", 523441, Requirements([NozzleType.spray, NozzleType.hover]))
     ], parent_region="Pianta 6 Only"),
 
