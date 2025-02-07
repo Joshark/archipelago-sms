@@ -258,7 +258,7 @@ ALL_REGIONS: list[SmsRegion] = [
     SmsRegion("Gelato Entrance", GELATO, Requirements([NozzleType.splasher | NozzleType.yoshi], shines=5), [
         Shine("Dune Bud Sand Castle Secret", 523020, Requirements([NozzleType.splasher])),
         Shine("Mirror Madness! Tilt, Slam, Bam!", 523021, Requirements([NozzleType.spray, NozzleType.hover])),
-        Shine("Wiggler Ahoy! Full Steam Ahead!", 523022, Requirements([NozzleType.spray | NozzleType.hover])),
+        Shine("Wiggler Ahoy! Full Steam Ahead!", 523022, Requirements([NozzleType.spray, NozzleType.hover])),
         Shine("Red Coins in the Sand Castle", 523028, Requirements([NozzleType.hover])),
         Shine("Sandy Shine Sprite", 523029, Requirements([NozzleType.splasher])),
         Shine("100 Coins", 523102, Requirements([NozzleType.yoshi, NozzleType.spray | NozzleType.hover]), hundred=True)],
@@ -289,8 +289,8 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Middle Sand Shine", 523274, Requirements([NozzleType.spray])),
         BlueCoin("Close Underwater", 523284),
         BlueCoin("Far Underwater", 523285),
-        BlueCoin("Blue Fish", 523286, Requirements([NozzleType.turbo])),
-        BlueCoin("Red Fish", 523287, Requirements([NozzleType.turbo]))
+        BlueCoin("Blue Fish", 523286),
+        BlueCoin("Red Fish", 523287)
     ], parent_region="Gelato Entrance"),
 
     SmsRegion("Gelato 2 and 4-8", GELATO, Requirements(location="Gelato Beach - Dune Bud Sand Castle Secret"), [], [
@@ -535,7 +535,7 @@ ALL_REGIONS: list[SmsRegion] = [
 
     SmsRegion("Pianta 1/3/5/7", PIANTA, Requirements(), [], [
         BlueCoin("Moon", 523420, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Statue's Nose", 523429)
+        BlueCoin("Statue's Nose", 523429, Requirements([NozzleType.rocket])),
     ], parent_region="Pianta Entrance"),
 
     SmsRegion("Pianta 2/4/6/8", PIANTA, Requirements(location="Pianta Village - Chain Chomplets Unchained"), [], [
