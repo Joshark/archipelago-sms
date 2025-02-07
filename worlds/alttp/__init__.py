@@ -213,7 +213,6 @@ class ALTTPWorld(World):
     item_name_to_id = {name: data.item_code for name, data in item_table.items() if type(data.item_code) == int}
     location_name_to_id = lookup_name_to_id
 
-    data_version = 9
     required_client_version = (0, 4, 1)
     web = ALTTPWeb()
 
@@ -261,7 +260,8 @@ class ALTTPWorld(World):
     fix_fake_world: bool = True
 
     clock_mode: str = ""
-    treasure_hunt_count: int = 1
+    treasure_hunt_required: int = 0
+    treasure_hunt_total: int = 0
 
     def __init__(self, *args, **kwargs):
         self.dungeon_local_item_names = set()
@@ -356,6 +356,8 @@ class ALTTPWorld(World):
                 self.dungeon_local_item_names |= self.item_name_groups[option.item_name_group]
                 if option == "original_dungeon":
                     self.dungeon_specific_item_names |= self.item_name_groups[option.item_name_group]
+                else:
+                    self.options.local_items.value |= self.dungeon_local_item_names
 
         self.difficulty_requirements = difficulties[multiworld.item_pool[player].current_key]
 
