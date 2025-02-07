@@ -258,8 +258,9 @@ ALL_REGIONS: list[SmsRegion] = [
     SmsRegion("Gelato Entrance", GELATO, Requirements([NozzleType.splasher | NozzleType.yoshi], shines=5), [
         Shine("Dune Bud Sand Castle Secret", 523020, Requirements([NozzleType.splasher])),
         Shine("Mirror Madness! Tilt, Slam, Bam!", 523021, Requirements([NozzleType.spray, NozzleType.hover])),
-        Shine("Wiggler Ahoy! Full Steam Ahead!", 523022, Requirements([NozzleType.spray | NozzleType.hover])),
-        Shine("Red Coins in the Sand Castle", 523028, Requirements([NozzleType.hover])),
+        Shine("Wiggler Ahoy! Full Steam Ahead!", 523022, 
+            Requirements([NozzleType.spray | NozzleType.hover], location="Gelato Beach - Mirror Madness! Tilt, Slam, Bam!")),
+        Shine("Red Coins in the Sand Castle", 523028, Requirements([NozzleType.hover], location="Gelato Beach - Wiggler Ahoy! Full Steam Ahead!")),
         Shine("Sandy Shine Sprite", 523029, Requirements([NozzleType.splasher])),
         Shine("100 Coins", 523102, Requirements([NozzleType.yoshi, NozzleType.spray | NozzleType.hover]), hundred=True)],
         [
@@ -322,8 +323,8 @@ ALL_REGIONS: list[SmsRegion] = [
     # Pinna Park
     SmsRegion("Pinna Entrance", PINNA, Requirements(shines=10), [
         Shine("Mecha-Bowser Appears!", 523030, Requirements([NozzleType.spray])),
-        Shine("Red Coins of the Pirate Ships", 523032,Requirements([NozzleType.hover])),
-        Shine("The Wilted Sunflowers", 523033, Requirements([NozzleType.splasher]), bandaid=True),
+        Shine("Red Coins of the Pirate Ships", 523032,Requirements([NozzleType.hover], location="Pinna Park - The Beach Cannon's Secret")),
+        Shine("The Wilted Sunflowers", 523033, Requirements([NozzleType.splasher], location="Pinna Park - Red Coins of the Pirate Ships"), bandaid=True),
         Shine("100 Coins", 523103, Requirements([NozzleType.spray]), hundred=True)],
         [
         BlueCoin("Tree Sand Shine", 523348, Requirements([NozzleType.spray])),
@@ -333,7 +334,7 @@ ALL_REGIONS: list[SmsRegion] = [
     SmsRegion("Pinna 1, 3 and 5-8", PINNA, Requirements(), [], [
         BlueCoin("Orange Wall M", 523320, Requirements([NozzleType.spray])),
         BlueCoin("Sand M", 523321, Requirements([NozzleType.spray])),
-        BlueCoin("Green Clam", 523322, Requirements([NozzleType.spray])),
+        BlueCoin("Green Clam", 523322, Requirements([NozzleType.spray | NozzleType.hover])),
         BlueCoin("Left O", 523323, Requirements([NozzleType.spray])),
         BlueCoin("Entrance Bird", 523324, Requirements([NozzleType.spray ])),
         BlueCoin("Pineapple Bird", 523325, Requirements([NozzleType.spray])),
@@ -354,7 +355,7 @@ ALL_REGIONS: list[SmsRegion] = [
 
     SmsRegion("Pinna 2 Only", PINNA, Requirements(location="Pinna Park - Mecha-Bowser Appears!"), [
         Shine("The Beach Cannon's Secret", 523031, Requirements([NozzleType.splasher])),
-        Shine("Red Coins in the Cannon", 523038, Requirements([NozzleType.hover]))], [
+        Shine("Red Coins in the Cannon", 523038, Requirements([NozzleType.hover], location="Pinna Park - The Beach Cannon's Secret"))], [
         BlueCoin("Spawn Basket", 523340),
         BlueCoin("Flower Basket", 523341),
         BlueCoin("Gate Basket", 523342),
@@ -512,30 +513,30 @@ ALL_REGIONS: list[SmsRegion] = [
 
     # Pianta Village
     SmsRegion("Pianta Entrance", "Pianta Village", Requirements([NozzleType.rocket], shines=10), [
-        Shine("Chain Chomplets Unchained", 523060, Requirements([NozzleType.splasher])),
-        Shine("Il Piantissimo's Crazy Climb", 523065, Requirements([NozzleType.spray])), # Req. None
-        Shine("The Goopy Inferno", 523062, Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover])), 
-        Shine("Chain Chomp's Bath", 523063, Requirements([NozzleType.splasher])),
-        Shine("100 Coins", 523106, Requirements([NozzleType.yoshi, NozzleType.spray, NozzleType.hover]), hundred=True)],
+        Shine("Chain Chomplets Unchained", 523060, Requirements([NozzleType.rocket, NozzleType.splasher])),
+        Shine("Il Piantissimo's Crazy Climb", 523065, Requirements([NozzleType.rocket, NozzleType.spray])), # Req. None
+        Shine("The Goopy Inferno", 523062, Requirements([NozzleType.rocket, NozzleType.hover])), 
+        Shine("Chain Chomp's Bath", 523063, Requirements([NozzleType.rocket, NozzleType.splasher])),
+        Shine("100 Coins", 523106, Requirements([NozzleType.rocket, NozzleType.yoshi, NozzleType.spray, NozzleType.hover]), hundred=True)],
         [
-        BlueCoin("Giant M", 523430, Requirements([NozzleType.spray])),
-        BlueCoin("River End", 523432),
-        BlueCoin("Grass", 523433),
-        BlueCoin("Back Tree", 523434, Requirements([NozzleType.hover])),
-        BlueCoin("River Bridge", 523435),
-        BlueCoin("Left Tree", 523438, Requirements([NozzleType.hover])),
-        BlueCoin("Waterfall", 523439, Requirements([NozzleType.spray])),
-        BlueCoin("Wall Triangle", 523443, Requirements([NozzleType.spray])),
-        BlueCoin("Hot Tub Triangle", 523444, Requirements([NozzleType.spray])),
-        BlueCoin("Left M", 523445, Requirements([NozzleType.spray])),
-        BlueCoin("Right M", 523446, Requirements([NozzleType.spray])),
-        BlueCoin("Spawn M", 523447, Requirements([NozzleType.spray])),
-        BlueCoin("Underside M", 523448, Requirements([NozzleType.spray]))
+        BlueCoin("Giant M", 523430, Requirements([NozzleType.rocket, NozzleType.spray])),
+        BlueCoin("River End", 523432, Requirements([NozzleType.rocket])),
+        BlueCoin("Grass", 523433, Requirements([NozzleType.rocket])),
+        BlueCoin("Back Tree", 523434, Requirements([NozzleType.rocket, NozzleType.hover])),
+        BlueCoin("River Bridge", 523435, Requirements([NozzleType.rocket])),
+        BlueCoin("Left Tree", 523438, Requirements([NozzleType.rocket, NozzleType.hover])),
+        BlueCoin("Waterfall", 523439, Requirements([NozzleType.rocket, NozzleType.spray])),
+        BlueCoin("Wall Triangle", 523443, Requirements([NozzleType.rocket, NozzleType.spray])),
+        BlueCoin("Hot Tub Triangle", 523444, Requirements([NozzleType.rocket, NozzleType.spray])),
+        BlueCoin("Left M", 523445, Requirements([NozzleType.rocket, NozzleType.spray])),
+        BlueCoin("Right M", 523446, Requirements([NozzleType.rocket, NozzleType.spray])),
+        BlueCoin("Spawn M", 523447, Requirements([NozzleType.rocket, NozzleType.spray])),
+        BlueCoin("Underside M", 523448, Requirements([NozzleType.rocket, NozzleType.spray]))
     ], ticketed="Pianta Village Ticket", parent_region=STATUE),
 
     SmsRegion("Pianta 1/3/5/7", PIANTA, Requirements(), [], [
-        BlueCoin("Moon", 523420, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Statue's Nose", 523429)
+        BlueCoin("Moon", 523420, Requirements([NozzleType.rocket, NozzleType.spray, NozzleType.hover])),
+        BlueCoin("Statue's Nose", 523429, Requirements([NozzleType.rocket]))
     ], parent_region="Pianta Entrance"),
 
     SmsRegion("Pianta 2/4/6/8", PIANTA, Requirements(location="Pianta Village - Chain Chomplets Unchained"), [], [

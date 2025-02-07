@@ -56,10 +56,10 @@ def sms_can_get_blue_coin(state: CollectionState, blue_coin: BlueCoin, world: "S
 
 
 def sms_can_use_entrance(state: CollectionState, region: SmsRegion, world: "SmsWorld"):
-    can_use = sms_requirements_satisfied(state, region.requirements, world)
-    if region.ticketed and world.options.level_access == 1 and can_use:
+    if region.ticketed and world.options.level_access == 1:
         return state.has(region.ticketed, world.player)
-    return can_use
+    else:
+        return sms_requirements_satisfied(state, region.requirements, world)
 
 
 def make_shine_lambda(shine: Shine, world: "SmsWorld"):
