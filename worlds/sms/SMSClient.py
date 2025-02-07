@@ -17,6 +17,12 @@ ModuleUpdate.update()
 
 import Utils
 
+''' "Comment-Dictionary"
+    #Gravi01    Preventing Crash when game is closed/disconnected before Client + Allowing client to reconnect
+
+'''
+
+
 from NetUtils import ClientStatus
 from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
     CommonContext, server_loop
@@ -181,9 +187,21 @@ async def game_watcher(ctx: SmsContext):
             sync_msg.append({"cmd": "LocationChecks", "locations": list(ctx.locations_checked)})
         await ctx.send_msgs(sync_msg)
 
-        if dme.is_hooked():
-            refresh_collection_counts(ctx)
+        #Gravi01 Begin      
+        '''
+        dme.is_hooked() returns true if just the emulation stops, as dolphin itself is still running
+        this causes the dme to write into a non existing memory, resulting in the crashes.
+        changed if to check based on connection status, and unhooking DME properly if connection is lost (Exception)
+        ''' 
+        if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
+            try:
+                refresh_collection_counts(ctx)
+            except Exception:
+                logger.info("Connection to Dolphin lost, reconnecting...")
+                ctx.dolphin_status = CONNECTION_LOST_STATUS
+                dme.un_hook()
         ctx.lives_switch = True
+        #Gravi01 End
 
         if ctx.victory and not ctx.finished_game:
             await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
@@ -209,9 +227,12 @@ async def location_watcher(ctx):
         return
 
     while not ctx.exit_event.is_set():
-        if not dme.is_hooked():
-            dme.hook()
-        else:
+        #Gravi01 Begin      #Changing dme.is_Hooked => Connection Status 
+        #if not dme.is_hooked():
+            #dme.hook()
+        #else:
+        if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
+        #Gravi01 End
             _sub()
         await asyncio.sleep(delaySeconds)
 
@@ -345,7 +366,15 @@ def get_shine_id(location, value):
 def refresh_item_count(ctx, item_id, targ_address):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
     temp = change_endian(counts[item_id])
-    dme.write_byte(targ_address, temp)
+    #Gravi01 Begin      #Stacktrace where the original Exception was thrown. Keeping the changes in this place as well, you still land here without connection, due to it being an async task
+    if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
+        try:
+            dme.write_byte(targ_address, temp) 
+        except Exception:
+            logger.info("Connection to Dolphin lost, reconnecting...")
+            ctx.dolphin_status = CONNECTION_LOST_STATUS
+            dme.un_hook()
+    #Gravi01 End
 
 
 def refresh_all_items(ctx: SmsContext):
@@ -512,7 +541,7 @@ def resolve_tickets(stage, ctx):
 
 async def handle_stages(ctx):
     while not ctx.exit_event.is_set():
-        if dme.is_hooked():
+        if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS: #Gravi01  change to connection status
             stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
             cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
             if ctx.fludd_start == 2 and stage == 0x00: # Airstrip 1 skip
