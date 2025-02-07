@@ -269,8 +269,8 @@ async def arbitrary_ram_checks(ctx):
         for noz in ctx.ap_nozzles_received:
             if noz < 4:
                 activated_bits = bit_flagger(activated_bits, noz, True)
-                dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
                 dme.write_byte(addresses.ARB_FLUDD_ENABLER, 0x1)
+                dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
         await asyncio.sleep(delaySeconds)
 
 
@@ -523,7 +523,7 @@ async def handle_stages(ctx):
             if stage == 0x01: # Delfino Plaza
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
                 ctx.plaza_episode = episode
-                if episode == 0x00 and (ctx.ticket_mode == 1 or ctx.fludd_start == 2):
+                if episode != 0x8 and (ctx.ticket_mode == 1 or ctx.fludd_start == 2):
                     dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
                 if not episode == 0x01:
                     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
