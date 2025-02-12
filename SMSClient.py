@@ -557,11 +557,11 @@ async def handle_stages(ctx):
                 if not episode == 0x01:
                     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
                     # BEGIN YOSHI BANDAID
-            elif stage == 0x05: # Pinna Park
-                if ctx.yoshi_mode:
-                    episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-                    if episode == 0x03:
-                        dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
+            # elif stage == 0x05: # Pinna Park
+            #     if ctx.yoshi_mode:
+            #         episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+            #         if episode == 0x03:
+            #             dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
                         #dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
                     # END YOSHI BANDAID
             if ctx.ticket_mode and cur_stage != stage:
