@@ -516,7 +516,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Chain Chomplets Unchained", 523060, Requirements([NozzleType.rocket, NozzleType.splasher])),
         Shine("Il Piantissimo's Crazy Climb", 523065, Requirements([NozzleType.rocket, NozzleType.spray])), # Req. None
         Shine("The Goopy Inferno", 523062, Requirements([NozzleType.rocket, NozzleType.hover])), 
-        Shine("Chain Chomp's Bath", 523063, Requirements([NozzleType.rocket, NozzleType.splasher])),
+        Shine("Chain Chomp's Bath", 523061, Requirements([NozzleType.rocket, NozzleType.splasher])),
         Shine("100 Coins", 523106, Requirements([NozzleType.rocket, NozzleType.yoshi, NozzleType.spray, NozzleType.hover]), hundred=True)],
         [
         BlueCoin("Giant M", 523430, Requirements([NozzleType.rocket, NozzleType.spray])),
@@ -557,7 +557,7 @@ ALL_REGIONS: list[SmsRegion] = [
     SmsRegion("Pianta 5 and Beyond", PIANTA, Requirements([NozzleType.yoshi]), [
         Shine("Secret of the Village Underside", 523064,
               Requirements([NozzleType.yoshi])),
-        Shine("Piantas in Need", 523061,
+        Shine("Piantas in Need", 523063,
               Requirements([NozzleType.spray | NozzleType.hover])),
         Shine("Shadow Mario Runs Wild", 523066,
               Requirements([NozzleType.spray])),
@@ -577,8 +577,9 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Pianta in Need H", 523428, Requirements([NozzleType.spray]))
     ], parent_region="Pianta 5 Only"),
 
-    SmsRegion("Pianta 8 Only", PIANTA, Requirements(location="Pianta Village - Shadow Mario Runs Wild"), [], [
-        Shine("Soak the Sun", 523069, Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket])),
+    SmsRegion("Pianta 8 Only", PIANTA, Requirements(location="Pianta Village - Shadow Mario Runs Wild"), [
+        Shine("Soak the Sun", 523069, Requirements([NozzleType.spray, NozzleType.hover | NozzleType.rocket]))],
+        [
         BlueCoin("Bird", 523441, Requirements([NozzleType.spray, NozzleType.hover]))
     ], parent_region="Pianta 6 Only"),
 
