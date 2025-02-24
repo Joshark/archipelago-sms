@@ -546,13 +546,11 @@ async def handle_stages(ctx):
             cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
             if ctx.fludd_start == 2 and stage == 0x00: # Airstrip 1 skip
                 dme.write_byte(addresses.SMS_NEXT_STAGE, 0x01)
-                #if ctx.ticket_mode == 1:
-                    #open_stage(Ticket("Bianco Hills Ticket", 523005, 5, 2, 0x805789f8))
 
             if stage == 0x01: # Delfino Plaza
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
                 ctx.plaza_episode = episode
-                if episode != 0x8 and (ctx.ticket_mode == 1 or ctx.fludd_start == 2):
+                if (episode != 0x8 or episode != 0x2) and (ctx.ticket_mode == 1 or ctx.fludd_start == 2):
                     dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
                 if not episode == 0x01:
                     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
@@ -562,7 +560,7 @@ async def handle_stages(ctx):
                     episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
                     if episode == 0x03:
                         dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
-                        #dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
+                        dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
                     # END YOSHI BANDAID
             if ctx.ticket_mode and cur_stage != stage:
                 resolve_tickets(stage, ctx)
