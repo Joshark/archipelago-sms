@@ -536,18 +536,29 @@ def resolve_tickets(stage, ctx):
             #dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
             dme.write_byte(addresses.SMS_CURRENT_STAGE, 1)
             #dme.write_byte(addresses.SMS_CURRENT_STAGE, ctx.plaza_episode)
+        else:
+            send_map_id(stage, ctx)
     return
 
+# Checks to see if player changed stages to update map_id for Poptracker
+async def send_map_id(map_id, ctx):
+    await ctx.send_msgs([{
+        "cmd": "Set",
+        "key": f"sms_map_{ctx.team}_{ctx.slot}",
+        "default": 0,
+        "want_reply": False,
+        "operations": [{"operation": "replace", "value": map_id}]
+    }])
 
 async def handle_stages(ctx):
     while not ctx.exit_event.is_set():
         if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS: #Gravi01  change to connection status
-            stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
+            next_stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
             cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
-            if ctx.fludd_start == 2 and stage == 0x00: # Airstrip 1 skip
+            if ctx.fludd_start == 2 and next_stage == 0x00: # Airstrip 1 skip
                 dme.write_byte(addresses.SMS_NEXT_STAGE, 0x01)
 
-            if stage == 0x01: # Delfino Plaza
+            if next_stage == 0x01: # Delfino Plaza
                 episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
                 ctx.plaza_episode = episode
                 if (episode != 0x8 or episode != 0x2) and (ctx.ticket_mode == 1 or ctx.fludd_start == 2):
@@ -555,15 +566,18 @@ async def handle_stages(ctx):
                 if not episode == 0x01:
                     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
                     # BEGIN YOSHI BANDAID
-            elif stage == 0x05: # Pinna Park
+            elif next_stage == 0x05: # Pinna Park
                 if ctx.yoshi_mode:
                     episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
                     if episode == 0x03:
                         dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
                         dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
                     # END YOSHI BANDAID
-            if ctx.ticket_mode and cur_stage != stage:
-                resolve_tickets(stage, ctx)
+            if ctx.ticket_mode and cur_stage != next_stage:
+                resolve_tickets(next_stage, ctx)
+            else:
+                send_map_id(next_stage, ctx)
+                 
         await asyncio.sleep(0.1)
 
 
