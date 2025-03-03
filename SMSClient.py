@@ -573,10 +573,10 @@ async def handle_stages(ctx):
                         dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
                         dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
                     # END YOSHI BANDAID
-            if ctx.ticket_mode and cur_stage != next_stage:
-                resolve_tickets(next_stage, ctx)
-            else:
-                send_map_id(next_stage, ctx)
+            if cur_stage != next_stage:
+                await send_map_id(next_stage, ctx)
+                if ctx.ticket_mode:
+                    resolve_tickets(next_stage, ctx)
                  
         await asyncio.sleep(0.1)
 
