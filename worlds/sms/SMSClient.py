@@ -559,17 +559,20 @@ async def handle_stages(ctx):
                 dme.write_byte(addresses.SMS_NEXT_STAGE, 0x01)
 
             if next_stage == 0x01: # Delfino Plaza
-                episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-                ctx.plaza_episode = episode
-                if (episode != 0x8 or episode != 0x2) and (ctx.ticket_mode == 1 or ctx.fludd_start == 2):
+                next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+                ctx.plaza_episode = next_episode
+
+                # Checks if next episode is either 0x8 or if Corona has been opened
+                # Only in the case of ticket mode or fluddless start, to give more checks early
+                if (next_episode != 0x8 and not ctx.corona_message_given) and (ctx.ticket_mode == 1 or ctx.fludd_start == 2):
                     dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
-                if not episode == 0x01:
+                if not next_episode == 0x01:
                     dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
                     # BEGIN YOSHI BANDAID
             elif next_stage == 0x05: # Pinna Park
                 if ctx.yoshi_mode:
-                    episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-                    if episode == 0x03:
+                    next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+                    if next_episode == 0x03:
                         dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
                         dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
                     # END YOSHI BANDAID
