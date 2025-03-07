@@ -414,7 +414,7 @@ def open_stage(ticket):
 
 
 def special_noki_handling():
-    dme.write_double(addresses.SMS_NOKI_REQ, addresses.SMS_NOKI_LO)
+    dme.write_byte(addresses.SMS_NOKI_REQ, addresses.SMS_NOKI_LO)
     return
 
 

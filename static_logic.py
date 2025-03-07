@@ -473,7 +473,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Rocket Alcove", 523470, Requirements([NozzleType.hover | NozzleType.rocket])),
         BlueCoin("Bottom Secret Path", 523471, Requirements([NozzleType.spray, NozzleType.hover])),
         BlueCoin("Top Secret Path", 523472, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Rocket", 523473, Requirements([NozzleType.hover, NozzleType.rocket])),
+        BlueCoin("Rocket", 523473, Requirements([NozzleType.rocket])),
         BlueCoin("Bottom Pulley", 523474, Requirements([NozzleType.spray, NozzleType.hover])),
         BlueCoin("Top Pulley", 523475, Requirements([NozzleType.spray, NozzleType.hover])),
         BlueCoin("Tall Alcove", 523476, Requirements([NozzleType.spray, NozzleType.hover])),
