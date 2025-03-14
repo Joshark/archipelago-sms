@@ -562,14 +562,17 @@ async def handle_stages(ctx):
                 next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
                 ctx.plaza_episode = next_episode
 
-                # Checks if next episode is either 0x8 or if Corona has been opened
-                # Only in the case of ticket mode or fluddless start, to give more checks early
-                if (next_episode != 0x8 and not ctx.corona_message_given) and (ctx.ticket_mode == 1 or ctx.fludd_start == 2):
+                # If starting Fluddless without ticket mode on, open Bianco Hills
+                if next_episode == 0x0 and ctx.fludd_start == 2 and ctx.ticket_mode == 0:
+                    check_world_flags(TICKETS[0].address, 4, True)
+                    open_stage(TICKETS[0])
+                # Sets plaza state to 8 if it is not and goal hasn't been reached
+                if (ctx.ticket_mode == 1 and next_episode != 0x8 and not ctx.corona_message_given):
                     dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
                 if not next_episode == 0x01:
-                    dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
+                    dme.write_byte(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
                     # BEGIN YOSHI BANDAID
-            elif next_stage == 0x05: # Pinna Park
+            elif next_stage == 0x05 and cur_stage != next_stage: # Pinna Park
                 if ctx.yoshi_mode:
                     next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
                     if next_episode == 0x03:
