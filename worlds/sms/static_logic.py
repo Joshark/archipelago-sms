@@ -386,7 +386,6 @@ ALL_REGIONS: list[SmsRegion] = [
     # Sirena Beach
     SmsRegion("Sirena Entrance", SIRENA, Requirements([NozzleType.yoshi]), [
         Shine("The Manta Storm", 523040, Requirements([NozzleType.spray, NozzleType.hover]))], [
-        BlueCoin("White Painting", 523380, Requirements([NozzleType.spray])),
         BlueCoin("Ocean", 523387)
     ], ticketed="Sirena Beach Ticket", parent_region=STATUE),
 
@@ -419,6 +418,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Big Light", 523376, Requirements([NozzleType.spray])),
         BlueCoin("Box Hole", 523378),
         BlueCoin("Glass Hole", 523379),
+        BlueCoin("White Painting", 523380, Requirements([NozzleType.yoshi])),
         BlueCoin("Dolpic Poster", 523381, Requirements([NozzleType.spray])),
         BlueCoin("Bookshelf", 523382, Requirements([NozzleType.spray])),
         BlueCoin("Attic", 523383)
