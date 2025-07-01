@@ -31,9 +31,6 @@ Run the ArchipelagoLauncher.exe from your Archipelago install and click `Generat
 This will produce a `/Players/Templates` folder in your Archipelago install, which contains default config files for 
 every game in your `custom_worlds` folder. You can manually edit the config file using a text editor of your choice.
 
-Alternately, the [Player Settings](../player-settings) page on the website allows you to configure
-your personal settings and export a config file from them.
-
 ### Verifying your config file
 
 If you would like to validate your config file to make sure it works, you may do so on the
