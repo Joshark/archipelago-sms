@@ -59,7 +59,7 @@ If you would like to validate your config file to make sure it works, you may do
 
 ## Joining a MultiWorld Game
 
-### Obtain your patch file and create your ROM
+### Setup your .ini and ROM
 
 When you join a multiworld game, you will be asked to provide your config file to whoever is hosting. Once that is done,
 the host will provide you with a link to the room or the address and port necessary to connect.
