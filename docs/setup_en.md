@@ -1,16 +1,16 @@
 # Super Mario Sunshine Multiworld Setup Guide
 
 ## Required Software
-[Latest release of Archipelago Multiworld Suite]
-[Doplhin Emulator]
-Your **Legally** obtained American ISO file, likely named `Super Mario Sunshine (USA).iso`
+- [Latest release of Archipelago Multiworld Suite](https://github.com/ArchipelagoMW/Archipelago/releases). 
+- [Dolphin Gamecube/Wii Emulator](https://dolphin-emu.org/)
+- Your **Legally** obtained American ISO file, likely named `Super Mario Sunshine (USA).iso`
 
 ## Setup process
 1. Download and install the latest release of Archipelago Multiworld from the link above.
 
 2. Download and install the latest release of Dolphin Emulator from the link above.
 
-3. Unzip the APWorld downloaded from the [releases] page and place it in your `custom_worlds` folder located in your Archipelago install directory
+3. Unzip the APWorld downloaded from the [releases](https://github.com/Joshark/archipelago-sms/releases/latest) page and place it in your `custom_worlds` folder located in your Archipelago install directory
 
 4. Drag and place the `lib` folder downloaded from releases straight to your Archipelago main directory. **This is necessary as the `dolphin_memory_engine` in this release is what works for this current implementation!!!**
 
