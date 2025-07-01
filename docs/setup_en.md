@@ -73,7 +73,7 @@ Open up your SMSClient and connect as per you would in a single player session. 
 2. Open your SMSClient, making sure to launch it only after you've launched Super Mario Sunshine and are waiting in the File Select. In the server page, there will be a port number. Copy this port number into the top of your SMSClient. 
    - The field should read `archipelago.gg:<port number>`
 3. Once you have loaded into the game, the client should log that Dolphin has been connected. Click the `Connect` button
-at the top of the LMClient. If the port number is correct, you are now connected and ready to play!
+at the top of the SMSClient. If the port number is correct, you are now connected and ready to play!
 
 ### Play the game
 
