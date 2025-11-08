@@ -1,21 +1,24 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 import collections
 import time
 import traceback
+import dolphin_memory_engine as dme
+import ModuleUpdate
+import Utils
 from typing import Any, Dict, List, Optional, Set, Tuple
 from dataclasses import dataclass
-
-import ModuleUpdate
 from .options import SmsOptions
 from .bit_helper import change_endian, bit_flagger, extract_bits
-import dolphin_memory_engine as dme
 from . import addresses
+from NetUtils import ClientStatus
+from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
+    CommonContext, server_loop
 
 ModuleUpdate.update()
 
-import Utils
 
 ''' "Comment-Dictionary"
     #Gravi01    Preventing Crash when game is closed/disconnected before Client + Allowing client to reconnect
@@ -23,9 +26,6 @@ import Utils
 '''
 
 
-from NetUtils import ClientStatus
-from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
-    CommonContext, server_loop
 
 CONNECTION_REFUSED_GAME_STATUS = (
     "Dolphin failed to connect. Please load a randomized ROM for Super Mario Sunshine. Trying again in 5 seconds..."
@@ -45,6 +45,8 @@ debug = False
 debug_b = False
 
 game_ver = 0x3a
+CLIENT_VERSION = "0.4.0-alpha"
+AP_WORLD_VERSION_NAME = "APWorldVersion"
 
 
 @dataclass
@@ -238,49 +240,66 @@ async def location_watcher(ctx):
 
 async def dolphin_sync_task(ctx: SmsContext) -> None:
     logger.info("Starting Dolphin connector. Use /dolphin for status information.")
-    while not ctx.exit_event.is_set():
-        try:
-            if dme.is_hooked() and ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
-                # if ctx.slot is not None:
-                #     # await give_items(ctx)
-                #     # await check_locations(ctx)
-                #     # await check_current_stage_changed(ctx)
-                #     # self._cmd_resync()
-                # else:
-                if ctx.awaiting_rom:
-                    await ctx.server_auth()
-                await asyncio.sleep(0.1)
-            else:   
-                if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
-                    logger.info("Connection to Dolphin lost, reconnecting...")
-                    ctx.dolphin_status = CONNECTION_LOST_STATUS
-                logger.info("Attempting to connect to Dolphin...")
-                dme.hook()
-                if dme.is_hooked():
-                    if dme.read_bytes(0x80000000, 6) != b"GMSE01":
+
+    try:
+        while not ctx.exit_event.is_set():
+            try:
+                if not dme.is_hooked():
+                    dme.hook()
+                    if dme.get_status() in [dme.get_status().noEmu, dme.get_status().notRunning]:
+                        dme.un_hook()
+                        ctx.dolphin_status = CONNECTION_INITIAL_STATUS
+                        logger.info(ctx.dolphin_status)
+                        await asyncio.sleep(3)
+                        continue
+                
+                if not ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
+                    game_id = read_string(0x80000000, 6)
+                    if game_id in ["GSME01", "GMSP01", "GMSJ01"]:
                         logger.info(CONNECTION_REFUSED_GAME_STATUS)
                         ctx.dolphin_status = CONNECTION_REFUSED_GAME_STATUS
                         dme.un_hook()
-                        await asyncio.sleep(5)
-                    else:
-                        logger.info(CONNECTION_CONNECTED_STATUS)
-                        ctx.dolphin_status = CONNECTION_CONNECTED_STATUS
-                        ctx.locations_checked = set()
-                else:
+                        await asyncio.sleep(3)
+                        continue
+                    
+                    # If to check for slot name before connecting to server below
+
+                ctx.locations_checked = set()
+
+                # Ready and waiting to connect to server
+                if not ctx.dolphin_status == CONNECTION_VERIFY_SERVER:
+                    ctx.dolphin_status = CONNECTION_VERIFY_SERVER
+                    logger.info(ctx.dolphin_status)
+                await ctx.server_auth()
+
+                if not ctx.slot():
+                    await asyncio.sleep(3)
+                    continue
+
+                arg_seed = read_string(0x80000001, len(str(ctx.arg_seed)))
+                if arg_seed != ctx.arg_seed:
+                    raise Exception(
+                        "Incorrect Randomized Super Mario Sunshine ISO file selected. The seed does not match." +
+                        "Please verify that you are using the right ISO/seed/APSMS file.")
+                
+                # Update SMSClient UI (Show how many Shines needed for Corona for example)
+
+                await game_watcher(ctx)
+                await location_watcher(ctx)
+                await handle_stages(ctx)
+                await arbitrary_ram_checks(ctx)
+                await asyncio.sleep(5)
+
+            except Exception as ex:
+                    dme.un_hook()
+                    logger.error(str(ex))
                     logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
-                    dme_status = dme.get_status()
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
                     await ctx.disconnect()
-                    await asyncio.sleep(5)
+                    await asyncio.sleep(3)
                     continue
-        except Exception:
-            dme.un_hook()
-            logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
-            logger.error(traceback.format_exc())
-            ctx.dolphin_status = CONNECTION_LOST_STATUS
-            await ctx.disconnect()
-            await asyncio.sleep(5)
-            continue
+    except Exception as ex:
+        logger.error("SMSClient Error: " + str(ex))
         
 
 async def arbitrary_ram_checks(ctx):
@@ -587,53 +606,67 @@ async def handle_stages(ctx):
         await asyncio.sleep(0.1)
 
 
-def main(connect= None, password= None):
+def main(*launch_args: str):
+    import colorama
+
+    server_address: str = ""
+    rom_path: str = ""
+
     Utils.init_logging("SMSClient", exception_logger="Client")
 
+    parser = get_base_parser()
+    parser.add_argument("apsms_file", default="", type=str, nargs="?", help="Path to a APSMS File")
+    args = parser.parse_args(launch_args)
+
+    if args.apsms_file:
+        sms_patch = SMSPatch()
+        try:
+            sms_manifest = sms_patch.read_contents(args.apsms_file)
+            server_address = sms_manifest["server"]
+            rom_path = sms_patch.patch(args.apsms_file)
+        except Exception as ex:
+            logger.error("Unable to patch your Super Mario Sunshine. Addiotional Details:\n" + str(ex))
+            Utils.messagebox("Cannot Patch Super Mario Sunshine", "Unable to patch your Super Mario Sunshine ROM as " +
+                "expected. Additional details:\n" + str(ex), True)
+            raise ex
+
     async def _main(connect, password):
-        ctx = SmsContext(connect, password)
+        ctx = SmsContext(server_address if server_address else connect, password)
         ctx.server_task = asyncio.create_task(server_loop(ctx), name="ServerLoop")
+
+        # ctx._main()
+
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
-        await asyncio.sleep(1)
+        await asyncio.sleep(5)
 
         game_start()
 
         ctx.dolphin_sync_task = asyncio.create_task(dolphin_sync_task(ctx), name="DolphinSync")
 
-        # if dme.is_hooked():
-        #     logger.info("Hooked to Dolphin!")
+        # progression_watcher = asyncio.create_task(game_watcher(ctx), name="SmsProgressionWatcher")
+        # loc_watch = asyncio.create_task(location_watcher(ctx))
+        # stage_watch = asyncio.create_task(handle_stages(ctx))
+        # arbitrary = asyncio.create_task(arbitrary_ram_checks(ctx))
 
-        progression_watcher = asyncio.create_task(game_watcher(ctx), name="SmsProgressionWatcher")
-        loc_watch = asyncio.create_task(location_watcher(ctx))
-        stage_watch = asyncio.create_task(handle_stages(ctx))
-        arbitrary = asyncio.create_task(arbitrary_ram_checks(ctx))
-
-        await progression_watcher
-        await loc_watch
-        await stage_watch
-        await arbitrary
-        await asyncio.sleep(.25)
+        # await progression_watcher
+        # await loc_watch
+        # await stage_watch
+        # await arbitrary
+        # await asyncio.sleep(.25)
 
         await ctx.exit_event.wait()
-        ctx.server_address = None
-
         await ctx.shutdown()
 
         if ctx.dolphin_sync_task:
-            await asyncio.sleep(3)
             await ctx.dolphin_sync_task
 
-
-    import colorama
-
-    colorama.init()
-    asyncio.run(_main(connect, password))
+    colorama.just_fix_windows_console()
+    asyncio.run(_main(args.connect, args.password))
     colorama.deinit()
 
 
 if __name__ == "__main__":
-    parser = get_base_parser(description="Super Mario Sunshine Client, for text interfacing.")
-    args, rest = parser.parse_known_args()
-    main(args.connect, args.password)
+    Utils.init_logging("SMSClient", exception_logger="Client")
+    main(*sys.argv[1:])
