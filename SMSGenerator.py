@@ -8,7 +8,7 @@ from gclib.dol import DOL
 from gclib.rarc import RARC
 from gclib.yaz0_yay0 import Yay0
 
-from. SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
+from .SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
 from .Helper_Functions import StringByteFunction as sbf
 from .patch import update_dol_offsets
 
@@ -70,9 +70,10 @@ class SuperMarioSunshineRandomizer:
         blue_coin_rando: int = int(self.output_data["Options"]["blue_coin_sanity"])
         starting_nozzle: int = int(self.output_data["Options"]["starting_nozzle"])
         yoshi_mode: bool = bool(self.output_data["Options"]["yoshi_mode"])
+        player_name: str = str(self.output_data["Name"])
 
         logger.info("Updating all the main.dol offsets with their appropriate values.")
-        self.gcm, self.dol = update_dol_offsets(self.gcm, self.dol, self.seed, starting_nozzle, 
+        self.gcm, self.dol = update_dol_offsets(self.gcm, self.dol, self.seed, player_name, starting_nozzle, 
             bool_level_access, bool_coin_shines, blue_coin_rando, yoshi_mode)
         
         for _, _ in self.export_files_from_memory():

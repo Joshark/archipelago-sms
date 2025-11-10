@@ -4,28 +4,19 @@ import asyncio
 import sys
 import collections
 import time
-import traceback
+from typing import Optional
+from dataclasses import dataclass
 import dolphin_memory_engine as dme
 import ModuleUpdate
+from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
+    CommonContext, server_loop
 import Utils
-from typing import Any, Dict, List, Optional, Set, Tuple
-from dataclasses import dataclass
+from NetUtils import ClientStatus
 from .options import SmsOptions
 from .bit_helper import change_endian, bit_flagger, extract_bits
 from . import addresses
-from NetUtils import ClientStatus
-from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
-    CommonContext, server_loop
 
 ModuleUpdate.update()
-
-
-''' "Comment-Dictionary"
-    #Gravi01    Preventing Crash when game is closed/disconnected before Client + Allowing client to reconnect
-
-'''
-
-
 
 CONNECTION_REFUSED_GAME_STATUS = (
     "Dolphin failed to connect. Please load a randomized ROM for Super Mario Sunshine. Trying again in 5 seconds..."
@@ -38,19 +29,21 @@ CONNECTION_LOST_STATUS = (
 )
 CONNECTION_CONNECTED_STATUS = "Dolphin connected successfully."
 CONNECTION_INITIAL_STATUS = "Dolphin connection has not been initiated."
+CONNECTION_VERIFY_SERVER = "Dolphin connected. Awaiting server verification."
 
 ticket_listing = []
 world_flags = {}
-debug = False
-debug_b = False
+DEBUG = False
+DEBUG_B = False
 
-game_ver = 0x3a
 CLIENT_VERSION = "0.4.0-alpha"
 AP_WORLD_VERSION_NAME = "APWorldVersion"
 
 
 @dataclass
 class NozzleItem:
+    """Data Class for Nozzles indicating its name and associated item ID"""
+
     nozzle_name: str
     ap_item_id: int
 
@@ -117,8 +110,14 @@ class SmsContext(CommonContext):
     async def server_auth(self, password_requested: bool = False):
         if password_requested and not self.password:
             await super(SmsContext, self).server_auth(password_requested)
+
         await self.get_username()
         await self.send_connect()
+
+        # if self.slot:
+        #     logger.info(CONNECTION_CONNECTED_STATUS)
+        #     self.dolphin_status = CONNECTION_CONNECTED_STATUS
+        # await self.send_connect()
 
     @property
     def endpoints(self):
@@ -166,20 +165,17 @@ class SmsContext(CommonContext):
 
 storedShines = []
 curShines = []
-delaySeconds = .5
-location_offset = 523000
+DELAY_SECONDS = .5
+LOCATION_OFFSET = 523000
 
 def read_string(console_address: int, strlen: int) -> str:
     return dme.read_bytes(console_address, strlen).split(b"\0", 1)[0].decode()
 
 
 def game_start():
-    for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
+    for _ in range(0, addresses.SMS_SHINE_BYTE_COUNT):
         storedShines.append(0x00)
         curShines.append(0x00)
-    # dme.hook()
-    # return dme.is_hooked()
-
 
 async def game_watcher(ctx: SmsContext):
     while not ctx.exit_event.is_set():
@@ -189,12 +185,12 @@ async def game_watcher(ctx: SmsContext):
             sync_msg.append({"cmd": "LocationChecks", "locations": list(ctx.locations_checked)})
         await ctx.send_msgs(sync_msg)
 
-        #Gravi01 Begin      
-        '''
-        dme.is_hooked() returns true if just the emulation stops, as dolphin itself is still running
-        this causes the dme to write into a non existing memory, resulting in the crashes.
-        changed if to check based on connection status, and unhooking DME properly if connection is lost (Exception)
-        ''' 
+        # Gravi01 Begin
+        
+        # dme.is_hooked() returns true if just the emulation stops, as dolphin itself is still running
+        # this causes the dme to write into a non existing memory, resulting in the crashes.
+        # changed if to check based on connection status, and unhooking DME properly if connection is lost (Exception)
+         
         if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
             try:
                 refresh_collection_counts(ctx)
@@ -203,7 +199,7 @@ async def game_watcher(ctx: SmsContext):
                 ctx.dolphin_status = CONNECTION_LOST_STATUS
                 dme.un_hook()
         ctx.lives_switch = True
-        #Gravi01 End
+        # Gravi01 End
 
         if ctx.victory and not ctx.finished_game:
             await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
@@ -236,7 +232,7 @@ async def location_watcher(ctx):
         if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
         #Gravi01 End
             _sub()
-        await asyncio.sleep(delaySeconds)
+        await asyncio.sleep(DELAY_SECONDS)
 
 async def dolphin_sync_task(ctx: SmsContext) -> None:
     logger.info("Starting Dolphin connector. Use /dolphin for status information.")
@@ -250,19 +246,29 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                         dme.un_hook()
                         ctx.dolphin_status = CONNECTION_INITIAL_STATUS
                         logger.info(ctx.dolphin_status)
-                        await asyncio.sleep(3)
+                        await asyncio.sleep(DELAY_SECONDS)
                         continue
                 
                 if not ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
                     game_id = read_string(0x80000000, 6)
-                    if game_id in ["GSME01", "GMSP01", "GMSJ01"]:
+                    if game_id in ["GMSE01", "GMSP01", "GMSJ01"]:
                         logger.info(CONNECTION_REFUSED_GAME_STATUS)
                         ctx.dolphin_status = CONNECTION_REFUSED_GAME_STATUS
                         dme.un_hook()
-                        await asyncio.sleep(3)
+                        await asyncio.sleep(DELAY_SECONDS)
                         continue
                     
-                    # If to check for slot name before connecting to server below
+                    # if not ctx.auth:
+                    #     ctx.auth = read_string(0x80418000, 64)
+                    #     logger.info(f"Player Name found in ROM: {ctx.auth}")
+                    #     # If no player name is found, disconnect DME and inform player
+                    #     if not ctx.auth:
+                    #         ctx.auth = None
+                    #         ctx.dolphin_status = "No name found in rom."
+                    #         logger.info(ctx.dolphin_status)
+                    #         dme.un_hook()
+                    #         await asyncio.sleep(3)
+                    #         continue
 
                 ctx.locations_checked = set()
 
@@ -273,7 +279,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                 await ctx.server_auth()
 
                 if not ctx.slot():
-                    await asyncio.sleep(3)
+                    await asyncio.sleep(DELAY_SECONDS)
                     continue
 
                 arg_seed = read_string(0x80000001, len(str(ctx.arg_seed)))
@@ -288,7 +294,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                 await location_watcher(ctx)
                 await handle_stages(ctx)
                 await arbitrary_ram_checks(ctx)
-                await asyncio.sleep(5)
+                await asyncio.sleep(DELAY_SECONDS)
 
             except Exception as ex:
                     dme.un_hook()
@@ -296,7 +302,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                     logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
                     await ctx.disconnect()
-                    await asyncio.sleep(3)
+                    await asyncio.sleep(DELAY_SECONDS)
                     continue
     except Exception as ex:
         logger.error("SMSClient Error: " + str(ex))
@@ -311,17 +317,17 @@ async def arbitrary_ram_checks(ctx):
                 activated_bits = bit_flagger(activated_bits, noz, True)
                 dme.write_byte(addresses.ARB_FLUDD_ENABLER, 0x1)
                 dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
-        await asyncio.sleep(delaySeconds)
+        await asyncio.sleep(DELAY_SECONDS)
 
 
 def memory_changed(ctx: SmsContext):
-    if debug: logger.info("memory_changed: " + str(curShines))
+    if DEBUG: logger.info("memory_changed: " + str(curShines))
     bit_list = []
     for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
         bit_found = extract_bits((curShines[x]), x)
         bit_list.extend(bit_found)
         storedShines[x] = curShines[x]
-    if debug: logger.info("bit_list: " + str(bit_list))
+    if DEBUG: logger.info("bit_list: " + str(bit_list))
     parse_bits(bit_list, ctx)
 
 
@@ -360,17 +366,17 @@ def send_victory(ctx: SmsContext):
 
 
 def parse_bits(all_bits, ctx: SmsContext):
-    if debug: logger.info("parse_bits: " + str(all_bits))
+    if DEBUG: logger.info("parse_bits: " + str(all_bits))
     if len(all_bits) == 0:
         return
 
     for x in all_bits:
         if x < 119:
-            temp = x + location_offset
+            temp = x + LOCATION_OFFSET
             ctx.locations_checked.add(temp)
-            if debug: logger.info("checks to send: " + str(temp))
+            if DEBUG: logger.info("checks to send: " + str(temp))
         elif 119 < x <= 549:
-            temp = x + location_offset
+            temp = x + LOCATION_OFFSET
             ctx.locations_checked.add(temp)
         if x == 119:
             send_victory(ctx)
@@ -409,7 +415,7 @@ def refresh_all_items(ctx: SmsContext):
 
 
 def refresh_collection_counts(ctx):
-    #if debug: logger.info("refresh_collection_counts")
+    #if DEBUG: logger.info("refresh_collection_counts")
     refresh_item_count(ctx, 523004, addresses.SMS_SHINE_COUNTER)
     if ctx.blue_status == 1:
         refresh_item_count(ctx, 523014, addresses.SMS_BLUECOIN_COUNTER)
@@ -603,11 +609,12 @@ async def handle_stages(ctx):
                 if ctx.ticket_mode:
                     resolve_tickets(next_stage, ctx)
                  
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(3)
 
 
 def main(*launch_args: str):
     import colorama
+    from .iso_helper.sms_rom import SMSPatch
 
     server_address: str = ""
     rom_path: str = ""
@@ -639,7 +646,7 @@ def main(*launch_args: str):
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
-        await asyncio.sleep(5)
+        await asyncio.sleep(DELAY_SECONDS)
 
         game_start()
 

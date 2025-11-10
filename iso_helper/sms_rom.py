@@ -109,7 +109,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
     @classmethod
     def get_base_rom_path(cls) -> str:
         options: Settings = get_settings()
-        file_name = options["supermariosunshine_options"]["iso_file"]
+        file_name = options["sms_options"]["iso_file"]
         if not os.path.exists(file_name):
             file_name = Utils.user_path(file_name)
         return file_name
@@ -157,8 +157,8 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
         if magic == "CISO":
             raise InvalidCleanISOError(f"The provided ISO is in CISO format. The {RANDOMIZER_NAME} randomizer " +
                                        "only supports ISOs in ISO format.")
-        if game_id != "GSME01":
-            if game_id and game_id.startswith("GSM"):
+        if game_id != "GMSE01":
+            if game_id and game_id.startswith("GMS"):
                 raise InvalidCleanISOError(f"Invalid version of {RANDOMIZER_NAME}. " +
                                            "Currently, only the North American version is supported by this randomizer.")
             else:

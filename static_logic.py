@@ -84,7 +84,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Turbo Dash!", 523116, Requirements([NozzleType.turbo])),
         Shine("Lighthouse Roof", 523093, Requirements([NozzleType.rocket])),
         Shine("Clean the East Bell", 523097, Requirements([NozzleType.rocket, NozzleType.splasher])),
-        Shine("Shine Gate", 523099, Requirements([NozzleType.rocket])),
+        Shine("Shine Gate", 523099, Requirements([NozzleType.spray, NozzleType.rocket])),
         Shine("Pachinko Game", 523089, Requirements([NozzleType.hover])),
         Shine("Lily Pad Ride", 523091, Requirements([NozzleType.hover, NozzleType.spray, NozzleType.yoshi])),
         Shine("Turbo Track", 523087, Requirements([NozzleType.turbo])),
