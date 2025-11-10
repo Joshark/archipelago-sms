@@ -1,15 +1,18 @@
+import os
 import random
 import struct
 
 from gclib.gcm import GCM
 from gclib.dol import DOL, DOLSection
 
+from .Helper_Functions import StringByteFunction as sbf
+
 CUSTOM_CODE_OFFSET_START = 0x3F00A0
 SMS_PLAYER_NAME_BYTE_LENGTH = 64
 
 # class SMSTest:
 
-def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, start_inv: int, level_access: bool,
+def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, start_inv: int, level_access: bool,
     coin_shines: bool, blue_rando: int, yoshi_rando: bool) -> (GCM, DOL):
 
     random.seed(seed)
@@ -21,6 +24,12 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, start_inv: int, level_acce
     fmv_values2 = [0x38, 0x60, 0x00, 0x01]
     blue_visual_fix_values = [0x4e, 0x80, 0x00, 0x20]
     skip_blue_save_values = "60000000"
+
+    # ChangeNozzle offset to check if we own the nozzles
+    change_nozzle_offset = dol.convert_address_to_offset(0x8026a164)
+
+    dol.data.seek(change_nozzle_offset)
+    dol.data.write(bytes.fromhex("481ad8a4"))
 
     # FMV Offset patching to skip cutscenes in game
     fmv_offset1 = dol.convert_address_to_offset(0x802B5EF4)
@@ -53,8 +62,13 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, start_inv: int, level_acce
     dol.data.seek(len(dol.data.getvalue()))
     blank_data = b"\x00" * new_dol_size
     dol.data.write(blank_data)
-
-    with open("SMS_custom_code.smsco", "rb") as f:
+    
+    entries = os.listdir('.')
+    for entry in entries:
+        if os.path.isfile(entry):
+            print(entry)
+    
+    with open("./worlds/sms/SMS_custom_code.smsco", "rb") as f:
         custom_dol_code = f.read()
     print(f"Custom Code Read: {custom_dol_code[:16]}...")
     dol.data.seek(CUSTOM_CODE_OFFSET_START)
@@ -77,6 +91,10 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, start_inv: int, level_acce
 
     dol.data.seek(fludd4_offset)
     dol.data.write(bytes.fromhex("4814e6cc"))
+
+    slot_name_offset = dol.convert_address_to_offset(0x80418000)
+    dol.data.seek(slot_name_offset)
+    dol.data.write(sbf.string_to_bytes(slot_name, SMS_PLAYER_NAME_BYTE_LENGTH))
 
     for section in dol.sections:
         print(f"Section at 0x{section.offset:X} (0x{section.address:X}) size 0x{section.size:X}")

@@ -2,21 +2,39 @@
 Archipelago init file for Super Mario Sunshine
 """
 import random
+from dataclasses import fields
 from typing import Dict, Any
 import os
+import settings
 
 from BaseClasses import ItemClassification
 from worlds.AutoWorld import WebWorld, World
-from worlds.LauncherComponents import Component, components, launch_subprocess
+from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
+
 from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, TICKET_ITEMS, SmsItem
 from .locations import ALL_LOCATIONS_TABLE
 from .options import SmsOptions
 from .regions import create_regions
+from .iso_helper.sms_rom import SMSPlayerContainer
 
+
+def run_client(*args):
+    from .SMSClient import main
+    launch_subprocess(main, name="SMS Client", args=args)
+
+components.append(
+    Component("Super Mario Sunshine Client", func=run_client, component_type=Type.CLIENT,
+        file_identifier=SuffixIdentifier(".apsms")))
+
+class SuperMarioSunshineSettings(settings.Group):
+    class ISOFile(settings.UserFilePath):
+        description = "Super Mario Sunshine (USA) NTSC-U ISO File"
+        copy_to = None
+
+    iso_file: ISOFile = ISOFile(ISOFile.copy_to)
 
 class SmsWebWorld(WebWorld):
     theme = "ocean"
-
 
 class SmsWorld(World):
     """
@@ -33,6 +51,8 @@ class SmsWorld(World):
 
     item_name_to_id = ALL_ITEMS_TABLE
     location_name_to_id = ALL_LOCATIONS_TABLE
+
+    settings: SuperMarioSunshineSettings
 
     corona_goal = 50
     possible_shines = 0
@@ -91,25 +111,46 @@ class SmsWorld(World):
                 "boathouse_maximum": self.options.trade_shine_maximum.value,
                 "coin_shine_enabled": self.options.enable_coin_shines.value}
 
+    def generate_output(self, output_directory: str):
+        from .SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
 
-def launch_client():
-    from .SMSClient import main
-    launch_subprocess(main, name="SMS client")
+        output_data = {
+            "Seed": self.multiworld.seed,
+            "Slot": self.player,
+            "Name": self.player_name,
+            "Options": {},
+            AP_WORLD_VERSION_NAME: CLIENT_VERSION
+        }
+
+        for field in fields(self.options):
+            output_data["Options"][field.name] = getattr(self.options, field.name).value
+        
+        patch_path = os.path.join(output_directory, f"{self.multiworld.get_out_file_name_base(self.player)}"
+            f"{SMSPlayerContainer.patch_file_ending}")
+        sms_container = SMSPlayerContainer(output_data, patch_path, self.multiworld.player_name[self.player], self.player)
+        sms_container.write()
+
+        
 
 
-def add_client_to_launcher() -> None:
-    version = "0.2.0"
-    found = False
-    for c in components:
-        if c.display_name == "Super Mario Sunshine Client":
-            found = True
-            if getattr(c, "version", 0) < version:
-                c.version = version
-                c.func = launch_client
-                return
-    if not found:
-        components.append(Component("Super Mario Sunshine Client", "SMSClient",
-                                    func=launch_client))
+# def launch_client():
+#     from .SMSClient import main
+#     launch_subprocess(main, name="SMS client")
 
 
-add_client_to_launcher()
+# def add_client_to_launcher() -> None:
+#     version = "0.2.0"
+#     found = False
+#     for c in components:
+#         if c.display_name == "Super Mario Sunshine Client":
+#             found = True
+#             if getattr(c, "version", 0) < version:
+#                 c.version = version
+#                 c.func = launch_client
+#                 return
+#     if not found:
+#         components.append(Component("Super Mario Sunshine Client", "SMSClient",
+#                                     func=launch_client))
+
+
+# add_client_to_launcher()
