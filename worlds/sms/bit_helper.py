@@ -5,7 +5,7 @@ def extract_bits(input_byte, input_offset):
     for x in range(0, len(temp)):
         if temp[x] == "1":
             bit_list.append(((input_offset + 1) * 8) - int(x+1))
-    print(bit_list)
+
     return bit_list
 
 

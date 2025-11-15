@@ -1,13 +1,12 @@
 import json
-import os, yaml
-import Utils
+import os
 
-from CommonClient import logger
 from gclib.gcm import GCM
 from gclib.dol import DOL
 from gclib.rarc import RARC
-from gclib.yaz0_yay0 import Yay0
 
+import Utils
+from CommonClient import logger
 from .SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
 from .Helper_Functions import StringByteFunction as sbf
 from .patch import update_dol_offsets
@@ -26,20 +25,20 @@ class SuperMarioSunshineRandomizer:
                 temp_file.close()
         except IOError:
             raise Exception(f"{randomized_output_file_path} is currently in use by another program")
-        
+
         self.output_data = json.loads(ap_output_data.decode("utf-8"))
 
         self.gcm = GCM(self.clean_iso_path)
         self.gcm.read_entire_disc()
         self.dol = DOL()
 
-        logger.info("Updating the ISO game id with the AP generated seed")
+        # logger.info("Updating the ISO game id with the AP generated seed")
         self.seed = self.output_data["Seed"]
-        magic_seed = str(self.seed)
-        bin_data = self.gcm.read_file_data("sys/boot.bin")
-        bin_data.seek(0x01)
-        bin_data.write(sbf.string_to_bytes(magic_seed, len(magic_seed)))
-        self.gcm.changed_files["sys/boot.bin"] = bin_data
+        # magic_seed = str(self.seed)
+        # bin_data = self.gcm.read_file_data("sys/boot.bin")
+        # bin_data.seek(0x01)
+        # bin_data.write(sbf.string_to_bytes(magic_seed, len(magic_seed)))
+        # self.gcm.changed_files["sys/boot.bin"] = bin_data
 
         self.save_randomized_iso()
 
@@ -57,13 +56,13 @@ class SuperMarioSunshineRandomizer:
             raise Utils.VersionException("Error! Server was generated with a different Super Mario Sunshine " +
                     f"APWorld version.\nThe client version is {CLIENT_VERSION}!\nPlease verify you are using the " +
                     f"same APWorld as the generator, which is '{ap_world_version}'")
-        
+
     def get_arc(self, arc_path):
         arc_path = arc_path.replace("\\", "/")
         arc = RARC(self.gcm.read_file_data(arc_path))
         arc.read()
         return arc
-    
+
     def save_randomized_iso(self):
         bool_level_access: bool = bool(self.output_data["Options"]["level_access"])
         bool_coin_shines: bool = bool(self.output_data["Options"]["enable_coin_shines"])
@@ -75,7 +74,7 @@ class SuperMarioSunshineRandomizer:
         logger.info("Updating all the main.dol offsets with their appropriate values.")
         self.gcm, self.dol = update_dol_offsets(self.gcm, self.dol, self.seed, player_name, starting_nozzle, 
             bool_level_access, bool_coin_shines, blue_coin_rando, yoshi_mode)
-        
+
         for _, _ in self.export_files_from_memory():
             continue
 
