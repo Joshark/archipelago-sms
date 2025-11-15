@@ -1,14 +1,14 @@
+from hashlib import md5
+from typing import Any
 import shutil
+import json, logging, sys, os, zipfile, tempfile
+import urllib.request
 
-from worlds.Files import APPatch, APPlayerContainer, AutoPatchRegister 
+from worlds.Files import APPatch, APPlayerContainer, AutoPatchRegister
 from settings import get_settings, Settings
 from NetUtils import convert_to_base_types
 import Utils
 
-from hashlib import md5
-from typing import Any
-import json, logging, sys, os, zipfile, tempfile
-import urllib.request
 
 logger = logging.getLogger()
 MAIN_PKG_NAME = "worlds.supermariosunshine.SMSGenerator"
@@ -144,7 +144,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
             magic = fs.try_read_str(f, 0, 4)
             game_id = fs.try_read_str(f, 0, 6)
             logger.info(f"Magic Code: {magic}")
-            logger.info(f"LM Game ID: {game_id}")
+            logger.info(f"SMS Game ID: {game_id}")
 
         # Verify that the file has the right hash first, as the wrong file could have been loaded.
         md5_conv = int(base_md5.hexdigest(), 16)

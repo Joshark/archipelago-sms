@@ -75,14 +75,17 @@ class SmsWorld(World):
     def create_items(self):
         pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
 
+        for _ in range(0, 4):
+            pool.append(self.create_item("1-UP"))
+
         if self.options.level_access == 1:
             pool += [self.create_item(name) for name in TICKET_ITEMS.keys()]
 
         if self.options.blue_coin_sanity == "full_shuffle":
-            for i in range(0, self.options.blue_coin_maximum):
+            for _ in range(0, self.options.blue_coin_maximum):
                 pool.append((self.create_item("Blue Coin")))
 
-        for i in range(0, len(self.multiworld.get_locations(self.player)) - len(pool) - 1):
+        for _ in range(0, len(self.multiworld.get_locations(self.player)) - len(pool) - 1):
             pool.append(self.create_item("Shine Sprite"))
             self.possible_shines += 1
 
@@ -98,18 +101,19 @@ class SmsWorld(World):
 
     def set_rules(self):
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
-        self.corona_goal = self.options.corona_mountain_shines.value
-        if self.corona_goal > self.possible_shines:
-            self.corona_goal = self.possible_shines
+        self.corona_goal = min(self.options.corona_mountain_shines.value, self.possible_shines)
 
     def fill_slot_data(self) -> Dict[str, Any]:
-        return {"corona_mountain_shines": self.options.corona_mountain_shines.value,
-                "blue_coin_sanity": self.options.blue_coin_sanity.value,
-                "starting_nozzle": self.options.starting_nozzle.value,
-                "yoshi_mode": self.options.yoshi_mode.value,
-                "ticket_mode": self.options.level_access.value,
-                "boathouse_maximum": self.options.trade_shine_maximum.value,
-                "coin_shine_enabled": self.options.enable_coin_shines.value}
+        return {
+            "corona_mountain_shines": self.options.corona_mountain_shines.value,
+            "blue_coin_sanity": self.options.blue_coin_sanity.value,
+            "starting_nozzle": self.options.starting_nozzle.value,
+            "yoshi_mode": self.options.yoshi_mode.value,
+            "ticket_mode": self.options.level_access.value,
+            "boathouse_maximum": self.options.trade_shine_maximum.value,
+            "coin_shine_enabled": self.options.enable_coin_shines.value,
+            "seed": self.multiworld.seed
+        }
 
     def generate_output(self, output_directory: str):
         from .SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
@@ -124,13 +128,11 @@ class SmsWorld(World):
 
         for field in fields(self.options):
             output_data["Options"][field.name] = getattr(self.options, field.name).value
-        
+
         patch_path = os.path.join(output_directory, f"{self.multiworld.get_out_file_name_base(self.player)}"
             f"{SMSPlayerContainer.patch_file_ending}")
         sms_container = SMSPlayerContainer(output_data, patch_path, self.multiworld.player_name[self.player], self.player)
         sms_container.write()
-
-        
 
 
 # def launch_client():

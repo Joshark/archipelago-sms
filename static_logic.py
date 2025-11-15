@@ -55,6 +55,19 @@ class BlueCoin(NamedTuple):
     tears: Requirements = Requirements()
     available: [int] = []
 
+class OneUp(NamedTuple):
+    name: str
+    id: int
+    requirements: Requirements = Requirements()
+    available: [int] = []
+
+# Yes, I'm going to include Shadow Mario Plaza chases as NozzleBox Locations
+class NozzleBox(NamedTuple):
+    name: str
+    id: int
+    requirements: Requirements = Requirements()
+    available: [int] = []
+
 
 class SmsRegion(NamedTuple):
     name: str
@@ -62,6 +75,8 @@ class SmsRegion(NamedTuple):
     requirements: Requirements = Requirements()
     shines: list[Shine] = []
     blue_coins: list[BlueCoin] = []
+    one_ups: list[OneUp] = []
+    nozzle_boxes: list[NozzleBox] = []
     ticketed: str = ""
     trade: bool = False
     parent_region: str = "Menu"
@@ -76,7 +91,8 @@ ALL_REGIONS: list[SmsRegion] = [
 
 
     # Delfino Plaza
-    SmsRegion(INIT, PLAZA, Requirements([NozzleType.splasher], skip_into=True), [
+    SmsRegion(INIT, PLAZA, Requirements([NozzleType.splasher], skip_into=True),
+    [
         Shine("Shine Sprite in the Sand", 523117, Requirements([NozzleType.hover])),
         Shine("Clean the West Bell", 523096, Requirements([NozzleType.hover | NozzleType.yoshi])),
         Shine("Super Slide", 523090, Requirements([NozzleType.hover | NozzleType.rocket])),
@@ -89,9 +105,11 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Lily Pad Ride", 523091, Requirements([NozzleType.hover, NozzleType.spray, NozzleType.yoshi])),
         Shine("Turbo Track", 523087, Requirements([NozzleType.turbo])),
         Shine("Red Coin Field", 523092,
-              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover]))], [
+              Requirements([NozzleType.spray, NozzleType.rocket | NozzleType.hover]))
+    ],
+    [
         BlueCoin("Turbo Pillar", 523121, Requirements([NozzleType.turbo])),
-        BlueCoin("Burning Pianta", 523124, Requirements([NozzleType.splasher], shines=5)),
+        BlueCoin("Burning Pianta", 523124, Requirements([NozzleType.splasher])),
         BlueCoin("Shine Gate M", 523125, Requirements([NozzleType.splasher])),
         BlueCoin("Tower M", 523126, Requirements([NozzleType.splasher])),
         BlueCoin("Chuckster Room M", 523127, Requirements([NozzleType.splasher])),
@@ -103,8 +121,13 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Canal Sewer", 523137),
         BlueCoin("Blue Bird Near Sirena Pipe", 523138, Requirements([NozzleType.spray | NozzleType.yoshi])),
         BlueCoin("Blue Bird Near Crate Guy", 523139, Requirements([NozzleType.spray | NozzleType.yoshi]))
-    ],
-        parent_region=AIRSTRIP),
+    ],[
+        OneUp("Under Beach 1", 523600), # High number ideas for now till I figure out their bitflags
+        OneUp("Under Beach 2", 523601),
+        OneUp("Campfire", 523602, Requirements([NozzleType.splasher])),
+        OneUp("Underwater Hole", 523603),
+        OneUp("Lily Pad Ride", 523604, Requirements([NozzleType.spray and NozzleType.yoshi]))
+    ],parent_region=AIRSTRIP),
 
     SmsRegion(STATUE, PLAZA, Requirements([NozzleType.spray | NozzleType.yoshi], skip_into=True), [
         Shine("Boxing Clever 1", 523094),
@@ -116,7 +139,11 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Pineapple Basket", 523128),
         BlueCoin("Durian Basket", 523129),
         BlueCoin("Banana Basket", 523130),
-        BlueCoin("Coconut Basket", 523131, Requirements([NozzleType.splasher])),
+        BlueCoin("Coconut Basket", 523131, Requirements([NozzleType.splasher]))], [
+        NozzleBox("Shadow Mario Rocket Nozzle Chase", 523550, Requirements([NozzleType.splasher], shines=30)),
+        NozzleBox("Shadow Mario Turbo Nozzle Chase", 523551, Requirements([NozzleType.splasher], shines=25)),
+        NozzleBox("Shadow Mario Yoshi Egg Chase", 523911, Requirements([NozzleType.splasher],
+            location="Pinna Park - The Wilted Sunflowers")) # Giving this high ID for now till I resolve all Nozzle Boxes
     ], parent_region=INIT),
 
 
@@ -194,7 +221,7 @@ ALL_REGIONS: list[SmsRegion] = [
 
 
     # Ricco Harbor
-    SmsRegion("Ricco Entrance", "Ricco Harbor", Requirements([NozzleType.splasher | NozzleType.yoshi], shines=3), [
+    SmsRegion("Ricco Entrance", RICCO, Requirements([NozzleType.splasher | NozzleType.yoshi], shines=3), [
         Shine("100 Coins", 523101, Requirements([NozzleType.hover]), hundred=True)],
         [
         BlueCoin("Tower Wall", 523221, Requirements([NozzleType.spray])),

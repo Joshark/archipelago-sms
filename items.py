@@ -31,7 +31,7 @@ ALL_PROGRESSION_ITEMS: dict[str, int] = {
 }
 
 JUNK_ITEMS: dict[str, int] = {
-    "1-UP": 523012,
+    "1-UP": 523140,
 }
 
 
