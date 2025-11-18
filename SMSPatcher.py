@@ -32,13 +32,7 @@ class SuperMarioSunshineRandomizer:
         self.gcm.read_entire_disc()
         self.dol = DOL()
 
-        # logger.info("Updating the ISO game id with the AP generated seed")
         self.seed = self.output_data["Seed"]
-        # magic_seed = str(self.seed)
-        # bin_data = self.gcm.read_file_data("sys/boot.bin")
-        # bin_data.seek(0x01)
-        # bin_data.write(sbf.string_to_bytes(magic_seed, len(magic_seed)))
-        # self.gcm.changed_files["sys/boot.bin"] = bin_data
 
         self.save_randomized_iso()
 
@@ -72,7 +66,7 @@ class SuperMarioSunshineRandomizer:
         player_name: str = str(self.output_data["Name"])
 
         logger.info("Updating all the main.dol offsets with their appropriate values.")
-        self.gcm, self.dol = update_dol_offsets(self.gcm, self.dol, self.seed, player_name, starting_nozzle, 
+        self.gcm, self.dol = update_dol_offsets(self.gcm, self.dol, self.seed, player_name, starting_nozzle,
             bool_level_access, bool_coin_shines, blue_coin_rando, yoshi_mode)
 
         for _, _ in self.export_files_from_memory():

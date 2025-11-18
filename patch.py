@@ -10,7 +10,7 @@ SMS_PLAYER_NAME_BYTE_LENGTH = 64
 
 # class SMSTest:
 
-def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, start_inv: int, level_access: bool,
+def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_nozzle: int, level_access: bool,
     coin_shines: bool, blue_rando: int, yoshi_rando: bool) -> (GCM, DOL):
 
     random.seed(seed)
@@ -33,15 +33,13 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, start_inv:
     # ChangeNozzle offset to check if we own the nozzles
     change_nozzle_offset = dol.convert_address_to_offset(0x8026a164)
 
-    print(f"Change Nozzle Offset: 0x{change_nozzle_offset:X}")
     dol.data.seek(change_nozzle_offset)
     dol.data.write(bytes.fromhex(change_nozzle_values))
 
     # FMV Offset patching to skip cutscenes in game
     fmv_offset1 = dol.convert_address_to_offset(0x802B5EF4)
     fmv_offset2 = dol.convert_address_to_offset(0x802B5E8C)
-    print(f"FMV1 offset: 0x{fmv_offset1:X}")
-    print(f"FMV2 offset: 0x{fmv_offset2:X}")
+
     dol.data.seek(fmv_offset1)
     dol.data.write(bytes.fromhex(fmv_values1))
     dol.data.seek(fmv_offset2)
@@ -49,18 +47,18 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, start_inv:
 
     # Blue Coin Visual Bug Fix (No HUD Glitches upon picking up blue coins)
     blue_visual_fix_offset = dol.convert_address_to_offset(0x8014757c)
-    print(f"Blue Visual Fix offset: 0x{blue_visual_fix_offset:X}")
+
     dol.data.seek(blue_visual_fix_offset)
     dol.data.write(bytes.fromhex(blue_visual_fix_values))
 
     # Skip Blue Coin Save Prompt
     skip_blue_save_offset = dol.convert_address_to_offset(0x8029A73C)
-    print(f"Skip Blue Save offset: 0x{skip_blue_save_offset:X}")
+
     dol.data.seek(skip_blue_save_offset)
     dol.data.write(bytes.fromhex(skip_blue_save_values))
 
     # Replace section two with our own custom section, which is about 1000 hex bytes long.
-    new_dol_size = 0x1000
+    new_dol_size = 0x2048
     new_dol_sect = DOLSection(CUSTOM_CODE_OFFSET_START, 0x80417800, new_dol_size)
     dol.sections[2] = new_dol_sect
 
@@ -68,10 +66,10 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, start_inv:
     dol.data.seek(len(dol.data.getvalue()))
     blank_data = b"\x00" * new_dol_size
     dol.data.write(blank_data)
-    
+
     with open("./worlds/sms/SMS_custom_code.smsco", "rb") as f:
         custom_dol_code = f.read()
-    print(f"Custom Code Read: {custom_dol_code[:16]}...")
+
     dol.data.seek(CUSTOM_CODE_OFFSET_START)
     dol.data.write(custom_dol_code)
 
@@ -80,11 +78,6 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, start_inv:
     fludd2_offset = dol.convert_address_to_offset(0x80268DD4)
     fludd3_offset = dol.convert_address_to_offset(0x80268E18)
     fludd4_offset = dol.convert_address_to_offset(0x802C924C)
-
-    print(f"Fludd Nozzle Rando Offsets: 0x{fludd1_offset:x}")
-    print(f"Fludd Nozzle Rando Offsets: 0x{fludd2_offset:x}")
-    print(f"Fludd Nozzle Rando Offsets: 0x{fludd3_offset:x}")
-    print(f"Fludd Nozzle Rando Offsets: 0x{fludd4_offset:x}")
 
     dol.data.seek(fludd1_offset)
     dol.data.write(bytes.fromhex(nozzle_rando_value1))
@@ -98,21 +91,52 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, start_inv:
     dol.data.seek(fludd4_offset)
     dol.data.write(bytes.fromhex(nozzle_rando_value4))
 
+    # Offset and branch rewrite for Nozzle Enforcement in TWaterGun::init()
+    twatergun_init_offset = dol.convert_address_to_offset(0x8026aa44)
+
+    dol.data.seek(twatergun_init_offset)
+    dol.data.write(bytes.fromhex("481ad01c"))
+
+    # Offset to change Yoshi Egg Spawn Flag
+    delfino_yoshi_egg_offset = dol.convert_address_to_offset(0x801bbf84)
+    others_yoshi_egg_offset = dol.convert_address_to_offset(0x801bbfb0)
+
+    dol.data.seek(delfino_yoshi_egg_offset)
+    dol.data.write(bytes.fromhex("4825bb45"))
+    dol.data.seek(others_yoshi_egg_offset)
+    dol.data.write(bytes.fromhex("4825bb19"))
+
     # Player Slot Name Writing
     slot_name_offset = dol.convert_address_to_offset(0x80418000)
-    print(f"Slot Name Offset: 0x{slot_name_offset:X}")
+
     dol.data.seek(slot_name_offset)
     dol.data.write(sbf.string_to_bytes(slot_name, SMS_PLAYER_NAME_BYTE_LENGTH))
 
     # Removes plaza darkness so game won't go full dark mode above 120 shines
     plaza_darkness1_offset = dol.convert_address_to_offset(0x8017D1E0)
     plaza_darkness2_offset = dol.convert_address_to_offset(0x8027C67C)
-    print(f"Plaza Darkness1 Offset: 0x{plaza_darkness1_offset:X}")
-    print(f"Plaza Darkness2 Offset: 0x{plaza_darkness2_offset:X}")
+
     dol.data.seek(plaza_darkness1_offset)
     dol.data.write(bytes.fromhex(plaza_darkness1_value))
     dol.data.seek(plaza_darkness2_offset)
     dol.data.write(bytes.fromhex(plaza_darkness2_value))
+
+    # If Ticketed mode, set Noki requirement to 0 so it opens whenever ticket is acquired
+    if level_access is True:
+        noki_entrance_requirement = dol.convert_address_to_offset(0x802b79e3)
+
+        dol.data.seek(noki_entrance_requirement)
+        dol.data.write(bytes.fromhex("00"))
+
+    # If starting Fludd, changes so File Select boots straight to plaza 8
+    if starting_nozzle is 2:
+        boot_to_plaza_offset = dol.convert_address_to_offset(0x80164E46)
+        dol.data.seek(boot_to_plaza_offset)
+        dol.data.write(bytes.fromhex("00000108"))
+
+    # QOL shines no longer boot out of stage
+
+
 
     for section in dol.sections:
         print(f"Section at 0x{section.offset:X} (0x{section.address:X}) size 0x{section.size:X}")

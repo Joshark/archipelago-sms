@@ -11,7 +11,7 @@ import Utils
 
 
 logger = logging.getLogger()
-MAIN_PKG_NAME = "worlds.supermariosunshine.SMSGenerator"
+MAIN_PKG_NAME = "worlds.supermariosunshine.SMSPatcher"
 
 RANDOMIZER_NAME = "Super Mario Sunshine"
 SMS_USA_MD5 = 0x0c6d2edae9fdf40dfc410ff1623e4119
@@ -89,7 +89,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
             self.verify_base_rom(sms_clean_iso, throw_on_missing_speedups=True)
 
             # Use our randomize function to patch the file into an ISO.
-            from ..SMSGenerator import SuperMarioSunshineRandomizer
+            from ..SMSPatcher import SuperMarioSunshineRandomizer
             with zipfile.ZipFile(apsms_patch, "r") as zf:
                 apsms_bytes = zf.read("patch.apsms")
             SuperMarioSunshineRandomizer(sms_clean_iso, output_file, apsms_bytes)
@@ -192,7 +192,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
         self.verify_base_rom(vanilla_iso_path)
 
         # Use our randomize function to patch the file into an ISO.
-        from ..SMSGenerator import SuperMarioSunshineRandomizer
+        from ..SMSPatcher import SuperMarioSunshineRandomizer
         with zipfile.ZipFile(patch_file_path, "r") as zf:
             apsms_bytes = zf.read("patch.apsms")
         SuperMarioSunshineRandomizer(vanilla_iso_path, output_iso_path, apsms_bytes)
