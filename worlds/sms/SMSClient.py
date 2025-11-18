@@ -98,8 +98,6 @@ class SmsContext(SuperContext):
 
     plaza_episode = 0
 
-    yoshi_check = False
-
     goal = 50
     corona_message_given = False
     blue_status = 1
@@ -131,7 +129,7 @@ class SmsContext(SuperContext):
             return [self.server]
         else:
             return []
-        
+
     def make_gui(self):
         ui = super().make_gui()
         ui.base_title = "Super Mario Sunshine Client"
@@ -237,7 +235,7 @@ async def game_watcher(ctx: SmsContext):
 
 
 async def location_watcher(ctx):
-    ctx.checked_yoshi_egg = False
+    # ctx.checked_yoshi_egg = False
     def _sub():
         if not dme.is_hooked():
             return
@@ -268,10 +266,10 @@ async def location_watcher(ctx):
                 storedNozzleBoxes[x] = curNozzleBoxes[x]
 
         # Check corresponds to Shadow Mario Yoshi Egg Chase
-        delfino_yoshi_unlock = dme.read_byte(addresses.DELFINO_YOSHI_UNLOCK)
-        if (delfino_yoshi_unlock & 0x80) and not ctx.checked_yoshi_egg:
-            ctx.checked_yoshi_egg = True
-            memory_changed(ctx, 113, delfino_yoshi_unlock)
+        # delfino_yoshi_unlock = dme.read_byte(addresses.DELFINO_YOSHI_UNLOCK)
+        # if (delfino_yoshi_unlock & 0x80) and not ctx.checked_yoshi_egg:
+        #     ctx.checked_yoshi_egg = True
+        #     memory_changed(ctx, 113, delfino_yoshi_unlock)
 
         return
 
@@ -333,15 +331,16 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
 
 
 async def arbitrary_ram_checks(ctx):
-    if dme.is_hooked():
-        activated_bits = dme.read_byte(addresses.ARB_NOZZLES_ENABLER)
+    while not ctx.exit_event.is_set():
+        if dme.is_hooked():
+            activated_bits = dme.read_byte(addresses.ARB_NOZZLES_ENABLER)
 
-        for noz in ctx.ap_nozzles_received:
-            if noz < 4:
-                activated_bits = bit_flagger(activated_bits, noz, True)
-                dme.write_byte(addresses.ARB_FLUDD_ENABLER, 0x1)
-                dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
-        await asyncio.sleep(DELAY_SECONDS)
+            for noz in ctx.ap_nozzles_received:
+                if noz < 4:
+                    activated_bits = bit_flagger(activated_bits, noz, True)
+                    dme.write_byte(addresses.ARB_FLUDD_ENABLER, 0x1)
+                    dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
+            await asyncio.sleep(DELAY_SECONDS)
 
 
 def memory_changed(ctx: SmsContext, bit_pos, cached_byte):
@@ -544,6 +543,7 @@ def activate_nozzle(id, ctx):
 
 
 def activate_yoshi(ctx):
+    dme.write_byte(0x80417A03, 0x01)
     if not ctx.ap_nozzles_received.__contains__(4):
         ctx.ap_nozzles_received.append(4)
     return
