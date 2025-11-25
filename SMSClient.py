@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+import sys
 import asyncio
 import collections
 import time
 import traceback
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Optional
 from dataclasses import dataclass
 
 import ModuleUpdate
+import Utils
+from NetUtils import ClientStatus
+from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
+    server_loop
 from .options import SmsOptions
 from .bit_helper import change_endian, bit_flagger, extract_bits
 import dolphin_memory_engine as dme
@@ -15,17 +20,17 @@ from . import addresses
 
 ModuleUpdate.update()
 
-import Utils
+TRACKER_LOADED = False
+try:
+    from worlds.tracker.TrackerClient import TrackerGameContext as SuperContext
+    TRACKER_LOADED = True
+except ModuleNotFoundError:
+    from CommonClient import CommonContext as SuperContext
 
 ''' "Comment-Dictionary"
     #Gravi01    Preventing Crash when game is closed/disconnected before Client + Allowing client to reconnect
 
 '''
-
-
-from NetUtils import ClientStatus
-from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
-    CommonContext, server_loop
 
 CONNECTION_REFUSED_GAME_STATUS = (
     "Dolphin failed to connect. Please load a randomized ROM for Super Mario Sunshine. Trying again in 5 seconds..."
@@ -41,10 +46,11 @@ CONNECTION_INITIAL_STATUS = "Dolphin connection has not been initiated."
 
 ticket_listing = []
 world_flags = {}
-debug = False
-debug_b = False
 
-game_ver = 0x3a
+DEBUG = False
+GAME_VER = 0x3a
+AP_WORLD_VERSION_NAME = "0.6.4"
+CLIENT_VERSION = "0.4.3"
 
 
 @dataclass
@@ -74,9 +80,10 @@ class SmsCommandProcessor(ClientCommandProcessor):
         refresh_collection_counts(self.ctx)
 
 
-class SmsContext(CommonContext):
+class SmsContext(SuperContext):
     command_processor: SmsCommandProcessor
     game = "Super Mario Sunshine"
+    tags = {"AP"}
     items_handling = 0b111  # full remote
 
     options: SmsOptions
@@ -91,8 +98,6 @@ class SmsContext(CommonContext):
 
     plaza_episode = 0
 
-    yoshi_check = False
-
     goal = 50
     corona_message_given = False
     blue_status = 1
@@ -100,6 +105,7 @@ class SmsContext(CommonContext):
     yoshi_mode = 0
     ticket_mode = False
     victory = False
+    checked_yoshi_egg = False
 
     ap_nozzles_received = []
 
@@ -125,20 +131,29 @@ class SmsContext(CommonContext):
         else:
             return []
 
-    def run_gui(self):
-        """Import kivy UI system and start running it as self.ui_task."""
-        from kvui import GameManager
+    def make_gui(self):
+        ui = super().make_gui()
+        ui.base_title = "Super Mario Sunshine Client"
+        return ui
 
-        class SmsManager(GameManager):
-            logging_pairs = [
-                ("Client", "Archipelago")
-            ]
-            base_title = "Archipelago Super Mario Sunshine Client"
+    # def run_gui(self):
+    #     """Import kivy UI system and start running it as self.ui_task."""
+    #     from kvui import GameManager
 
-        self.ui = SmsManager(self)
-        self.ui_task = asyncio.create_task(self.ui.async_run(), name="UI")
+    #     class SmsManager(GameManager):
+    #         logging_pairs = [
+    #             ("Client", "Archipelago")
+    #         ]
+    #         base_title = "Archipelago Super Mario Sunshine Client"
+
+    #     self.ui = SmsManager(self)
+    #     # self.ui = super().make_gui()
+    #     # self.ui.base_title = "Archipelago Super Mario Sunshine Client"
+    #     self.ui_task = asyncio.create_task(self.ui.async_run(), name="UI")
 
     def on_package(self, cmd: str, args: dict):
+        super().on_package(cmd, args)
+
         if cmd == "Connected":
             slot_data = args.get("slot_data")
             self.goal = slot_data.get("corona_mountain_shines")
@@ -164,42 +179,62 @@ class SmsContext(CommonContext):
 
 storedShines = []
 curShines = []
-delaySeconds = .5
-location_offset = 523000
+storedBlues = []
+curBlues = []
+storedNozzleBoxes = []
+curNozzleBoxes = []
+
+DELAY_SECONDS = .5
+LOCATION_OFFSET = 523000
 
 def read_string(console_address: int, strlen: int) -> str:
     return dme.read_bytes(console_address, strlen).split(b"\0", 1)[0].decode()
 
 
 def game_start():
-    for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
+    for _ in range(0, addresses.SMS_SHINE_BYTE_COUNT):
         storedShines.append(0x00)
         curShines.append(0x00)
-    # dme.hook()
-    # return dme.is_hooked()
+    for _ in range(0, addresses.SMS_BLUECOIN_BYTE_COUNT):
+        storedBlues.append(0x00)
+        curBlues.append(0x00)
+    for _ in range(0, addresses.NOZZLE_BOXES_BYTE_COUNT):
+        storedNozzleBoxes.append(0x00)
+        curNozzleBoxes.append(0x00)
+
+# Apparently when you beat the game it considers current stage AS FILE SELECT
+# Therefore it wasn't sending out the Victory check
+def in_file_select():
+    return dme.read_byte(addresses.SMS_CURRENT_STAGE) == 15
 
 
 async def game_watcher(ctx: SmsContext):
     while not ctx.exit_event.is_set():
+        '''
+        dme.is_hooked() returns true if just the emulation stops, as dolphin itself is still running
+        this causes the dme to write into a non existing memory, resulting in the crashes.
+        changed if to check based on connection status, and unhooking DME properly if connection is lost (Exception)
+        
+        ctx.slot None means we are not connected to the AP server.
+        '''
+        if not dme.is_hooked() or ctx.slot is None:
+            await asyncio.sleep(5)
+            continue
+
+        # if in_file_select():
+        #     await asyncio.sleep(1)
+        #     continue
+
+        await handle_stages(ctx)
+        await location_watcher(ctx)
 
         sync_msg = [{'cmd': 'Sync'}]
         if ctx.locations_checked:
             sync_msg.append({"cmd": "LocationChecks", "locations": list(ctx.locations_checked)})
         await ctx.send_msgs(sync_msg)
 
-        #Gravi01 Begin      
-        '''
-        dme.is_hooked() returns true if just the emulation stops, as dolphin itself is still running
-        this causes the dme to write into a non existing memory, resulting in the crashes.
-        changed if to check based on connection status, and unhooking DME properly if connection is lost (Exception)
-        ''' 
-        if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
-            try:
-                refresh_collection_counts(ctx)
-            except Exception:
-                logger.info("Connection to Dolphin lost, reconnecting...")
-                ctx.dolphin_status = CONNECTION_LOST_STATUS
-                dme.un_hook()
+        #Gravi01 Begin
+        refresh_collection_counts(ctx)
         ctx.lives_switch = True
         #Gravi01 End
 
@@ -212,29 +247,59 @@ async def game_watcher(ctx: SmsContext):
 
 
 async def location_watcher(ctx):
-    def _sub():
-        if not dme.is_hooked():
-            return
+    for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
+        targ_location = addresses.SMS_SHINE_LOCATION_OFFSET + x
+        cache_byte = dme.read_byte(targ_location)
+        curShines[x] = cache_byte
+        if storedShines[x] != curShines[x]:
+            memory_changed(ctx, x, curShines[x])
+            storedShines[x] = curShines[x]
 
-        for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
-            targ_location = addresses.SMS_SHINE_LOCATION_OFFSET + x
-            cache_byte = dme.read_byte(targ_location)
-            curShines[x] = cache_byte
+    # If possible, check if blue coin sanity is enabled or not
+    for x in range(0, addresses.SMS_BLUECOIN_BYTE_COUNT):
+        targ_location = addresses.SMS_BLUECOIN_LOCATION_OFFSET + x
+        cache_byte = dme.read_byte(targ_location)
+        curBlues[x] = cache_byte
+        if storedBlues[x] != curBlues[x]:
+            memory_changed(ctx, x+15, curBlues[x]) # Add 15 to 'x' to align with blue coin IDs
+            storedBlues[x] = curBlues[x]
 
-        if storedShines != curShines:
-            memory_changed(ctx)
+    for x in range(0, addresses.NOZZLE_BOXES_BYTE_COUNT):
+        targ_location = addresses.NOZZLE_BOXES_FLAGS_OFFSET + x
+        cache_byte = dme.read_byte(targ_location)
+        curNozzleBoxes[x] = cache_byte
+        if storedNozzleBoxes[x] != curNozzleBoxes[x]:
+            memory_changed(ctx, x+108, curNozzleBoxes[x])
+            storedNozzleBoxes[x] = curNozzleBoxes[x]
 
-        return
+    # Check corresponds to Shadow Mario Yoshi Egg Chase
+    delfino_yoshi_unlock = dme.read_byte(addresses.DELFINO_YOSHI_UNLOCK)
+    if (delfino_yoshi_unlock & 0x80) and not ctx.checked_yoshi_egg:
+        ctx.checked_yoshi_egg = True
+        memory_changed(ctx, 113, delfino_yoshi_unlock)
+    return
 
-    while not ctx.exit_event.is_set():
-        #Gravi01 Begin      #Changing dme.is_Hooked => Connection Status 
-        #if not dme.is_hooked():
-            #dme.hook()
-        #else:
-        if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
-        #Gravi01 End
-            _sub()
-        await asyncio.sleep(delaySeconds)
+
+async def handle_stages(ctx):
+    #Gravi01  change to connection status
+    next_stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
+    cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
+
+    if next_stage == 0x01: # Delfino Plaza
+        next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+
+        # If starting Fluddless without ticket mode on, open Bianco Hills
+        if next_episode == 0x0 and ctx.fludd_start == 2 and ctx.ticket_mode == 0:
+            check_world_flags(TICKETS[0].address, 4, True)
+            open_stage(TICKETS[0])
+        # Sets plaza state to 8 if it is not and goal hasn't been reached
+        if ctx.ticket_mode == 1 and next_episode != 0x8 and not ctx.corona_message_given:
+            dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
+    if cur_stage != next_stage:
+        await send_map_id(next_stage, ctx)
+        if ctx.ticket_mode:
+            await resolve_tickets(next_stage, ctx)
+
 
 async def dolphin_sync_task(ctx: SmsContext) -> None:
     logger.info("Starting Dolphin connector. Use /dolphin for status information.")
@@ -250,7 +315,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                 if ctx.awaiting_rom:
                     await ctx.server_auth()
                 await asyncio.sleep(0.1)
-            else:   
+            else:
                 if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
                     logger.info("Connection to Dolphin lost, reconnecting...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
@@ -266,6 +331,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                         logger.info(CONNECTION_CONNECTED_STATUS)
                         ctx.dolphin_status = CONNECTION_CONNECTED_STATUS
                         ctx.locations_checked = set()
+                        await asyncio.sleep(5)
                 else:
                     logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
                     dme_status = dme.get_status()
@@ -281,28 +347,32 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
             await ctx.disconnect()
             await asyncio.sleep(5)
             continue
-        
+
 
 async def arbitrary_ram_checks(ctx):
-    activated_bits = dme.read_byte(addresses.ARB_NOZZLES_ENABLER)
+    while not ctx.exit_event.is_set():
+        if not dme.is_hooked() or ctx.slot is None:
+            await asyncio.sleep(5)
+            continue
 
-    while dme.is_hooked():
+        activated_bits = dme.read_byte(addresses.ARB_NOZZLES_ENABLER)
+
         for noz in ctx.ap_nozzles_received:
             if noz < 4:
                 activated_bits = bit_flagger(activated_bits, noz, True)
                 dme.write_byte(addresses.ARB_FLUDD_ENABLER, 0x1)
                 dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
-        await asyncio.sleep(delaySeconds)
+        await asyncio.sleep(DELAY_SECONDS)
 
 
-def memory_changed(ctx: SmsContext):
-    if debug: logger.info("memory_changed: " + str(curShines))
+def memory_changed(ctx: SmsContext, bit_pos, cached_byte):
+    if DEBUG: logger.info(f"memory_changed: {cached_byte}, bit_pos: {bit_pos}")
     bit_list = []
-    for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
-        bit_found = extract_bits((curShines[x]), x)
-        bit_list.extend(bit_found)
-        storedShines[x] = curShines[x]
-    if debug: logger.info("bit_list: " + str(bit_list))
+
+    bit_found = extract_bits(cached_byte, bit_pos)
+    bit_list.extend(bit_found)
+
+    # if DEBUG: logger.info("bit_list: " + str(bit_list))
     parse_bits(bit_list, ctx)
 
 
@@ -328,6 +398,8 @@ def send_victory(ctx: SmsContext):
     time.sleep(.05)
     logger.info("Quizzeh - Extra testing")
     time.sleep(.05)
+    # logger.info("DoubleDubbel - The Incredible Name For The Randomizer ISO")
+    # time.sleep(.05)
     logger.info("Spicynun - Additional research")
     time.sleep(.05)
     logger.info("JoshuaMKW - Sunshine Toolset")
@@ -341,19 +413,16 @@ def send_victory(ctx: SmsContext):
 
 
 def parse_bits(all_bits, ctx: SmsContext):
-    if debug: logger.info("parse_bits: " + str(all_bits))
+    if DEBUG: logger.info("parse_bits: " + str(all_bits))
     if len(all_bits) == 0:
         return
 
     for x in all_bits:
-        if x < 119:
-            temp = x + location_offset
+        if x != 119 and x <= 911:
+            temp = x + LOCATION_OFFSET
             ctx.locations_checked.add(temp)
-            if debug: logger.info("checks to send: " + str(temp))
-        elif 119 < x <= 549:
-            temp = x + location_offset
-            ctx.locations_checked.add(temp)
-        if x == 119:
+            if DEBUG: logger.info("checks to send: " + str(temp))
+        elif x == 119:
             send_victory(ctx)
 
 
@@ -379,9 +448,9 @@ def refresh_item_count(ctx, item_id, targ_address):
 
 def refresh_all_items(ctx: SmsContext):
     counts = collections.Counter(received_item.item for received_item in ctx.items_received)
-    for items in counts:
-        if counts[items] > 0:
-            unpack_item(items, ctx, counts[items])
+    for item in counts:
+        if counts[item] > 0:
+            unpack_item(item, ctx)
     if counts[523004] >= ctx.get_corona_goal():
         activate_ticket(999999)
         if not ctx.corona_message_given:
@@ -390,7 +459,7 @@ def refresh_all_items(ctx: SmsContext):
 
 
 def refresh_collection_counts(ctx):
-    #if debug: logger.info("refresh_collection_counts")
+    #if DEBUG: logger.info("refresh_collection_counts")
     refresh_item_count(ctx, 523004, addresses.SMS_SHINE_COUNTER)
     if ctx.blue_status == 1:
         refresh_item_count(ctx, 523014, addresses.SMS_BLUECOIN_COUNTER)
@@ -409,6 +478,7 @@ def check_world_flags(byte_location, byte_pos, bool_setting):
 
 def open_stage(ticket):
     value = check_world_flags(ticket.address, ticket.bit_position, True)
+    value |= dme.read_byte(ticket.address)
     dme.write_byte(ticket.address, value)
     return
 
@@ -418,7 +488,7 @@ def special_noki_handling():
     return
 
 
-def unpack_item(item, ctx, amt=0):
+def unpack_item(item, ctx):
     if 522999 < item < 523004:
         activate_nozzle(item, ctx)
     elif item == 523013:
@@ -427,9 +497,9 @@ def unpack_item(item, ctx, amt=0):
         activate_ticket(item)
 
 
-def disable_shadow_mario():
-    if dme.is_hooked():
-        dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
+# def disable_shadow_mario():
+#     if dme.is_hooked():
+#         dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
 
 
 @dataclass
@@ -472,38 +542,24 @@ def handle_ticket(tick: Ticket):
     open_stage(tick)
     return
 
-
+# Not even used
 def refresh_all_tickets():
     for tickets in TICKETS:
         handle_ticket(tickets)
-
-
-def extra_unlocks_needed():
-    if not dme.is_hooked():
-        return
-    dme.write_byte(addresses.SMS_YOSHI_UNLOCK-1, 240)
-    val = bit_flagger((dme.read_byte(addresses.SMS_YOSHI_UNLOCK)), 1, True)
-    dme.write_byte(addresses.SMS_YOSHI_UNLOCK, val)
 
 
 def activate_nozzle(id, ctx):
     if id == 523000:
         if not ctx.ap_nozzles_received.__contains__(0):
             ctx.ap_nozzles_received.append(0)
-    if id == 523001:
+    elif id == 523001:
         if not ctx.ap_nozzles_received.__contains__(1):
             ctx.ap_nozzles_received.append(1)
-
-    if id == 523013:
-        temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
-        if temp < 2:
-            dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 2)
-        extra_unlocks_needed()
-    if id == 523002:
+    elif id == 523002:
         if not ctx.ap_nozzles_received.__contains__(2):
             ctx.ap_nozzles_received.append(2)
         # rocket nozzle
-    if id == 523003:
+    elif id == 523003:
         if not ctx.ap_nozzles_received.__contains__(3):
             ctx.ap_nozzles_received.append(3)
         # turbo nozzle
@@ -511,33 +567,21 @@ def activate_nozzle(id, ctx):
 
 
 def activate_yoshi(ctx):
-    temp = dme.read_byte(addresses.SMS_YOSHI_UNLOCK)
-    if temp < 130:
-        dme.write_byte(addresses.SMS_YOSHI_UNLOCK, 0x80)
-        # BEGIN YOSHI BANDAID
-    if ctx.yoshi_mode:
-        flag = dme.read_byte(0x8057898c)
-        new_flag = bit_flagger(flag, 1, True)
-        dme.write_byte(0x8057898c, new_flag)
-    # END YOSHI BANDAID
-    extra_unlocks_needed()
-
+    dme.write_byte(0x80417A03, 0x01)
     if not ctx.ap_nozzles_received.__contains__(4):
         ctx.ap_nozzles_received.append(4)
     return
 
 
-def resolve_tickets(stage, ctx):
+async def resolve_tickets(stage, ctx):
     for tick in TICKETS:
         if tick.course_id == stage and not tick.active:
             logger.info("Entering a stage without a ticket! Initiating bootout...")
             # Byte 1 should correspond to Delfino Plaza
             dme.write_byte(addresses.SMS_NEXT_STAGE, 1)
-            #dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
             dme.write_byte(addresses.SMS_CURRENT_STAGE, 1)
-            #dme.write_byte(addresses.SMS_CURRENT_STAGE, ctx.plaza_episode)
         else:
-            send_map_id(stage, ctx)
+            await send_map_id(stage, ctx)
     return
 
 # Checks to see if player changed stages to update map_id for Poptracker
@@ -550,49 +594,38 @@ async def send_map_id(map_id, ctx):
         "operations": [{"operation": "replace", "value": map_id}]
     }])
 
-async def handle_stages(ctx):
-    while not ctx.exit_event.is_set():
-        if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS: #Gravi01  change to connection status
-            next_stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
-            cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
-            if ctx.fludd_start == 2 and next_stage == 0x00: # Airstrip 1 skip
-                dme.write_byte(addresses.SMS_NEXT_STAGE, 0x01)
 
-            if next_stage == 0x01: # Delfino Plaza
-                next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-                ctx.plaza_episode = next_episode
+def main(*launch_args: str):
+    import colorama
+    from .iso_helper.sms_rom import SMSPatch
 
-                # If starting Fluddless without ticket mode on, open Bianco Hills
-                if next_episode == 0x0 and ctx.fludd_start == 2 and ctx.ticket_mode == 0:
-                    check_world_flags(TICKETS[0].address, 4, True)
-                    open_stage(TICKETS[0])
-                # Sets plaza state to 8 if it is not and goal hasn't been reached
-                if (ctx.ticket_mode == 1 and next_episode != 0x8 and not ctx.corona_message_given):
-                    dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
-                if not next_episode == 0x01:
-                    dme.write_byte(addresses.SMS_SHADOW_MARIO_STATE, 0x0)
-                    # BEGIN YOSHI BANDAID
-            elif next_stage == 0x05 and cur_stage != next_stage: # Pinna Park
-                if ctx.yoshi_mode:
-                    next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-                    if next_episode == 0x03:
-                        dme.write_byte(addresses.SMS_NEXT_EPISODE, 0x04)
-                        dme.write_byte(addresses.SMS_CURRENT_EPISODE, 0x04)
-                    # END YOSHI BANDAID
-            if cur_stage != next_stage:
-                await send_map_id(next_stage, ctx)
-                if ctx.ticket_mode:
-                    resolve_tickets(next_stage, ctx)
-                 
-        await asyncio.sleep(0.1)
+    server_address: str = ""
+    rom_path: str = ""
 
+    parser = get_base_parser()
+    parser.add_argument("apsms_file", default="", type=str, nargs="?", help="Path to a APSMS File")
+    args = parser.parse_args(launch_args)
 
-def main(connect= None, password= None):
-    Utils.init_logging("SMSClient", exception_logger="Client")
+    if args.apsms_file:
+        sms_patch = SMSPatch()
+        try:
+            sms_manifest = sms_patch.read_contents(args.apsms_file)
+            server_address = sms_manifest["server"]
+            rom_path = sms_patch.patch(args.apsms_file)
+        except Exception as ex:
+            logger.error("Unable to patch your Super Mario Sunshine. Addiotional Details:\n" + str(ex))
+            Utils.messagebox("Cannot Patch Super Mario Sunshine", "Unable to patch your Super Mario Sunshine ROM as " +
+                "expected. Additional details:\n" + str(ex), True)
+            raise ex
 
     async def _main(connect, password):
-        ctx = SmsContext(connect, password)
+        ctx = SmsContext(server_address if server_address else connect, password)
         ctx.server_task = asyncio.create_task(server_loop(ctx), name="ServerLoop")
+
+        # ctx._main()
+
+        if TRACKER_LOADED:
+            ctx.run_generator()
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
@@ -600,21 +633,10 @@ def main(connect= None, password= None):
 
         game_start()
 
-        ctx.dolphin_sync_task = asyncio.create_task(dolphin_sync_task(ctx), name="DolphinSync")
-
-        # if dme.is_hooked():
-        #     logger.info("Hooked to Dolphin!")
+        ctx.dolphin_sync_task = asyncio.create_task(dolphin_sync_task(ctx), name="SmsDolphinSync")
 
         progression_watcher = asyncio.create_task(game_watcher(ctx), name="SmsProgressionWatcher")
-        loc_watch = asyncio.create_task(location_watcher(ctx))
-        stage_watch = asyncio.create_task(handle_stages(ctx))
-        arbitrary = asyncio.create_task(arbitrary_ram_checks(ctx))
-
-        await progression_watcher
-        await loc_watch
-        await stage_watch
-        await arbitrary
-        await asyncio.sleep(.25)
+        arbitrary = asyncio.create_task(arbitrary_ram_checks(ctx), name="SmsArbitraryWatcher")
 
         await ctx.exit_event.wait()
         ctx.server_address = None
@@ -622,18 +644,19 @@ def main(connect= None, password= None):
         await ctx.shutdown()
 
         if ctx.dolphin_sync_task:
-            await asyncio.sleep(3)
             await ctx.dolphin_sync_task
 
+        if progression_watcher:
+            await progression_watcher
 
-    import colorama
+        if arbitrary:
+            await arbitrary
 
-    colorama.init()
-    asyncio.run(_main(connect, password))
+    colorama.just_fix_windows_console()
+    asyncio.run(_main(args.connect, args.password))
     colorama.deinit()
 
 
 if __name__ == "__main__":
-    parser = get_base_parser(description="Super Mario Sunshine Client, for text interfacing.")
-    args, rest = parser.parse_known_args()
-    main(args.connect, args.password)
+    Utils.init_logging("SMSClient", exception_logger="Client")
+    main(*sys.argv[1:])
