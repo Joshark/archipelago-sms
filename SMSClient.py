@@ -47,7 +47,7 @@ CONNECTION_INITIAL_STATUS = "Dolphin connection has not been initiated."
 ticket_listing = []
 world_flags = {}
 
-DEBUG = True
+DEBUG = False
 GAME_VER = 0x3a
 AP_WORLD_VERSION_NAME = "0.6.4"
 CLIENT_VERSION = "0.4.3"
@@ -105,6 +105,7 @@ class SmsContext(SuperContext):
     yoshi_mode = 0
     ticket_mode = False
     victory = False
+    checked_yoshi_egg = False
 
     ap_nozzles_received = []
 
@@ -201,6 +202,11 @@ def game_start():
         storedNozzleBoxes.append(0x00)
         curNozzleBoxes.append(0x00)
 
+# Apparently when you beat the game it considers current stage AS FILE SELECT
+# Therefore it wasn't sending out the Victory check
+def in_file_select():
+    return dme.read_byte(addresses.SMS_CURRENT_STAGE) == 15
+
 
 async def game_watcher(ctx: SmsContext):
     while not ctx.exit_event.is_set():
@@ -215,9 +221,9 @@ async def game_watcher(ctx: SmsContext):
             await asyncio.sleep(5)
             continue
 
-        # if not in_game():
-            # await asyncio.sleep(1)
-            # continue
+        # if in_file_select():
+        #     await asyncio.sleep(1)
+        #     continue
 
         await handle_stages(ctx)
         await location_watcher(ctx)
@@ -241,7 +247,6 @@ async def game_watcher(ctx: SmsContext):
 
 
 async def location_watcher(ctx):
-    # ctx.checked_yoshi_egg = False
     for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
         targ_location = addresses.SMS_SHINE_LOCATION_OFFSET + x
         cache_byte = dme.read_byte(targ_location)
@@ -268,10 +273,10 @@ async def location_watcher(ctx):
             storedNozzleBoxes[x] = curNozzleBoxes[x]
 
     # Check corresponds to Shadow Mario Yoshi Egg Chase
-    # delfino_yoshi_unlock = dme.read_byte(addresses.DELFINO_YOSHI_UNLOCK)
-    # if (delfino_yoshi_unlock & 0x80) and not ctx.checked_yoshi_egg:
-    #     ctx.checked_yoshi_egg = True
-    #     memory_changed(ctx, 113, delfino_yoshi_unlock)
+    delfino_yoshi_unlock = dme.read_byte(addresses.DELFINO_YOSHI_UNLOCK)
+    if (delfino_yoshi_unlock & 0x80) and not ctx.checked_yoshi_egg:
+        ctx.checked_yoshi_egg = True
+        memory_changed(ctx, 113, delfino_yoshi_unlock)
     return
 
 
@@ -393,6 +398,8 @@ def send_victory(ctx: SmsContext):
     time.sleep(.05)
     logger.info("Quizzeh - Extra testing")
     time.sleep(.05)
+    # logger.info("DoubleDubbel - The Incredible Name For The Randomizer ISO")
+    # time.sleep(.05)
     logger.info("Spicynun - Additional research")
     time.sleep(.05)
     logger.info("JoshuaMKW - Sunshine Toolset")

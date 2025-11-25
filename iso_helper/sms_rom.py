@@ -172,11 +172,11 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
 
         from ..SMSClient import CLIENT_VERSION
         lib_path = self.__get_archive_name()
-        lib_path_base = f"https://github.com/Joshark/archipelago-sms/releases/download/{CLIENT_VERSION}"
+        lib_path_base = f"https://github.com/Joshark/archipelago-sms/releases/download/0.5.0/sms-0.4.3-ap.zip"
         download_path = f"{lib_path_base}/{lib_path}.zip"
 
         temp_zip_path = os.path.join(tmp_dir_path, "temp.zip")
-        with urllib.request.urlopen(download_path) as response, open(temp_zip_path, 'wb') as created_zip:
+        with urllib.request.urlopen(lib_path_base) as response, open(temp_zip_path, 'wb') as created_zip:
             created_zip.write(response.read())
 
         with zipfile.ZipFile(temp_zip_path) as z:
@@ -208,7 +208,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
             os.makedirs(local_dir_path, exist_ok=True)
             # Load the external dependencies based on OS
             logger.info("Temporary Directory created as: %s", local_dir_path)
-            self.download_lib_zip(local_dir_path)
+            # self.download_lib_zip(local_dir_path)
             self.create_iso(local_dir_path, apsms_patch, output_file, sms_clean_iso)
         except PermissionError:
             logger.warning("Failed to cleanup temp folder, %s ignoring delete.", local_dir_path)
