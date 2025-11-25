@@ -133,8 +133,9 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Durian Basket", 523129),
         BlueCoin("Banana Basket", 523130),
         BlueCoin("Coconut Basket", 523131, Requirements([NozzleType.splasher]))], [
-        NozzleBox("Shadow Mario Rocket Nozzle Chase", 523870, Requirements([NozzleType.splasher], shines=30)),
-        NozzleBox("Shadow Mario Turbo Nozzle Chase", 523871, Requirements([NozzleType.splasher], shines=25)),
+        # NozzleBox("Shadow Mario Yoshi Egg Chase", 523911, Requirements([NozzleType.spray], location="Pinna Park - The Wilted Sunflowers")),
+        NozzleBox("Shadow Mario Rocket Nozzle Chase", 523870, Requirements([NozzleType.splasher, NozzleType.yoshi], shines=30)),
+        NozzleBox("Shadow Mario Turbo Nozzle Chase", 523871, Requirements([NozzleType.splasher, NozzleType.yoshi], shines=25)),
     ], parent_region=INIT),
 
 
@@ -365,12 +366,12 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Orange Wall M", 523320, Requirements([NozzleType.spray])),
         BlueCoin("Sand M", 523321, Requirements([NozzleType.spray])),
         BlueCoin("Green Clam", 523322, Requirements([NozzleType.spray | NozzleType.hover])),
-        BlueCoin("Left O", 523323, Requirements([NozzleType.spray])),
+        BlueCoin("Left O", 523323, Requirements([NozzleType.splasher])),
         BlueCoin("Entrance Bird", 523324, Requirements([NozzleType.spray ])),
         BlueCoin("Pineapple Bird", 523325, Requirements([NozzleType.spray])),
         BlueCoin("Ship Peak", 523326, Requirements([NozzleType.hover])),
         BlueCoin("Cage Platform", 523327, Requirements([NozzleType.hover])),
-        BlueCoin("Right O", 523328, Requirements([NozzleType.spray])),
+        BlueCoin("Right O", 523328, Requirements([NozzleType.splasher])),
         BlueCoin("White Wall X", 523329, Requirements([NozzleType.spray])),
         BlueCoin("Tree X", 523330, Requirements([NozzleType.spray])),
         BlueCoin("Ferris M", 523331, Requirements([NozzleType.hover])),
@@ -378,7 +379,7 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Ferris Triangle", 523333, Requirements([NozzleType.spray])),
         BlueCoin("Stairs", 523334, Requirements([NozzleType.hover])),
         BlueCoin("Girder", 523336, Requirements([NozzleType.hover])),
-        BlueCoin("Coaster Ledge", 523337, Requirements([NozzleType.hover])),
+        BlueCoin("Coaster Ledge", 523337, Requirements([NozzleType.spray | NozzleType.hover])),
         BlueCoin("Cage", 523338, Requirements([NozzleType.hover])),
         BlueCoin("Stackin Stus", 523339, Requirements([NozzleType.spray | NozzleType.hover])),
     ], parent_region="Pinna Entrance"),
@@ -415,7 +416,7 @@ ALL_REGIONS: list[SmsRegion] = [
 
     # Sirena Beach
     SmsRegion("Sirena Entrance", SIRENA, Requirements([NozzleType.yoshi]), [
-        Shine("The Manta Storm", 523040, Requirements([NozzleType.spray, NozzleType.hover]))], [
+        Shine("The Manta Storm", 523040, Requirements([NozzleType.spray]))], [
         BlueCoin("Ocean", 523387)
     ], ticketed="Sirena Beach Ticket", parent_region=STATUE),
 

@@ -1,4 +1,5 @@
 import random
+from importlib.resources import read_binary
 
 from gclib.gcm import GCM
 from gclib.dol import DOL, DOLSection
@@ -67,8 +68,8 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_n
     blank_data = b"\x00" * new_dol_size
     dol.data.write(blank_data)
 
-    with open("./worlds/sms/SMS_custom_code.smsco", "rb") as f:
-        custom_dol_code = f.read()
+    custom_dol_code = read_binary(__name__, "SMS_custom_code.smsco")
+    print(f"{custom_dol_code}")
 
     dol.data.seek(CUSTOM_CODE_OFFSET_START)
     dol.data.write(custom_dol_code)
@@ -95,16 +96,16 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_n
     twatergun_init_offset = dol.convert_address_to_offset(0x8026aa44)
 
     dol.data.seek(twatergun_init_offset)
-    dol.data.write(bytes.fromhex("481ad01c"))
+    dol.data.write(bytes.fromhex("481ad03c"))
 
     # Offset to change Yoshi Egg Spawn Flag
     delfino_yoshi_egg_offset = dol.convert_address_to_offset(0x801bbf84)
     others_yoshi_egg_offset = dol.convert_address_to_offset(0x801bbfb0)
 
     dol.data.seek(delfino_yoshi_egg_offset)
-    dol.data.write(bytes.fromhex("4825bb45"))
+    dol.data.write(bytes.fromhex("4825bb65"))
     dol.data.seek(others_yoshi_egg_offset)
-    dol.data.write(bytes.fromhex("4825bb19"))
+    dol.data.write(bytes.fromhex("4825bb39"))
 
     # Player Slot Name Writing
     slot_name_offset = dol.convert_address_to_offset(0x80418000)
@@ -129,13 +130,14 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_n
         dol.data.write(bytes.fromhex("00"))
 
     # If starting Fludd, changes so File Select boots straight to plaza 8
-    if starting_nozzle is 2:
-        boot_to_plaza_offset = dol.convert_address_to_offset(0x80164E46)
+    if starting_nozzle == 2:
+        boot_to_plaza_offset = dol.convert_address_to_offset(0x80164E32)
         dol.data.seek(boot_to_plaza_offset)
-        dol.data.write(bytes.fromhex("00000108"))
+        # Is there a way to write only a half-word?
+        # dol.data.write_u16(bytes.fromhex("0208"))
+        dol.data.write(bytes.fromhex("020838A0"))
 
     # QOL shines no longer boot out of stage
-
 
 
     for section in dol.sections:
