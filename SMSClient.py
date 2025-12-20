@@ -239,10 +239,8 @@ async def game_watcher(ctx: SmsContext):
         await handle_stages(ctx)
         await location_watcher(ctx)
 
-        # Check for death (DeathLink)
         if "DeathLink" in ctx.tags:
             await check_death(ctx, previous_lives)
-            # Update previous lives for next iteration
             try:
                 previous_lives = dme.read_byte(addresses.SMS_LIVES_COUNTER)
             except:
@@ -279,8 +277,7 @@ async def check_death(ctx: SmsContext, previous_lives):
                 player_name = ctx.player_names[ctx.slot] if ctx.slot in ctx.player_names else "Player"
                 await ctx.send_death(f"{player_name} died!")
                 logger.info(f"Sent DeathLink: Mario died (lives {previous_lives} -> {current_lives})")
-        elif current_lives >= previous_lives:
-            # Lives same or increased, reset death flag
+        else:
             ctx.has_send_death = False
     except Exception as e:
         logger.error(f"Error checking death: {e}")
