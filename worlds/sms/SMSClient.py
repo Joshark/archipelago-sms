@@ -79,6 +79,11 @@ class SmsCommandProcessor(ClientCommandProcessor):
         self.ctx.syncing = True
         refresh_collection_counts(self.ctx)
 
+    def _cmd_testdeath(self):
+        """Manually trigger a resync."""
+        print("TESTING DEATH")
+        kill_mario(self.ctx)
+
 class SmsContext(SuperContext):
     command_processor = SmsCommandProcessor
     game = "Super Mario Sunshine"
@@ -169,6 +174,9 @@ class SmsContext(SuperContext):
             temp = slot_data.get("ticket_mode")
             if temp:
                 self.ticket_mode = temp
+
+            if "death_link" in slot_data:
+                Utils.async_start(self.update_death_link(bool(slot_data["death_link"])))
 
     def on_deathlink(self, data: dict):
         super().on_deathlink(data)
