@@ -112,6 +112,7 @@ class SmsWorld(World):
             "ticket_mode": self.options.level_access.value,
             "boathouse_maximum": self.options.trade_shine_maximum.value,
             "coin_shine_enabled": self.options.enable_coin_shines.value,
+            "death_link": self.options.death_link.value,
             "seed": self.multiworld.seed
         }
 

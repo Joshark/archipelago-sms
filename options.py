@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Choice, DefaultOnToggle, PerGameCommonOptions, Range, Toggle
+from Options import Choice, DeathLink, DefaultOnToggle, PerGameCommonOptions, Range, Toggle
 
 
 class LevelAccess(Choice):
@@ -87,3 +87,4 @@ class SmsOptions(PerGameCommonOptions):
     trade_shine_maximum: TradeShineMaximum
     starting_nozzle: StartingNozzle
     yoshi_mode: YoshiMode
+    death_link: DeathLink
