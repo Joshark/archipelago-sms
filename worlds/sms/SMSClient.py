@@ -79,9 +79,8 @@ class SmsCommandProcessor(ClientCommandProcessor):
         self.ctx.syncing = True
         refresh_collection_counts(self.ctx)
 
-
 class SmsContext(SuperContext):
-    command_processor: SmsCommandProcessor
+    command_processor = SmsCommandProcessor
     game = "Super Mario Sunshine"
     tags = {"AP"}
     items_handling = 0b111  # full remote
@@ -117,6 +116,7 @@ class SmsContext(SuperContext):
         self.dolphin_sync_task: Optional[asyncio.Task[None]] = None
         self.dolphin_status: str = CONNECTION_INITIAL_STATUS
         self.awaiting_rom: bool = False
+        self.has_send_death: bool = False
 
     async def server_auth(self, password_requested: bool = False):
         if password_requested and not self.password:
@@ -170,6 +170,15 @@ class SmsContext(SuperContext):
             if temp:
                 self.ticket_mode = temp
 
+    def on_deathlink(self, data: dict):
+        super().on_deathlink(data)
+        source = data.get('source', 'Unknown')
+        cause = data.get('cause', 'No cause specified')
+        logger.info(f"DeathLink received! Source: {source}")
+        logger.info(f"DeathLink message: {cause}")
+        logger.info("Killing Mario now...")
+        kill_mario(self)
+
     def get_corona_goal(self):
         if self.goal:
             return self.goal
@@ -209,12 +218,14 @@ def in_file_select():
 
 
 async def game_watcher(ctx: SmsContext):
+    previous_lives = None
+
     while not ctx.exit_event.is_set():
         '''
         dme.is_hooked() returns true if just the emulation stops, as dolphin itself is still running
         this causes the dme to write into a non existing memory, resulting in the crashes.
         changed if to check based on connection status, and unhooking DME properly if connection is lost (Exception)
-        
+
         ctx.slot None means we are not connected to the AP server.
         '''
         if not dme.is_hooked() or ctx.slot is None:
@@ -227,6 +238,15 @@ async def game_watcher(ctx: SmsContext):
 
         await handle_stages(ctx)
         await location_watcher(ctx)
+
+        # Check for death (DeathLink)
+        if "DeathLink" in ctx.tags:
+            await check_death(ctx, previous_lives)
+            # Update previous lives for next iteration
+            try:
+                previous_lives = dme.read_byte(addresses.SMS_LIVES_COUNTER)
+            except:
+                pass
 
         sync_msg = [{'cmd': 'Sync'}]
         if ctx.locations_checked:
@@ -244,6 +264,26 @@ async def game_watcher(ctx: SmsContext):
 
         await asyncio.sleep(0.2)
         ctx.lives_switch = False
+
+
+async def check_death(ctx: SmsContext, previous_lives):
+    """Check if Mario died by comparing current lives with previous lives, then send DeathLink."""
+    if ctx.slot is None or previous_lives is None:
+        return
+
+    try:
+        current_lives = dme.read_byte(addresses.SMS_LIVES_COUNTER)
+        if current_lives < previous_lives:
+            if not ctx.has_send_death and time.time() >= ctx.last_death_link + 3:
+                ctx.has_send_death = True
+                player_name = ctx.player_names[ctx.slot] if ctx.slot in ctx.player_names else "Player"
+                await ctx.send_death(f"{player_name} died!")
+                logger.info(f"Sent DeathLink: Mario died (lives {previous_lives} -> {current_lives})")
+        elif current_lives >= previous_lives:
+            # Lives same or increased, reset death flag
+            ctx.has_send_death = False
+    except Exception as e:
+        logger.error(f"Error checking death: {e}")
 
 
 async def location_watcher(ctx):
@@ -570,6 +610,21 @@ def activate_yoshi(ctx):
     dme.write_byte(0x80417A03, 0x01)
     if not ctx.ap_nozzles_received.__contains__(4):
         ctx.ap_nozzles_received.append(4)
+    return
+
+
+def kill_mario(ctx: SmsContext):
+    """Uses the same logic as Gecko code death trigger"""
+    if ctx.slot is not None and dme.is_hooked() and ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
+        try:
+            pointer_addr = 0x8040E178
+            pointer_value = int.from_bytes(dme.read_bytes(pointer_addr, 4), byteorder="big")
+            actual_target = pointer_value + 0x4C
+
+            dme.write_bytes(actual_target, (0x4020).to_bytes(2, byteorder="big"))
+            ctx.has_send_death = True
+        except Exception as e:
+            logger.error(f"Failed to kill Mario - connection may be lost: {e}")
     return
 
 
