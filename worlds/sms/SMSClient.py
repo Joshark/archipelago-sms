@@ -79,11 +79,6 @@ class SmsCommandProcessor(ClientCommandProcessor):
         self.ctx.syncing = True
         refresh_collection_counts(self.ctx)
 
-    def _cmd_testdeath(self):
-        """Manually trigger a resync."""
-        print("TESTING DEATH")
-        kill_mario(self.ctx)
-
 class SmsContext(SuperContext):
     command_processor = SmsCommandProcessor
     game = "Super Mario Sunshine"
