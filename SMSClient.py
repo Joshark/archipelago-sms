@@ -101,6 +101,7 @@ class SmsContext(SuperContext):
     corona_message_given = False
     blue_status = 1
     fludd_start = 0
+    bianco_flag = 0
     yoshi_mode = 0
     ticket_mode = False
     victory = False
@@ -324,13 +325,13 @@ async def handle_stages(ctx):
     #Gravi01  change to connection status
     next_stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
     cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
-
     if next_stage == 0x01: # Delfino Plaza
         next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
 
         # If starting Fluddless without ticket mode on, open Bianco Hills
-        if next_episode == 0x0 and ctx.fludd_start == 2 and ctx.ticket_mode == 0:
-            check_world_flags(TICKETS[0].address, 4, True)
+        if not ctx.bianco_flag and ctx.fludd_start == 2 and ctx.ticket_mode == 0:
+            ctx.bianco_flag |= dme.read_byte(TICKETS[0].address)
+            dme.write_byte(TICKETS[0].address, ctx.bianco_flag)
             open_stage(TICKETS[0])
         # Sets plaza state to 8 if it is not and goal hasn't been reached
         if ctx.ticket_mode == 1 and next_episode != 0x8 and not ctx.corona_message_given:
@@ -362,7 +363,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                 logger.info("Attempting to connect to Dolphin...")
                 dme.hook()
                 if dme.is_hooked():
-                    if dme.read_bytes(0x80000000, 6) != b"GMSE01":
+                    if dme.read_bytes(0x80000000, 6) != b"GMSEAP":
                         logger.info(CONNECTION_REFUSED_GAME_STATUS)
                         ctx.dolphin_status = CONNECTION_REFUSED_GAME_STATUS
                         dme.un_hook()

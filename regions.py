@@ -10,8 +10,7 @@ if TYPE_CHECKING:
 
 
 def sms_requirements_satisfied(state: CollectionState, requirements: Requirements, world: "SmsWorld"):
-
-    if requirements.skip_into and world.options.starting_nozzle == 2:
+    if requirements.skip_into and (world.options.starting_nozzle == 2 or world.options.level_access == 1):
         return True
 
     my_nozzles: NozzleType = NozzleType.none
@@ -27,7 +26,6 @@ def sms_requirements_satisfied(state: CollectionState, requirements: Requirement
         my_nozzles |= NozzleType.turbo
     if state.has("Yoshi", world.player):
         my_nozzles |= NozzleType.yoshi
-        my_nozzles |= NozzleType.splasher
 
     for req in requirements.nozzles:
         if my_nozzles & req == NozzleType(0):
