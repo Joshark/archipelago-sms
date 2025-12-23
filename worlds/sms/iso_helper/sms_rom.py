@@ -172,11 +172,11 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
 
         from ..SMSClient import CLIENT_VERSION
         lib_path = self.__get_archive_name()
-        lib_path_base = f"https://github.com/Joshark/archipelago-sms/releases/download/0.5.0/sms-0.4.3-ap.zip"
+        lib_path_base = f"https://github.com/Joshark/archipelago-sms/releases/download/{CLIENT_VERSION}"
         download_path = f"{lib_path_base}/{lib_path}.zip"
 
         temp_zip_path = os.path.join(tmp_dir_path, "temp.zip")
-        with urllib.request.urlopen(lib_path_base) as response, open(temp_zip_path, 'wb') as created_zip:
+        with urllib.request.urlopen(download_path) as response, open(temp_zip_path, 'wb') as created_zip:
             created_zip.write(response.read())
 
         with zipfile.ZipFile(temp_zip_path) as z:
