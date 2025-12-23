@@ -31,6 +31,14 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_n
     plaza_darkness1_value = "4800006C"
     plaza_darkness2_value = "4E800020"
 
+    # Changing Game ID and Game Name from boot.bin
+    bin_data = gcm.read_file_data("sys/boot.bin")
+    bin_data.seek(0x04)
+    bin_data.write(bytes.fromhex("4150"))
+    bin_data.seek(0x34)
+    bin_data.write(bytes.fromhex("20417263686970656C61676F"))
+    gcm.changed_files["sys/boot.bin"] = bin_data
+
     # ChangeNozzle offset to check if we own the nozzles
     change_nozzle_offset = dol.convert_address_to_offset(0x8026a164)
 
@@ -69,7 +77,7 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_n
     dol.data.write(blank_data)
 
     custom_dol_code = read_binary(__name__, "SMS_custom_code.smsco")
-    print(f"{custom_dol_code}")
+    # print(f"{custom_dol_code}")
 
     dol.data.seek(CUSTOM_CODE_OFFSET_START)
     dol.data.write(custom_dol_code)
@@ -129,7 +137,7 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_n
         dol.data.seek(noki_entrance_requirement)
         dol.data.write(bytes.fromhex("00"))
 
-    # If starting Fludd, changes so File Select boots straight to plaza 8
+    # If starting Fluddless, changes flags to skip Airstrip and start in post-statue plaza
     if starting_nozzle == 2:
         boot_to_plaza_offset = dol.convert_address_to_offset(0x80164E32)
         dol.data.seek(boot_to_plaza_offset)
@@ -140,8 +148,8 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_n
     # QOL shines no longer boot out of stage
 
 
-    for section in dol.sections:
-        print(f"Section at 0x{section.offset:X} (0x{section.address:X}) size 0x{section.size:X}")
+    # for section in dol.sections:
+    #     print(f"Section at 0x{section.offset:X} (0x{section.address:X}) size 0x{section.size:X}")
 
     dol.save_changes()
     gcm.changed_files["sys/main.dol"] = dol.data
