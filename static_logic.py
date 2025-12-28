@@ -598,7 +598,7 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Shadow Mario Runs Wild", 523066,
               Requirements([NozzleType.spray], location="Pianta Village - Piantas in Need")),
         Shine("Fluff Festival Coin Hunt", 523067,
-              Requirements([NozzleType.hover | NozzleType.rocket])),
+              Requirements([NozzleType.hover | NozzleType.rocket], location="Pianta Village - Shadow Mario Runs Wild")),
         Shine("Red Coin Chucksters", 523068,
               Requirements([NozzleType.hover]))], parent_region="Pianta 5 Only"),
 

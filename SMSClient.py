@@ -102,7 +102,6 @@ class SmsContext(SuperContext):
     blue_status = 1
     fludd_start = 0
     bianco_flag = 0
-    yoshi_mode = 0
     ticket_mode = False
     victory = False
     checked_yoshi_egg = False
@@ -164,9 +163,6 @@ class SmsContext(SuperContext):
             temp = slot_data.get("starting_nozzle")
             if temp:
                 self.fludd_start = temp
-            temp = slot_data.get("yoshi_mode")
-            if temp:
-                self.yoshi_mode = temp
             temp = slot_data.get("ticket_mode")
             if temp:
                 self.ticket_mode = temp

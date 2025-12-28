@@ -12,7 +12,7 @@ SMS_PLAYER_NAME_BYTE_LENGTH = 64
 # class SMSTest:
 
 def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_nozzle: int, level_access: bool,
-    coin_shines: bool, blue_rando: int, yoshi_rando: bool) -> (GCM, DOL):
+    coin_shines: bool, blue_rando: int) -> (GCM, DOL):
 
     random.seed(seed)
 

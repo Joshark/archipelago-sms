@@ -62,12 +62,11 @@ class SuperMarioSunshineRandomizer:
         bool_coin_shines: bool = bool(self.output_data["Options"]["enable_coin_shines"])
         blue_coin_rando: int = int(self.output_data["Options"]["blue_coin_sanity"])
         starting_nozzle: int = int(self.output_data["Options"]["starting_nozzle"])
-        yoshi_mode: bool = bool(self.output_data["Options"]["yoshi_mode"])
         player_name: str = str(self.output_data["Name"])
 
         logger.info("Updating all the main.dol offsets with their appropriate values.")
         self.gcm, self.dol = update_dol_offsets(self.gcm, self.dol, self.seed, player_name, starting_nozzle,
-            bool_level_access, bool_coin_shines, blue_coin_rando, yoshi_mode)
+            bool_level_access, bool_coin_shines, blue_coin_rando)
 
         for _, _ in self.export_files_from_memory():
             continue
