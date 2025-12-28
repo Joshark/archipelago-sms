@@ -12,7 +12,7 @@ jobs: # Define 1 or more "steps" to complete as part of this automatic release. 
     - uses: actions/checkout@v4 # Downloads the latest copy of the current repo this is attached to. Can be used to checkout other repos as well.
     - uses: actions/setup-python@v5
       with:
-        python-version: "~3.12.10"
+        python-version: "~3.13"
         cache: pip
     - name: Clear pip cache # This clears the pip cache in case any libraries with the same name were already installed on the same machine.
       run: pip cache purge
@@ -31,7 +31,7 @@ jobs: # Define 1 or more "steps" to complete as part of this automatic release. 
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
       with:
-        python-version: "~3.12.10"
+        python-version: "~3.13"
         cache: pip
     - name: Clear pip cache
       run: pip cache purge
@@ -90,7 +90,7 @@ jobs: # Define 1 or more "steps" to complete as part of this automatic release. 
       - name: Zip Lib Linux folder
         run: cd tmp-linux-lib && zip -r ../tmp-artifacts/lib-linux.zip * && cd ../
 
-        name: Create Manual Release
+      - name: Create Manual Release
         uses: softprops/action-gh-release@v2.3.2
         with:
           draft: true

@@ -23,7 +23,7 @@ class CoronaMountainShines(Range):
     If less than this number of Shines exist in the pool, it will be adjusted to the total Shine count."""
     display_name = "Corona Mountain Shines"
     range_start = 0
-    range_end = 360
+    range_end = 333
     default = 50
 
 
@@ -39,7 +39,7 @@ class BlueCoinSanity(Choice):
 class BlueCoinMaximum(Range):
     """How many Blue Coins to include in the pool if Blue Coinsanity is on. Does nothing if Blue Coinsanity is off.
     Corresponding trade shines will be removed from locations.
-    Removed Blue Coins will be replaced by extra Shine Sprites."""
+    Removed Blue Coins will be replaced by extra Shine Sprites and filler items."""
     display_name = "Blue Coin Maximum"
     range_start = 0
     range_end = 240
@@ -67,16 +67,6 @@ class StartingNozzle(Choice):
     default = 0
 
 
-class YoshiMode(Choice):
-    """Due to an issue with Yoshi, by default Pinna Park 4 has to be skipped in order for the egg to appear
-    in every level when receiving the item.
-    Alternatively, you can opt to have the item only apply to Delfino Plaza (may have logic errors)."""
-    display_name = "Yoshi Mode"
-    option_plaza_only = 0
-    option_skip_pinna = 1
-    default = 0
-
-
 @dataclass
 class SmsOptions(PerGameCommonOptions):
     level_access: LevelAccess
@@ -86,5 +76,4 @@ class SmsOptions(PerGameCommonOptions):
     blue_coin_maximum: BlueCoinMaximum
     trade_shine_maximum: TradeShineMaximum
     starting_nozzle: StartingNozzle
-    yoshi_mode: YoshiMode
     death_link: DeathLink
