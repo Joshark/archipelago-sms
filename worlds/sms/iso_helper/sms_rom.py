@@ -208,7 +208,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
             os.makedirs(local_dir_path, exist_ok=True)
             # Load the external dependencies based on OS
             logger.info("Temporary Directory created as: %s", local_dir_path)
-            # self.download_lib_zip(local_dir_path)
+            self.download_lib_zip(local_dir_path)
             self.create_iso(local_dir_path, apsms_patch, output_file, sms_clean_iso)
         except PermissionError:
             logger.warning("Failed to cleanup temp folder, %s ignoring delete.", local_dir_path)
