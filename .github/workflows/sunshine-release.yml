@@ -120,7 +120,7 @@ jobs: # Define 1 or more "steps" to complete as part of this automatic release. 
           name: lib-linux3-13
           path: ./lib-linux3-13/**
 
-  package: # Waits on both types of dependencies to complete, then creates an AP world.
+  package: # Waits on all dependencies to complete, then creates an AP world.
     needs: [windows-deps-311, windows-deps-312, windows-deps-313, linux-deps-311, linux-deps-312, linux-deps-313]
     runs-on: windows-latest
     steps:
