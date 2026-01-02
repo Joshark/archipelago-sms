@@ -12,6 +12,8 @@
 
 3. Download the APWorld from the [releases](https://github.com/Joshark/archipelago-sms/releases/latest) page and place it in your `custom_worlds` folder located in your Archipelago install director
 
+4. (Optional) If you have Universal Tracker (UT) make sure to place your yaml into your players folder to have access to UT in the SMS Client
+
 ## Create a Config (.yaml) File
 
 ### What is a config file and why do I need one?
@@ -49,11 +51,11 @@ If you would like to validate your config file to make sure it works, you may do
 
 ## Joining a MultiWorld Game
 
-### Setup your .ini and ROM
+### Setup your randomized ROM
 
 When you join a multiworld game, you will be asked to provide your config file to whoever is hosting. Once that is done,
 the host will provide you with a link to the room or the address and port necessary to connect.
-**SMS at the moment does not require a patch of any kind to play in Archipelago, it works with the cheat codes provided from the .ini that is within the downloaded .zip from releases**
+If the game is being hosted on the Archipelago website download the patch file for your game through the link there, otherwise you can obtain it from the generated output of the host of the multiworld
 
 ### Connect to the client
 
