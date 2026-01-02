@@ -1,6 +1,6 @@
 {
     "game": "Super Mario Sunshine",
     "authors": ["MrsMarinaRose", "Joshark"],
-    "minimum_ap_version": "0.6.4",
-    "world_version": "0.4.3"
+    "minimum_ap_version": "0.6.5",
+    "world_version": "0.5.1"
 }
