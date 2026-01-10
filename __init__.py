@@ -7,7 +7,7 @@ from typing import Dict, Any
 import os
 import settings
 
-from BaseClasses import ItemClassification
+from BaseClasses import ItemClassification, MultiWorld
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
 
@@ -54,8 +54,13 @@ class SmsWorld(World):
 
     settings: SuperMarioSunshineSettings
 
-    corona_goal = 50
-    possible_shines = 0
+    corona_goal: int
+    possible_shines: int
+
+    def __init__(self, multiworld: MultiWorld, player: int):
+        super().__init__(multiworld, player)
+        self.corona_goal = 50
+        self.possible_shines = 0
 
     def generate_early(self):
         if self.options.starting_nozzle.value == 0:
