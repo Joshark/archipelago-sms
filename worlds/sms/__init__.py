@@ -1,7 +1,7 @@
 """
 Archipelago init file for Super Mario Sunshine
 """
-import random, math
+import math
 from dataclasses import fields
 from typing import Dict, Any
 import os
@@ -64,7 +64,7 @@ class SmsWorld(World):
             self.options.start_inventory.value["Hover Nozzle"] = 1
 
         if self.options.level_access.value == 1:
-            pick = random.choice(list(TICKET_ITEMS.keys()))
+            pick = self.random.choice(list(TICKET_ITEMS.keys()))
             tick = str(pick)
             print(tick)
             self.options.start_inventory.value[tick] = 1
