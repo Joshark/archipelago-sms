@@ -27,11 +27,6 @@ try:
 except ModuleNotFoundError:
     from CommonClient import CommonContext as SuperContext
 
-''' "Comment-Dictionary"
-    #Gravi01    Preventing Crash when game is closed/disconnected before Client + Allowing client to reconnect
-
-'''
-
 CONNECTION_REFUSED_GAME_STATUS = (
     "Dolphin failed to connect. Please load a randomized ROM for Super Mario Sunshine. Trying again in 5 seconds..."
 )
@@ -49,8 +44,8 @@ world_flags = {}
 
 DEBUG = False
 GAME_VER = 0x3a
-AP_WORLD_VERSION_NAME = "0.6.4"
-CLIENT_VERSION = "0.5.0"
+AP_WORLD_VERSION_NAME = "0.6.5"
+CLIENT_VERSION = "0.5.1"
 
 
 @dataclass
@@ -67,7 +62,6 @@ NOZZLES: list[NozzleItem] = [
     NozzleItem("Yoshi", 53013)
 ]
 
-
 class SmsCommandProcessor(ClientCommandProcessor):
     def _cmd_connect(self, address: str = "") -> bool:
         if isinstance(self.ctx, SmsContext):
@@ -75,7 +69,7 @@ class SmsCommandProcessor(ClientCommandProcessor):
 
     def _cmd_resync(self):
         """Manually trigger a resync."""
-        self.output(f"Syncing items.")
+        self.output("Syncing items.")
         self.ctx.syncing = True
         refresh_collection_counts(self.ctx)
 
@@ -135,21 +129,6 @@ class SmsContext(SuperContext):
         ui = super().make_gui()
         ui.base_title = "Super Mario Sunshine Client"
         return ui
-
-    # def run_gui(self):
-    #     """Import kivy UI system and start running it as self.ui_task."""
-    #     from kvui import GameManager
-
-    #     class SmsManager(GameManager):
-    #         logging_pairs = [
-    #             ("Client", "Archipelago")
-    #         ]
-    #         base_title = "Archipelago Super Mario Sunshine Client"
-
-    #     self.ui = SmsManager(self)
-    #     # self.ui = super().make_gui()
-    #     # self.ui.base_title = "Archipelago Super Mario Sunshine Client"
-    #     self.ui_task = asyncio.create_task(self.ui.async_run(), name="UI")
 
     def on_package(self, cmd: str, args: dict):
         super().on_package(cmd, args)
@@ -221,13 +200,6 @@ async def game_watcher(ctx: SmsContext):
     previous_lives = None
 
     while not ctx.exit_event.is_set():
-        '''
-        dme.is_hooked() returns true if just the emulation stops, as dolphin itself is still running
-        this causes the dme to write into a non existing memory, resulting in the crashes.
-        changed if to check based on connection status, and unhooking DME properly if connection is lost (Exception)
-
-        ctx.slot None means we are not connected to the AP server.
-        '''
         if not dme.is_hooked() or ctx.slot is None:
             await asyncio.sleep(5)
             continue
@@ -329,7 +301,7 @@ async def handle_stages(ctx):
             ctx.bianco_flag |= dme.read_byte(TICKETS[0].address)
             dme.write_byte(TICKETS[0].address, ctx.bianco_flag)
             open_stage(TICKETS[0])
-        # Sets plaza state to 8 if it is not and goal hasn't been reached
+        # Sets plaza state to 8 if in ticket mode and goal hasn't been reached
         if ctx.ticket_mode == 1 and next_episode != 0x8 and not ctx.corona_message_given:
             dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
     if cur_stage != next_stage:
@@ -450,7 +422,8 @@ def send_victory(ctx: SmsContext):
 
 
 def parse_bits(all_bits, ctx: SmsContext):
-    if DEBUG: logger.info("parse_bits: " + str(all_bits))
+    if DEBUG:
+        logger.info("parse_bits: %s", str(all_bits))
     if len(all_bits) == 0:
         return
 
@@ -458,7 +431,8 @@ def parse_bits(all_bits, ctx: SmsContext):
         if x != 119 and x <= 911:
             temp = x + LOCATION_OFFSET
             ctx.locations_checked.add(temp)
-            if DEBUG: logger.info("checks to send: " + str(temp))
+            if DEBUG:
+                logger.info("checks to send: %s", str(temp))
         elif x == 119:
             send_victory(ctx)
 
@@ -475,7 +449,7 @@ def refresh_item_count(ctx, item_id, targ_address):
     #Gravi01 Begin      #Stacktrace where the original Exception was thrown. Keeping the changes in this place as well, you still land here without connection, due to it being an async task
     if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
         try:
-            dme.write_byte(targ_address, temp) 
+            dme.write_byte(targ_address, temp)
         except Exception:
             logger.info("Connection to Dolphin lost, reconnecting...")
             ctx.dolphin_status = CONNECTION_LOST_STATUS
@@ -532,12 +506,6 @@ def unpack_item(item, ctx):
         activate_yoshi(ctx)
     elif 523004 < item < 523012:
         activate_ticket(item)
-
-
-# def disable_shadow_mario():
-#     if dme.is_hooked():
-#         dme.write_double(addresses.SMS_SHADOW_MARIO_STATE, 0)
-
 
 @dataclass
 class Ticket:
