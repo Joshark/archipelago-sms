@@ -236,7 +236,8 @@ ALL_REGIONS: list[SmsRegion] = [
         BlueCoin("Underwater", 523238),
         BlueCoin("Tower X", 523239, Requirements([NozzleType.spray])),
         BlueCoin("Fountain M", 523240, Requirements([NozzleType.splasher])),
-        BlueCoin("Tower Crate", 523248)
+        BlueCoin("Tower Crate", 523248),
+        BlueCoin("Tower Rocket", 523233, Requirements([NozzleType.rocket]))
     ], ticketed="Ricco Harbor Ticket", parent_region=STATUE),
 
     SmsRegion("Ricco 1 Only", RICCO, Requirements(), [
@@ -255,7 +256,6 @@ ALL_REGIONS: list[SmsRegion] = [
 
     SmsRegion("Ricco 3", RICCO, Requirements(location="Ricco Harbor - Blooper Surfing Safari"), [
         Shine("The Caged Shine Sprite", 523012, Requirements([NozzleType.hover | NozzleType.rocket]))], [
-        BlueCoin("Tower Rocket", 523233, Requirements([NozzleType.rocket])),
         BlueCoin("Mesh Wall Klamber", 523243),
         BlueCoin("Mesh Ceiling Klamber", 523244)
     ], [
@@ -550,8 +550,8 @@ ALL_REGIONS: list[SmsRegion] = [
     # Pianta Village
     SmsRegion("Pianta Entrance", "Pianta Village", Requirements([NozzleType.rocket], shines=10), [
         Shine("Chain Chomplets Unchained", 523060, Requirements([NozzleType.rocket, NozzleType.splasher])),
-        Shine("Il Piantissimo's Crazy Climb", 523065, Requirements([NozzleType.rocket])), # Req. None
-        Shine("The Goopy Inferno", 523062, Requirements([NozzleType.rocket, NozzleType.hover])), 
+        Shine("Il Piantissimo's Crazy Climb", 523065, Requirements([NozzleType.rocket], location="Pianta Village - Chain Chomplets Unchained")), # Req. None
+        Shine("The Goopy Inferno", 523062, Requirements([NozzleType.rocket, NozzleType.hover])),
         Shine("Chain Chomp's Bath", 523061, Requirements([NozzleType.rocket, NozzleType.splasher])),
         Shine("100 Coins", 523106, Requirements([NozzleType.rocket, NozzleType.yoshi, NozzleType.spray, NozzleType.hover]), hundred=True)],
         [
