@@ -1,13 +1,13 @@
 """
 Archipelago init file for Super Mario Sunshine
 """
-import random, math
+import math
 from dataclasses import fields
 from typing import Dict, Any
 import os
 import settings
 
-from BaseClasses import ItemClassification
+from BaseClasses import ItemClassification, MultiWorld
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
 
@@ -54,8 +54,15 @@ class SmsWorld(World):
 
     settings: SuperMarioSunshineSettings
 
-    corona_goal = 50
-    possible_shines = 0
+    corona_goal: int
+    possible_shines: int
+    blue_coins: int
+
+    def __init__(self, multiworld: MultiWorld, player: int):
+        super().__init__(multiworld, player)
+        self.corona_goal = 50
+        self.possible_shines = 0
+        self.blue_coins = 0
 
     def generate_early(self):
         if self.options.starting_nozzle.value == 0:
@@ -64,7 +71,7 @@ class SmsWorld(World):
             self.options.start_inventory.value["Hover Nozzle"] = 1
 
         if self.options.level_access.value == 1:
-            pick = random.choice(list(TICKET_ITEMS.keys()))
+            pick = self.random.choice(list(TICKET_ITEMS.keys()))
             tick = str(pick)
             print(tick)
             self.options.start_inventory.value[tick] = 1
@@ -81,6 +88,7 @@ class SmsWorld(World):
         if self.options.blue_coin_sanity == "full_shuffle":
             for _ in range(0, self.options.blue_coin_maximum):
                 pool.append((self.create_item("Blue Coin")))
+                self.blue_coins += 1
 
         # Adds the minimum amount required of shines for Corona Mountain access
         for _ in range(0, self.options.corona_mountain_shines):
@@ -90,13 +98,12 @@ class SmsWorld(World):
         extra_shines = math.floor(self.options.corona_mountain_shines * 0.30)
         # Adds extra shines to the pool if possible
         if (len(self.multiworld.get_unfilled_locations(self.player))) > 0:
-            for _ in range(0, min(len(self.multiworld.get_unfilled_locations(self.player)), extra_shines)):
-                pool.append(self.create_item("Shine Sprite"))
-                self.possible_shines += 1
-
-        if (len(self.multiworld.get_unfilled_locations(self.player))) > 0:
-            for _ in range(0, len(self.multiworld.get_unfilled_locations(self.player))):
-                pool.append(self.create_item(self.random.choice(list(JUNK_ITEMS.keys()))))
+            for i in range(0, len(self.multiworld.get_unfilled_locations(self.player)) - self.blue_coins - self.possible_shines - extra_shines):
+                if i <= extra_shines:
+                    pool.append(self.create_item("Shine Sprite"))
+                    self.possible_shines += 1
+                else:
+                    pool.append(self.create_item(self.random.choice(list(JUNK_ITEMS.keys()))))
 
         self.multiworld.itempool += pool
 
