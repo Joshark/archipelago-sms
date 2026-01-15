@@ -3,17 +3,19 @@ Archipelago init file for Super Mario Sunshine
 """
 import math
 from dataclasses import fields
-from typing import Dict, Any
+from typing import Dict, Any, ClassVar
 import os
 import settings
 
-from BaseClasses import ItemClassification, MultiWorld
+
+import Options
+from BaseClasses import ItemClassification, MultiWorld, Tutorial
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
 
 from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, TICKET_ITEMS, JUNK_ITEMS, SmsItem
 from .locations import ALL_LOCATIONS_TABLE
-from .options import SmsOptions
+from .options import *
 from .regions import create_regions
 from .iso_helper.sms_rom import SMSPlayerContainer
 
@@ -35,6 +37,29 @@ class SuperMarioSunshineSettings(settings.Group):
 
 class SmsWebWorld(WebWorld):
     theme = "ocean"
+    option_groups = [
+        Options.OptionGroup("SMS Basic", [
+            options.LevelAccess,
+            options.StartingNozzle,
+            options.EnableCoinShines,
+            options.CoronaMountainShines,
+            options.BlueCoinSanity,
+            options.BlueCoinMaximum,
+            options.TradeShineMaximum,
+        ])
+    ]
+
+    setup = Tutorial(
+        "Multiworld Setup Guide",
+        "A guide to setting up the Archipelago Minecraft software on your computer. This guide covers"
+        "single-player, multiworld, and related software.",
+        "English",
+        "setup_en.md",
+        "sms/en",
+        ["Joshark"]
+    )
+
+    tutorials = [setup]
 
 class SmsWorld(World):
     """
@@ -52,7 +77,7 @@ class SmsWorld(World):
     item_name_to_id = ALL_ITEMS_TABLE
     location_name_to_id = ALL_LOCATIONS_TABLE
 
-    settings: SuperMarioSunshineSettings
+    settings: ClassVar[SuperMarioSunshineSettings]
 
     corona_goal: int
     possible_shines: int
