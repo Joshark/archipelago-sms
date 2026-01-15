@@ -28,7 +28,7 @@ class Requirements(NamedTuple):
     blue_coins: Optional[int] = None
     location: Optional[str] = None
     corona: bool = False  # is corona access needed (configurable)
-    fluddless: bool = False
+    fluddless: bool = None
 
 
 class Shine(NamedTuple):
