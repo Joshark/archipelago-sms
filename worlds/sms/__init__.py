@@ -132,6 +132,9 @@ class SmsWorld(World):
         self.multiworld.itempool += pool
 
     def create_item(self, name: str):
+        if not name in ALL_ITEMS_TABLE:
+            raise Exception(f"Invalid SMS item name: {name}")
+
         if name in ALL_PROGRESSION_ITEMS:
             classification = ItemClassification.progression
         else:
