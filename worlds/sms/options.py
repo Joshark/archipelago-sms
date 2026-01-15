@@ -26,6 +26,14 @@ class CoronaMountainShines(Range):
     range_end = 333
     default = 50
 
+class ExtraShines(Range):
+    """How many extra shine sprites you want added to the pool. This is a percentage so it ranges from 0 to 100
+    If more shines would be added than locations possible it will add as many as it can"""
+    display_name = "Extra Shines"
+    range_start = 0
+    range_end = 100
+    default = 50
+
 
 class BlueCoinSanity(Choice):
     """Full shuffle: adds Blue Coins to the pool and makes Blue Coins locations."""
@@ -72,6 +80,7 @@ class SmsOptions(PerGameCommonOptions):
     level_access: LevelAccess
     enable_coin_shines: EnableCoinShines
     corona_mountain_shines: CoronaMountainShines
+    extra_shines: ExtraShines
     blue_coin_sanity: BlueCoinSanity
     blue_coin_maximum: BlueCoinMaximum
     trade_shine_maximum: TradeShineMaximum
