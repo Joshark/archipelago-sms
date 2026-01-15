@@ -184,7 +184,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
                     for chunk in response.iter_content(chunk_size=8192):
                         created_zip.write(chunk)
         except Exception as downloadEx:
-            self._client_logger.error("While trying to download LM dependencies from the release page, an unexpected error " +
+            logger.error("While trying to download SMS dependencies from the release page, an unexpected error " +
                 f"occurred while using the requests library. Additional details: {str(downloadEx)}")
             ssl_context = ssl.create_default_context(cafile=certifi.where())
             with urllib.request.urlopen(download_path, context=ssl_context) as response, \

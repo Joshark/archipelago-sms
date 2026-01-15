@@ -4,7 +4,7 @@ Archipelago init file for Super Mario Sunshine
 import math
 from dataclasses import fields
 from typing import Dict, Any
-import os
+import os, logging
 import settings
 
 from BaseClasses import ItemClassification, MultiWorld
@@ -16,6 +16,8 @@ from .locations import ALL_LOCATIONS_TABLE
 from .options import SmsOptions
 from .regions import create_regions
 from .iso_helper.sms_rom import SMSPlayerContainer
+
+logger = logging.getLogger()
 
 
 def run_client(*args):
@@ -95,11 +97,17 @@ class SmsWorld(World):
             pool.append(self.create_item("Shine Sprite"))
             self.possible_shines += 1
 
-        extra_shines = math.floor(self.options.corona_mountain_shines * 0.30)
+        extra_shines = math.floor(self.options.corona_mountain_shines * self.options.extra_shines * .01)
+
+        # Adjusts Extra shines to be minimum amount of locations left if there would be too many
+        if extra_shines > len(self.multiworld.get_unfilled_locations(self.player)) - len(pool):
+            extra_shines = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
+            logger.info(f"Too many extra shines added, lowered amount to {extra_shines}")
+
         # Adds extra shines to the pool if possible
-        if (len(self.multiworld.get_unfilled_locations(self.player))) > 0:
-            for i in range(0, len(self.multiworld.get_unfilled_locations(self.player)) - self.blue_coins - self.possible_shines - extra_shines):
-                if i <= extra_shines:
+        if (len(self.multiworld.get_unfilled_locations(self.player))) > len(pool):
+            for i in range(0, len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)):
+                if i < extra_shines:
                     pool.append(self.create_item("Shine Sprite"))
                     self.possible_shines += 1
                 else:
