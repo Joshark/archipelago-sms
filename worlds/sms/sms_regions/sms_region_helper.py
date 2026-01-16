@@ -112,3 +112,6 @@ SPRAY_OR_YOSHI: list[list[str]] = [
     [NozzleType.spray],
     [NozzleType.yoshi]
 ]
+TURSPRAY: list[list[str]] = [
+    [NozzleType.spray, NozzleType.turbo]
+]
