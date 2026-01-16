@@ -79,7 +79,7 @@ ANY_SPLASHER: list[list[str]] = [
     [NozzleType.spray],
     [NozzleType.hover],
     [NozzleType.yoshi]]
-HOVER_AND_SPROSHI: list[list[str]] = [
+SPROVER_OR_YOSHI: list[list[str]] = [
     [NozzleType.spray, NozzleType.hover],
     [NozzleType.yoshi]
 ]
@@ -107,4 +107,8 @@ ROCKET_OR_HOVER_AND_SPRAY: list[list[str]] = [
 ROCKET_OR_HOVER: list[list[str]] = [
     [NozzleType.hover],
     [NozzleType.rocket]
+]
+SPRAY_OR_YOSHI: list[list[str]] = [
+    [NozzleType.spray],
+    [NozzleType.yoshi]
 ]
