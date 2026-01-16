@@ -1,9 +1,9 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
-from BaseClasses import CollectionState, Region, ItemClassification
-from .items import SmsItem
+from BaseClasses import CollectionState, Entrance
 from .locations import SmsLocation
-from .static_logic import ALL_REGIONS, SmsRegion, Shine, BlueCoin, OneUp, NozzleBox, Requirements, NozzleType
+from .static_logic import ALL_REGIONS, SmsRegion, Shine, BlueCoin, NozzleBox, Requirements, NozzleType
+from ..generic.Rules import add_rule
 
 if TYPE_CHECKING:
     from . import SmsWorld
@@ -81,7 +81,37 @@ def make_entrance_lambda(region: SmsRegion, world: "SmsWorld"):
     return lambda state: sms_can_use_entrance(state, region, world)
 
 
+def interpret_requirements(spot: Entrance | SmsLocation, rule_set: list[Requirements], player: int) -> (
+    Callable[[CollectionState], bool]):
+    # If a region/location does not have any items required, make the section(s) return no logic.
+    if rule_set is None or len(rule_set) < 1:
+        return spot.access_rule
+
+    # Otherwise, if a region/location DOES have items required, make the section(s) return list of logic.
+    access_list = []
+
+    for item_set in rule_set:
+        access_list.append(lambda state, items=tuple(item_set): state.has_all(items, player))
+
+    for access_rule in access_list:
+        if access_list.index(access_rule) == 0:
+            add_rule(spot, access_rule)
+        else:
+            add_rule(spot, access_rule, combine="or")
+
+    return spot.access_rule
+
+
 def create_region(region: SmsRegion, world: "SmsWorld"):
+    #coin_counter = world.options.blue_coin_maximum.value
+    #shine_limiter = world.options.trade_shine_maximum.value
+    for shine in region.shines:
+        rule_list = interpret_rule(required_items, world.player)
+
+
+    return region
+
+"""def create_region(region: SmsRegion, world: "SmsWorld"):
     new_region = Region(region.name, world.player, world.multiworld)
     coin_counter = world.options.blue_coin_maximum.value
     shine_limiter = world.options.trade_shine_maximum.value
@@ -124,15 +154,17 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         new_location.place_locked_item(event_item)
         world.multiworld.completion_condition[world.player] = lambda state: state.has("Victory", world.player)
 
-    return new_region
+    return new_region"""
 
 
 def create_regions(world: "SmsWorld"):
-    regions = {
-        "Menu": Region("Menu", world.player, world.multiworld)
-    }
-
     for region in ALL_REGIONS:
+        if world.options.starting_nozzle.value == 2: # User chose to be fluddless
+            if region == AIRSTRIP:
+                continue
+            elif region == PLAZA:
+                region.parent_region = "Menu"
+                region.requirements = None
         regions[region.name] = create_region(region, world)
         regions[region.parent_region].connect(regions[region.name], None, make_entrance_lambda(region, world))
 
