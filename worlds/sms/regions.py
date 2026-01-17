@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Callable
 
-from BaseClasses import CollectionState, Entrance
+from BaseClasses import CollectionState, Entrance, Region
 from .locations import SmsLocation
 from .static_logic import ALL_REGIONS, SmsRegion, Shine, BlueCoin, NozzleBox, Requirements, NozzleType
 from ..generic.Rules import add_rule
@@ -105,6 +105,15 @@ def interpret_requirements(spot: Entrance | SmsLocation, rule_set: list[Requirem
 def create_region(region: SmsRegion, world: "SmsWorld"):
     #coin_counter = world.options.blue_coin_maximum.value
     #shine_limiter = world.options.trade_shine_maximum.value
+    new_region = Region(region.name, world.player, world.multiworld)
+    if region.name == "Menu":
+        return new_region
+
+    # Add Entrance Logic to lock the region until you properly have access.
+    parent_region: Region = world.get_region(region.parent_region)
+    new_entrance: Entrance = parent_region.connect(new_region)
+    new_entrance.access_rule = interpret_requirements(new_entrance, region.requirements, world.player)
+
     for shine in region.shines:
         rule_list = interpret_rule(required_items, world.player)
 
