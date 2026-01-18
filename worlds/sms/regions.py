@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState, Entrance, Region
-from .locations import SmsLocation
+from .sms_regions.sms_region_helper import SmsLocation
 from .static_logic import ALL_REGIONS, SmsRegion, Shine, BlueCoin, NozzleBox, Requirements, NozzleType
 from ..generic.Rules import add_rule
 
@@ -81,8 +81,7 @@ def make_entrance_lambda(region: SmsRegion, world: "SmsWorld"):
     return lambda state: sms_can_use_entrance(state, region, world)
 
 
-def interpret_requirements(spot: Entrance | SmsLocation, rule_set: list[Requirements], player: int) -> (
-    Callable[[CollectionState], bool]):
+def interpret_requirements(spot: Entrance | SmsLocation, rule_set: list[Requirements], player: int) -> (Callable[[CollectionState], bool]):
     # If a region/location does not have any items required, make the section(s) return no logic.
     if rule_set is None or len(rule_set) < 1:
         return spot.access_rule
@@ -90,6 +89,7 @@ def interpret_requirements(spot: Entrance | SmsLocation, rule_set: list[Requirem
     # Otherwise, if a region/location DOES have items required, make the section(s) return list of logic.
     access_list = []
 
+    # TODO maybe pass in world object to get if corona is on, skip_forward, etc.
     for item_set in rule_set:
         access_list.append(lambda state, items=tuple(item_set): state.has_all(items, player))
 
@@ -105,17 +105,18 @@ def interpret_requirements(spot: Entrance | SmsLocation, rule_set: list[Requirem
 def create_region(region: SmsRegion, world: "SmsWorld"):
     #coin_counter = world.options.blue_coin_maximum.value
     #shine_limiter = world.options.trade_shine_maximum.value
-    new_region = Region(region.name, world.player, world.multiworld)
+    curr_region = Region(region.name, world.player, world.multiworld)
     if region.name == "Menu":
-        return new_region
+        return curr_region
 
     # Add Entrance Logic to lock the region until you properly have access.
     parent_region: Region = world.get_region(region.parent_region)
-    new_entrance: Entrance = parent_region.connect(new_region)
+    new_entrance: Entrance = parent_region.connect(curr_region)
     new_entrance.access_rule = interpret_requirements(new_entrance, region.requirements, world.player)
 
     for shine in region.shines:
-        rule_list = interpret_rule(required_items, world.player)
+        shine_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {shine.name}", curr_region)
+        shine_loc.access_rule = interpret_requirements(shine_loc, shine.requirements, world.player)
 
 
     return region
