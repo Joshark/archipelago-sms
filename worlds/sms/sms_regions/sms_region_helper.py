@@ -1,6 +1,19 @@
 from enum import StrEnum
 from typing import Optional, NamedTuple
 
+from BaseClasses import Location, Region
+
+
+class SmsLocation(Location):
+    name: str
+    address: Optional[int]
+    region: "SmsRegion"
+
+    def __init__(self, player: int, name: str, sms_region: Region):
+        self.address = len(sms_region.locations) + 1
+        super(SmsLocation, self).__init__(player, name, address=self.address, parent=sms_region)
+
+
 class SmsRegionName(StrEnum):
     AIRSTRIP = "Delfino Airstrip"
     PLAZA = "Delfino Plaza"
