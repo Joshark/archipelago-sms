@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState, Entrance, Region
-from .sms_regions.sms_region_helper import SmsLocation
+from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName
 from .static_logic import ALL_REGIONS, SmsRegion, Shine, BlueCoin, NozzleBox, Requirements, NozzleType
 from ..generic.Rules import add_rule
 
@@ -168,14 +168,11 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
 
 
 def create_regions(world: "SmsWorld"):
-    for region in ALL_REGIONS:
+    for region_name, region_data in ALL_REGIONS.items():
         if world.options.starting_nozzle.value == 2: # User chose to be fluddless
-            if region == AIRSTRIP:
+            if region_name == SmsRegionName.AIRSTRIP:
                 continue
-            elif region == PLAZA:
-                region.parent_region = "Menu"
-                region.requirements = None
-        regions[region.name] = create_region(region, world)
-        regions[region.parent_region].connect(regions[region.name], None, make_entrance_lambda(region, world))
-
-    world.multiworld.regions += regions.values()
+            elif region_name == SmsRegionName.PLAZA:
+                region_name.parent_region = "Menu"
+                region_name.requirements = None
+        world.multiworld.regions.append(create_region(region_data, world))
