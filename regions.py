@@ -124,6 +124,10 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     new_entrance.access_rule = interpret_requirements(new_entrance, region.requirements, world.player)
 
     for shine in region.shines:
+        # Ignore any 100 Coin shinies if not enabled.
+        if shine.hundred and not world.options.enable_coin_shines.value == 1:
+            continue
+
         shine_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {shine.name}", curr_region)
         shine_loc.access_rule = interpret_requirements(shine_loc, shine.requirements, world.player)
         curr_region.locations.append(shine_loc)
