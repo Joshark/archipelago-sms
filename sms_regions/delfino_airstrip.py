@@ -1,5 +1,4 @@
 from .sms_region_helper import *
-from ..locations import blue_coin
 
 # Delfino Airstrip
 # TODO Reminder that corona=True means that game must be able to reach Corona mountain
