@@ -1,13 +1,3 @@
-from .sms_regions.sms_region_helper import *
-from .sms_regions.delfino_plaza import DELFINO_PLAZA
-from .sms_regions.delfino_airstrip import DELFINO_AIRSTRIP
-
-ALL_REGIONS: dict[str, SmsRegion] = {
-    "Menu": SmsRegion("Menu"),
-    SmsRegionName.AIRSTRIP: DELFINO_AIRSTRIP,
-    SmsRegionName.PLAZA: DELFINO_PLAZA
-}
-
 """ALL_REGIONS: list[SmsRegion] = [
     # Delfino Airstrip
     SmsRegion(AIRSTRIP, AIRSTRIP, Requirements(), [
