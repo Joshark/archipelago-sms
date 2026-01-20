@@ -14,9 +14,8 @@ from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
 
 from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, TICKET_ITEMS, JUNK_ITEMS, SmsItem
-from .locations import ALL_LOCATIONS_TABLE
 from .options import *
-from .regions import create_regions
+from .regions import create_regions, ALL_REGIONS
 from .iso_helper.sms_rom import SMSPlayerContainer
 
 logger = logging.getLogger()
@@ -77,7 +76,12 @@ class SmsWorld(World):
     options: SmsOptions
 
     item_name_to_id = ALL_ITEMS_TABLE
-    location_name_to_id = ALL_LOCATIONS_TABLE
+    location_name_to_id = {
+    f"{sms_region.name} - {loc.name}": index
+    for index, (sms_region, loc) in enumerate(
+        (sms_region, loc)
+        for sms_region in ALL_REGIONS.values()
+        for loc in (list(sms_region.shines) + list(sms_region.blue_coins) + list(sms_region.nozzle_boxes)))}
 
     settings: ClassVar[SuperMarioSunshineSettings]
 
