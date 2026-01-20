@@ -118,7 +118,7 @@ class SmsWorld(World):
         for _ in range(0, self.options.corona_mountain_shines.value):
             pool.append(self.create_item("Shine Sprite"))
 
-        extra_shines = math.floor(self.options.corona_mountain_shines * self.options.extra_shines * .01)
+        extra_shines = math.floor(self.options.corona_mountain_shines.value * self.options.extra_shines.value * .01)
 
         # Adjusts Extra shines to be minimum amount of locations left if there would be too many
         if extra_shines > len(self.multiworld.get_unfilled_locations(self.player)) - len(pool):
