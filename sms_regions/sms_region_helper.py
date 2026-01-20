@@ -74,6 +74,9 @@ class NozzleBox(NamedTuple):
     name: str
     id: int
     requirements: list[Optional[Requirements]] = None
+    hard: list[Optional[Requirements]] = None
+    advanced: list[Optional[Requirements]] = None
+    tears: list[Optional[Requirements]] = None
 
 
 class SmsRegion(NamedTuple):
