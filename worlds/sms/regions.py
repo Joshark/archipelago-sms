@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Callable
 
-from BaseClasses import CollectionState, Entrance, Region
+from BaseClasses import CollectionState, Entrance, Region, Item
 from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName
 from .static_logic import ALL_REGIONS, SmsRegion, Shine, BlueCoin, NozzleBox, Requirements, NozzleType
 from ..generic.Rules import add_rule
@@ -117,6 +117,16 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     for shine in region.shines:
         shine_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {shine.name}", curr_region)
         shine_loc.access_rule = interpret_requirements(shine_loc, shine.requirements, world.player)
+        curr_region.locations.append(shine_loc)
+
+    for blue_coin in region.blue_coins:
+        blue_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {blue_coin.name}", curr_region)
+        blue_loc.access_rule = interpret_requirements(blue_loc, blue_coin.requirements, world.player)
+        if world.options.blue_coin_sanity.value != 1:
+            curr_region.add_event(f"{curr_region.name} - {blue_coin.name}", "Blue Coin",
+                blue_loc.access_rule, SmsLocation, Item)
+        else:
+            curr_region.locations.append(blue_loc)
 
 
     return region
