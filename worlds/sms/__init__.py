@@ -100,10 +100,13 @@ class SmsWorld(World):
         create_regions(self)
 
     def create_items(self):
-        pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
+        start_inv: list[str] = [start_item.name for start_item in self.multiworld.precollected_items[self.player]]
+
+        # Removes any progression item not in the starting items
+        pool = [self.create_item(prog_name) for prog_name in REGULAR_PROGRESSION_ITEMS.keys() if not prog_name in start_inv]
 
         if self.options.level_access == 1:
-            pool += [self.create_item(name) for name in TICKET_ITEMS.keys()]
+            pool += [self.create_item(tick_name) for tick_name in TICKET_ITEMS.keys() if tick_name not in start_inv]
 
         if self.options.blue_coin_sanity == "full_shuffle":
             for _ in range(0, self.options.blue_coin_maximum.value):
