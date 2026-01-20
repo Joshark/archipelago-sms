@@ -1,12 +1,21 @@
 from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState, Entrance, Region, Item
-from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName
-from .static_logic import ALL_REGIONS, SmsRegion, Requirements
+from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements
+from .sms_regions.delfino_plaza import DELFINO_PLAZA
+from .sms_regions.delfino_airstrip import DELFINO_AIRSTRIP
+
 from ..generic.Rules import add_rule
 
 if TYPE_CHECKING:
     from . import SmsWorld
+
+
+ALL_REGIONS: dict[str, SmsRegion] = {
+    "Menu": SmsRegion("Menu"),
+    SmsRegionName.AIRSTRIP: DELFINO_AIRSTRIP,
+    SmsRegionName.PLAZA: DELFINO_PLAZA
+}
 
 """
 def sms_requirements_satisfied(state: CollectionState, requirements: Requirements, world: "SmsWorld"):
