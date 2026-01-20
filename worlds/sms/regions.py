@@ -128,6 +128,11 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         else:
             curr_region.locations.append(blue_loc)
 
+    for nozzle_box in region.nozzle_boxes:
+        nozzle_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {nozzle_box.name}", curr_region)
+        nozzle_loc.access_rule = interpret_requirements(nozzle_loc, nozzle_box.requirements, world.player)
+        curr_region.locations.append(nozzle_loc)
+
 
     return region
 
