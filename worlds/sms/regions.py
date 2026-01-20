@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Callable
 
-from BaseClasses import CollectionState, Entrance, Region, Item
+from BaseClasses import CollectionState, Entrance, Region, Item, Location
 from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements
 from .sms_regions.delfino_plaza import DELFINO_PLAZA
 from .sms_regions.delfino_airstrip import DELFINO_AIRSTRIP
@@ -137,7 +137,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         blue_loc.access_rule = interpret_requirements(blue_loc, blue_coin.requirements, world.player)
         if world.options.blue_coin_sanity.value != 1:
             curr_region.add_event(f"{curr_region.name} - {blue_coin.name}", "Blue Coin",
-                blue_loc.access_rule, SmsLocation, Item)
+                blue_loc.access_rule, Location, Item)
         else:
             curr_region.locations.append(blue_loc)
 
@@ -146,7 +146,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         nozzle_loc.access_rule = interpret_requirements(nozzle_loc, nozzle_box.requirements, world.player)
         curr_region.locations.append(nozzle_loc)
 
-    return region
+    return curr_region
 
 """def create_region(region: SmsRegion, world: "SmsWorld"):
     new_region = Region(region.name, world.player, world.multiworld)
