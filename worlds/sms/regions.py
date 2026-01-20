@@ -2,13 +2,13 @@ from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState, Entrance, Region, Item
 from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName
-from .static_logic import ALL_REGIONS, SmsRegion, Shine, BlueCoin, NozzleBox, Requirements, NozzleType
+from .static_logic import ALL_REGIONS, SmsRegion, Requirements
 from ..generic.Rules import add_rule
 
 if TYPE_CHECKING:
     from . import SmsWorld
 
-
+"""
 def sms_requirements_satisfied(state: CollectionState, requirements: Requirements, world: "SmsWorld"):
     if requirements.skip_into and (world.options.starting_nozzle == 2 or world.options.level_access == 1):
         return True
@@ -78,7 +78,7 @@ def make_nozzle_box_lambda(nozzle_box: NozzleBox, world: "SmsWorld"):
     return lambda state: sms_can_get_nozzle_box(state, nozzle_box, world)
 
 def make_entrance_lambda(region: SmsRegion, world: "SmsWorld"):
-    return lambda state: sms_can_use_entrance(state, region, world)
+    return lambda state: sms_can_use_entrance(state, region, world)"""
 
 
 def interpret_requirements(spot: Entrance | SmsLocation, rule_set: list[Requirements], player: int) -> (Callable[[CollectionState], bool]):
@@ -132,7 +132,6 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         nozzle_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {nozzle_box.name}", curr_region)
         nozzle_loc.access_rule = interpret_requirements(nozzle_loc, nozzle_box.requirements, world.player)
         curr_region.locations.append(nozzle_loc)
-
 
     return region
 
