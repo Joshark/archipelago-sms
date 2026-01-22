@@ -1,3 +1,4 @@
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState, Entrance, Region, Item, Location
@@ -90,23 +91,41 @@ def make_entrance_lambda(region: SmsRegion, world: "SmsWorld"):
     return lambda state: sms_can_use_entrance(state, region, world)"""
 
 
-def interpret_requirements(spot: Entrance | SmsLocation, rule_set: list[Requirements], player: int) -> (Callable[[CollectionState], bool]):
+def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[Requirements], world: "SmsWorld") -> \
+    (Callable[[CollectionState], bool]):
     # If a region/location does not have any items required, make the section(s) return no logic.
-    if rule_set is None or len(rule_set) < 1:
+    if requirement_set is None or len(requirement_set) < 1:
+        return spot.access_rule
+    elif isinstance(spot, SmsLocation): # TODO also check for ticket/fludless to avoid tagging certain locations if its set to true at the location level maybe.
         return spot.access_rule
 
     # Otherwise, if a region/location DOES have items required, make the section(s) return list of logic.
-    access_list = []
+    current_rule = spot.access_rule
+    req_rules = None
 
     # TODO maybe pass in world object to get if corona is on, skip_forward, etc.
-    for item_set in rule_set:
-        access_list.append(lambda state, items=tuple(item_set): state.has_all(items, player))
+    for single_req in requirement_set:
+        nozzle_rule = None
+        blue_rule = None
+        location_rule = None
+        corona_rule = None
 
-    for access_rule in access_list:
-        if access_list.index(access_rule) == 0:
-            add_rule(spot, access_rule)
-        else:
-            add_rule(spot, access_rule, combine="or")
+        for nozzle_req in single_req.nozzles:
+            if nozzle_rule is None:
+                nozzle_rule = lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player)
+            else:
+                nozzle_rule = nozzle_rule or (lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player))
+
+        if single_req.blue_coins:
+            blue_rule = lambda state, coin_count=single_req.blue_coins, item_name="Blue Coin": (
+                state.has(item_name, world.player, coin_count))
+
+        if single_req.location:
+            location_rule = lambda state, loc_name=single_req.location: state.can_reach_location(loc_name, world.player)
+
+        if single_req.corona:
+            corona_rule = lambda state, item_name="Shine Sprite", shine_count=world.options.corona_mountain_shines.value: (
+                state.has(item_name, world.player, shine_count))
 
     return spot.access_rule
 
