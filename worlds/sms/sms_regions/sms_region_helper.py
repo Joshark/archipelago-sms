@@ -41,7 +41,6 @@ class Requirements(NamedTuple):
     blue_coins: Optional[int] = None
     location: Optional[str] = None
     corona: bool = False  # is corona access needed (configurable)
-    skip_forward: bool = None # Only in logic if tickets / fluddless are true
 
 
 class Shine(NamedTuple):
