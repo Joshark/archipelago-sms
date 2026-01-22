@@ -140,7 +140,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     # Add Entrance Logic to lock the region until you properly have access.
     parent_region: Region = world.get_region(region.parent_region)
     new_entrance: Entrance = parent_region.connect(curr_region)
-    new_entrance.access_rule = interpret_requirements(new_entrance, region.requirements, world.player)
+    new_entrance.access_rule = interpret_requirements(new_entrance, region.requirements, world)
 
     for shine in region.shines:
         # Ignore any 100 Coin shinies if not enabled.
@@ -148,12 +148,12 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
             continue
 
         shine_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {shine.name}", curr_region)
-        shine_loc.access_rule = interpret_requirements(shine_loc, shine.requirements, world.player)
+        shine_loc.access_rule = interpret_requirements(shine_loc, shine.requirements, world)
         curr_region.locations.append(shine_loc)
 
     for blue_coin in region.blue_coins:
         blue_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {blue_coin.name}", curr_region)
-        blue_loc.access_rule = interpret_requirements(blue_loc, blue_coin.requirements, world.player)
+        blue_loc.access_rule = interpret_requirements(blue_loc, blue_coin.requirements, world)
         if world.options.blue_coin_sanity.value != 1:
             curr_region.add_event(f"{curr_region.name} - {blue_coin.name}", "Blue Coin",
                 blue_loc.access_rule, Location, Item)
@@ -162,7 +162,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
 
     for nozzle_box in region.nozzle_boxes:
         nozzle_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {nozzle_box.name}", curr_region)
-        nozzle_loc.access_rule = interpret_requirements(nozzle_loc, nozzle_box.requirements, world.player)
+        nozzle_loc.access_rule = interpret_requirements(nozzle_loc, nozzle_box.requirements, world)
         curr_region.locations.append(nozzle_loc)
 
     return curr_region
