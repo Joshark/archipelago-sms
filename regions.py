@@ -1,4 +1,3 @@
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState, Entrance, Region, Item, Location
@@ -96,37 +95,56 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
     # If a region/location does not have any items required, make the section(s) return no logic.
     if requirement_set is None or len(requirement_set) < 1:
         return spot.access_rule
-    elif isinstance(spot, SmsLocation): # TODO also check for ticket/fludless to avoid tagging certain locations if its set to true at the location level maybe.
-        return spot.access_rule
 
     # Otherwise, if a region/location DOES have items required, make the section(s) return list of logic.
-    current_rule = spot.access_rule
-    req_rules = None
-
-    # TODO maybe pass in world object to get if corona is on, skip_forward, etc.
+    skip_forward_locs: bool = world.options.starting_nozzle.value == 2 or world.options.level_access.value == 1
+    any_skip_locs: bool = any([reqs for reqs in requirement_set if reqs.skip_forward])
     for single_req in requirement_set:
-        nozzle_rule = None
-        blue_rule = None
-        location_rule = None
-        corona_rule = None
+        # If entry is set to ticket mode or fludless and this location is not set to skip forward
+        if skip_forward_locs and any_skip_locs and not single_req.skip_forward:
+                continue
 
-        for nozzle_req in single_req.nozzles:
-            if nozzle_rule is None:
-                nozzle_rule = lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player)
-            else:
-                nozzle_rule = nozzle_rule or (lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player))
+        # Else if entry is NOT set to ticket mode or fludless and this location is set to skip forward
+        elif not (skip_forward_locs and any_skip_locs) and single_req.skip_forward:
+            continue
+
+        req_rule = None
+        nozzle_rule = None
+
+        if single_req.nozzles:
+            for nozzle_req in single_req.nozzles:
+                if nozzle_rule is None:
+                    nozzle_rule = lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player)
+                else:
+                    nozzle_rule = nozzle_rule or (lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player))
+
+        if nozzle_rule:
+            req_rule = nozzle_rule
 
         if single_req.blue_coins:
             blue_rule = lambda state, coin_count=single_req.blue_coins, item_name="Blue Coin": (
                 state.has(item_name, world.player, coin_count))
+            if req_rule:
+                req_rule = req_rule and blue_rule
+            else:
+                req_rule = blue_rule
 
         if single_req.location:
             location_rule = lambda state, loc_name=single_req.location: state.can_reach_location(loc_name, world.player)
+            if req_rule:
+                req_rule = req_rule and location_rule
+            else:
+                req_rule = location_rule
 
         if single_req.corona:
             corona_rule = lambda state, item_name="Shine Sprite", shine_count=world.options.corona_mountain_shines.value: (
                 state.has(item_name, world.player, shine_count))
+            if req_rule:
+                req_rule = req_rule and corona_rule
+            else:
+                req_rule = corona_rule
 
+        add_rule(spot, req_rule, combine="or")
     return spot.access_rule
 
 
