@@ -46,7 +46,6 @@ class Requirements(NamedTuple):
 
 class Shine(NamedTuple):
     name: str
-    id: int
     requirements: list[Optional[Requirements]] = None
     hard: list[Optional[Requirements]] = None
     advanced: list[Optional[Requirements]] = None
@@ -56,7 +55,6 @@ class Shine(NamedTuple):
 
 class BlueCoin(NamedTuple):
     name: str
-    id: int
     requirements: list[Optional[Requirements]] = None
     hard: list[Optional[Requirements]] = None
     advanced: list[Optional[Requirements]] = None
@@ -65,14 +63,12 @@ class BlueCoin(NamedTuple):
 
 class OneUp(NamedTuple):
     name: str
-    id: int
     requirements: Requirements = Requirements()
 
 
 # Yes, I'm going to include Shadow Mario Plaza chases as NozzleBox Locations
 class NozzleBox(NamedTuple):
     name: str
-    id: int
     requirements: list[Optional[Requirements]] = None
     hard: list[Optional[Requirements]] = None
     advanced: list[Optional[Requirements]] = None
