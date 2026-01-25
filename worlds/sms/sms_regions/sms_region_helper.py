@@ -17,6 +17,7 @@ class SmsLocation(Location):
 class SmsRegionName(StrEnum):
     AIRSTRIP = "Delfino Airstrip"
     PLAZA = "Delfino Plaza"
+    BIANCO_ENTRANCE = "Bianco Hills"
     BIANCO_ONE = "Bianco Hills 1"
     BIANCO_THREE = "Bianco Hills 3"
     BIANCO_FOUR = "Bianco Hills 4"
@@ -132,4 +133,11 @@ SPRAY_OR_YOSHI: list[list[str]] = [
 ]
 TURSPRAY: list[list[str]] = [
     [NozzleType.spray, NozzleType.turbo]
+]
+SPRAY_AND_HOVER: list[list[str]] = [
+    [NozzleType.spray, NozzleType.hover]
+]
+SPRAY_AND_ROCKET_OR_HOVER: list[list[str]] = [
+    [NozzleType.spray, NozzleType.rocket],
+    [NozzleType.hover]
 ]
