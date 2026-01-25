@@ -173,6 +173,9 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         add_rule(new_entrance, (lambda state, ticket_str=region.ticketed:
             state.has(ticket_str, world.player)), combine="and")
 
+    if world.options.trade_shine_maximum.value == 0 and not region.trade:
+        return curr_region
+
     for shine in region.shines:
         # Ignore any 100 Coin shinies if not enabled.
         if shine.hundred and not world.options.enable_coin_shines.value == 1:
