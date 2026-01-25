@@ -159,6 +159,9 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     parent_region: Region = world.get_region(region.parent_region)
     new_entrance: Entrance = parent_region.connect(curr_region)
     new_entrance.access_rule = interpret_requirements(new_entrance, region.requirements, world)
+    if world.options.level_access.value == 1:
+        add_rule(new_entrance, (lambda state, ticket_str=region.ticketed:
+            state.has(ticket_str, world.player)), combine="and")
 
     for shine in region.shines:
         # Ignore any 100 Coin shinies if not enabled.
