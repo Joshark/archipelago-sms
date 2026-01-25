@@ -4,6 +4,8 @@ from BaseClasses import CollectionState, Entrance, Region, Item, Location
 from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements
 from .sms_regions.delfino_plaza import DELFINO_PLAZA
 from .sms_regions.delfino_airstrip import DELFINO_AIRSTRIP
+from .sms_regions.bianco_hills import (BIANCO_ENTRANCE, BIANCO_HILLS_ONE, BIANCO_HILLS_THREE, BIANCO_HILLS_FOUR,
+    BIANCO_HILLS_FIVE, BIANCO_HILLS_SIX, BIANCO_HILLS_SEVEN, BIANCO_HILLS_EIGHT)
 
 from ..generic.Rules import add_rule
 
@@ -14,7 +16,15 @@ if TYPE_CHECKING:
 ALL_REGIONS: dict[str, SmsRegion] = {
     "Menu": SmsRegion("Menu"),
     SmsRegionName.AIRSTRIP: DELFINO_AIRSTRIP,
-    SmsRegionName.PLAZA: DELFINO_PLAZA
+    SmsRegionName.PLAZA: DELFINO_PLAZA,
+    SmsRegionName.BIANCO_ENTRANCE: BIANCO_ENTRANCE,
+    SmsRegionName.BIANCO_ONE: BIANCO_HILLS_ONE,
+    SmsRegionName.BIANCO_THREE: BIANCO_HILLS_THREE,
+    SmsRegionName.BIANCO_FOUR: BIANCO_HILLS_FOUR,
+    SmsRegionName.BIANCO_FIVE: BIANCO_HILLS_FIVE,
+    SmsRegionName.BIANCO_SIX: BIANCO_HILLS_SIX,
+    SmsRegionName.BIANCO_SEVEN: BIANCO_HILLS_SEVEN,
+    SmsRegionName.BIANCO_EIGHT: BIANCO_HILLS_EIGHT,
 }
 
 """
