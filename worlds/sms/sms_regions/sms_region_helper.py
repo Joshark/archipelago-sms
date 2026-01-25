@@ -17,6 +17,7 @@ class SmsLocation(Location):
 class SmsRegionName(StrEnum):
     AIRSTRIP = "Delfino Airstrip"
     PLAZA = "Delfino Plaza"
+    BOATHOUSE = "Boathouse Traders"
     BIANCO_ENTRANCE = "Bianco Hills"
     BIANCO_ONE = "Bianco Hills 1"
     BIANCO_THREE = "Bianco Hills 3"
