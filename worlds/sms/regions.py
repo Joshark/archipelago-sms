@@ -4,6 +4,7 @@ from BaseClasses import CollectionState, Entrance, Region, Item, Location
 from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements
 from .sms_regions.delfino_plaza import DELFINO_PLAZA
 from .sms_regions.delfino_airstrip import DELFINO_AIRSTRIP
+from .sms_regions.corona_mountain import CORONA_MOUNTAIN
 from .sms_regions.bianco_hills import (BIANCO_ENTRANCE, BIANCO_HILLS_ONE, BIANCO_HILLS_THREE, BIANCO_HILLS_FOUR,
     BIANCO_HILLS_FIVE, BIANCO_HILLS_SIX, BIANCO_HILLS_SEVEN, BIANCO_HILLS_EIGHT)
 
@@ -25,6 +26,7 @@ ALL_REGIONS: dict[str, SmsRegion] = {
     SmsRegionName.BIANCO_SIX: BIANCO_HILLS_SIX,
     SmsRegionName.BIANCO_SEVEN: BIANCO_HILLS_SEVEN,
     SmsRegionName.BIANCO_EIGHT: BIANCO_HILLS_EIGHT,
+    SmsRegionName.CORONA: CORONA_MOUNTAIN
 }
 
 """
@@ -204,6 +206,10 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         nozzle_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {nozzle_box.name}", curr_region)
         nozzle_loc.access_rule = interpret_requirements(nozzle_loc, nozzle_box.requirements, world)
         curr_region.locations.append(nozzle_loc)
+
+    if region.name == SmsRegionName.CORONA:
+        add_rule(new_entrance, lambda state, item_name="Shine Sprite", shine_count=world.options.corona_mountain_shines.value: (
+            state.has(item_name, world.player, shine_count)), combine="and")
 
     return curr_region
 
