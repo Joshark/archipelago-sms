@@ -1,10 +1,10 @@
 from .sms_region_helper import *
 
-BIANCO_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ENTRANCE, parent_region=SmsRegionName.PLAZA)
+BIANCO_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ENTRANCE,
+    requirements=[Requirements(shines=0), Requirements(SPRAY_OR_YOSHI, skip_forward=True)],
+    parent_region=SmsRegionName.PLAZA)
 
 BIANCO_HILLS_ONE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ONE,
-    requirements=[Requirements(shines=0),
-        Requirements(SPRAY_OR_YOSHI, skip_forward=True)],
     shines=[Shine("Road to the Big Windmill", [Requirements(ANY_SPLASHER)]),
         Shine("Down with Petey Piranha!", [Requirements([[NozzleType.spray]])]),
         Shine("100 Coins", [Requirements(SPRAY_AND_HOVER)], hundred=True)
