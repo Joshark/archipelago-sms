@@ -1,70 +1,4 @@
 """ALL_REGIONS: list[SmsRegion] = [
-
-    # Ricco Harbor
-    SmsRegion("Ricco Entrance", RICCO, Requirements([NozzleType.splasher | NozzleType.yoshi], shines=3), [
-        Shine("100 Coins", 523101, Requirements([NozzleType.hover]), hundred=True)],
-        [
-        BlueCoin("Tower Wall", 523221, Requirements([NozzleType.spray])),
-        BlueCoin("Outer Ship M", 523222, Requirements([NozzleType.splasher])),
-        BlueCoin("Spawn Building Top M", 523223, Requirements([NozzleType.splasher])),
-        BlueCoin("Fruit Machine X", 523224, Requirements([NozzleType.spray])),
-        BlueCoin("Rooftop M", 523226, Requirements([NozzleType.splasher])),
-        BlueCoin("Far Ledge", 523228, Requirements([NozzleType.hover | NozzleType.spray, NozzleType.rocket])),
-        BlueCoin("Short Beam", 523229, Requirements([NozzleType.hover])),
-        BlueCoin("Tower Platform", 523230, Requirements([NozzleType.hover])),
-        BlueCoin("Long Beam", 523231, Requirements([NozzleType.hover])),
-        BlueCoin("Off Catwalk", 523232, Requirements([NozzleType.hover])),
-        BlueCoin("Crane", 523234, Requirements([NozzleType.hover])),
-        BlueCoin("Blooper Open Water", 523235, Requirements([NozzleType.rocket], location="Ricco Harbor - Gooper Blooper Breaks Out")),
-        BlueCoin("Fountain", 523237),
-        BlueCoin("Underwater", 523238),
-        BlueCoin("Tower X", 523239, Requirements([NozzleType.spray])),
-        BlueCoin("Fountain M", 523240, Requirements([NozzleType.splasher])),
-        BlueCoin("Tower Crate", 523248),
-        BlueCoin("Tower Rocket", 523233, Requirements([NozzleType.rocket]))
-    ], ticketed="Ricco Harbor Ticket", parent_region=STATUE),
-
-    SmsRegion("Ricco 1 Only", RICCO, Requirements(), [
-        Shine("Gooper Blooper Breaks Out", 523010, Requirements([NozzleType.spray]))], [
-        BlueCoin("Tower Ground M", 523227, Requirements([NozzleType.splasher])),
-        BlueCoin("Spawn Building Side M", 523241, Requirements([NozzleType.splasher])),
-        BlueCoin("Inner Ship M", 523246, Requirements([NozzleType.splasher])),
-        BlueCoin("Yellow Submarine", 523249, Requirements([NozzleType.spray]))
-    ], parent_region="Ricco Entrance"),
-
-    SmsRegion("Ricco 2 Only", RICCO, Requirements(location="Ricco Harbor - Gooper Blooper Breaks Out"), [
-        Shine("Blooper Surfing Safari", 523011),
-        Shine("Blooper-Surfing Sequel", 523019)], [
-        BlueCoin("Blooper Underground Entrance", 523236)
-    ], parent_region="Ricco 1 Only"),
-
-    SmsRegion("Ricco 3", RICCO, Requirements(location="Ricco Harbor - Blooper Surfing Safari"), [
-        Shine("The Caged Shine Sprite", 523012, Requirements([NozzleType.hover | NozzleType.rocket]))], [
-        BlueCoin("Mesh Wall Klamber", 523243),
-        BlueCoin("Mesh Ceiling Klamber", 523244)
-    ], [
-        NozzleBox("Rocket Box", 523874, Requirements([NozzleType.hover]))
-    ], parent_region="Ricco 2 Only"),
-
-    SmsRegion("Ricco 4-7", RICCO, Requirements(location="Ricco Harbor - The Caged Shine Sprite"), [
-        Shine("The Secret of Ricco Tower", 523013, Requirements([NozzleType.hover | NozzleType.rocket])),
-        Shine("Gooper Blooper Returns", 523014, Requirements([NozzleType.spray])),
-        Shine("Red Coins on the Water", 523015, Requirements()),
-        Shine("Shadow Mario Revisited", 523016, Requirements([NozzleType.spray])),
-        Shine("Red Coins in Ricco Tower", 523018, Requirements())], [
-        BlueCoin("Caged Blooper", 523247, Requirements([NozzleType.hover | NozzleType.rocket]))
-    ], parent_region="Ricco 3"),
-
-    SmsRegion("Ricco 8", RICCO, Requirements(location="Ricco Harbor - Shadow Mario Revisited"), [
-        Shine("Yoshi's Fruit Adventure", 523017, Requirements([NozzleType.yoshi]))], [
-        BlueCoin("Butterflies", 523220, Requirements([NozzleType.yoshi])),
-        BlueCoin("Wall Klamber", 523225, Requirements([NozzleType.yoshi])),
-        BlueCoin("High Platform M", 523242, Requirements([NozzleType.yoshi | NozzleType.rocket, NozzleType.splasher])),
-        BlueCoin("Fish Basket", 523245, Requirements([NozzleType.spray]))
-    ], [
-        NozzleBox("Turbo Box", 523875)
-    ], parent_region="Ricco 4-7"),
-
     # Gelato Beach
     SmsRegion("Gelato Entrance", GELATO, Requirements([NozzleType.splasher | NozzleType.yoshi], shines=5), [
         Shine("Dune Bud Sand Castle Secret", 523020, Requirements([NozzleType.splasher])),
@@ -404,21 +338,4 @@
     ], [
         NozzleBox("Rocket Box", 523882, Requirements([NozzleType.hover]))
     ], parent_region="Pianta 6 Only"),
-
-    # Corona Mountain
-    SmsRegion("Corona Mountain", "Corona Mountain", Requirements([NozzleType.spray, NozzleType.hover], corona=True),
-              [], [
-        BlueCoin("Platform", 523540, Requirements([NozzleType.hover])),
-        BlueCoin("Back Right Lava", 523541, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Left Lava", 523542, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Front Lava", 523543, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Front Left Lava", 523544, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Front Right Lava", 523545, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Back Left Lava", 523546, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Far Back Left Lava", 523547, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Far Back Right Lava", 523548, Requirements([NozzleType.spray, NozzleType.hover])),
-        BlueCoin("Right Lava", 523549, Requirements([NozzleType.spray, NozzleType.hover]))
-    ],[
-        NozzleBox("Rocket Box", 523886, Requirements([NozzleType.spray, NozzleType.hover]))
-    ]),
 ]"""
