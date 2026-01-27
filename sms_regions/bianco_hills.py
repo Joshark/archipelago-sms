@@ -1,6 +1,6 @@
 from .sms_region_helper import *
 
-BIANCO_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ENTRANCE,
+BIANCO_HILLS_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ENTRANCE,
     requirements=[Requirements(shines=0), Requirements(SPRAY_OR_YOSHI, skip_forward=True)],
     parent_region=SmsRegionName.PLAZA)
 
