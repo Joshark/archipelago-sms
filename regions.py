@@ -146,6 +146,12 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
             else:
                 req_rule = location_rule
 
+            if isinstance(spot, Entrance):
+                #  We use this to explicitly tell the generator that, when a given region becomes accessible,
+                #   it is necessary to re-check a specific entrance, as we determine if a user has access to a region if they
+                #   complete previous stars/regions.
+                world.multiworld.register_indirect_condition(spot.parent_region, spot)
+
         if single_req.corona:
             corona_rule = lambda state, item_name="Shine Sprite", shine_count=world.options.corona_mountain_shines.value: (
                 state.has(item_name, world.player, shine_count))
@@ -200,51 +206,6 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         curr_region.locations.append(nozzle_loc)
 
     return curr_region
-
-"""def create_region(region: SmsRegion, world: "SmsWorld"):
-    new_region = Region(region.name, world.player, world.multiworld)
-    coin_counter = world.options.blue_coin_maximum.value
-    shine_limiter = world.options.trade_shine_maximum.value
-    for shine in region.shines:
-        if shine.hundred and not world.options.enable_coin_shines.value:
-            continue
-        if region.trade:
-            if world.options.blue_coin_sanity == "no_blue_coins" or coin_counter < 10 or shine_limiter < 1:
-                continue
-            coin_counter -= 10
-            shine_limiter -= 1
-        if region.skipped and world.options.starting_nozzle == 2:
-            continue
-        new_location = SmsLocation(world.player, f"{region.display} - {shine.name}", shine.id, new_region)
-        new_location.access_rule = make_shine_lambda(shine, world)
-        new_region.locations.append(new_location)
-    if world.options.blue_coin_sanity == "full_shuffle":
-        for blue_coin in region.blue_coins:
-            new_location = SmsLocation(
-                world.player, f"{region.display} - {blue_coin.name} Blue Coin", blue_coin.id, new_region)
-            new_location.access_rule = make_blue_coin_lambda(blue_coin, world)
-            new_region.locations.append(new_location)
-
-    # Adding Nozzle Boxes Locations
-    for nozzle_box in region.nozzle_boxes:
-        new_location = SmsLocation(world.player, f"{region.display} - {nozzle_box.name}", nozzle_box.id, new_region)
-        new_location.access_rule = make_nozzle_box_lambda(nozzle_box, world)
-        new_region.locations.append(new_location)
-
-    for one_up in region.one_ups:
-        new_location = SmsLocation(world.player, f"{region.display} - {one_up.name}", one_up.id, new_region)
-
-    if region.name == "Corona Mountain":
-        new_location = SmsLocation(world.player, "Corona Mountain - Father and Son Shine!", None, new_region)
-        new_location.access_rule = lambda state: sms_requirements_satisfied(state, Requirements([NozzleType.rocket]),
-                                                                            world)
-        new_region.locations.append(new_location)
-
-        event_item = SmsItem("Victory", ItemClassification.progression, None, world.player)
-        new_location.place_locked_item(event_item)
-        world.multiworld.completion_condition[world.player] = lambda state: state.has("Victory", world.player)
-
-    return new_region"""
 
 
 def create_regions(world: "SmsWorld"):
