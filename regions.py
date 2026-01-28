@@ -48,84 +48,12 @@ ALL_REGIONS: dict[str, SmsRegion] = {
     SmsRegionName.CORONA: CORONA_MOUNTAIN
 }
 
-"""
-def sms_requirements_satisfied(state: CollectionState, requirements: Requirements, world: "SmsWorld"):
-    if requirements.skip_into and (world.options.starting_nozzle == 2 or world.options.level_access == 1):
-        return True
 
-    my_nozzles: NozzleType = NozzleType.none
-    if state.has("Spray Nozzle", world.player):
-        my_nozzles |= NozzleType.spray
-        my_nozzles |= NozzleType.splasher
-    if state.has("Hover Nozzle", world.player):
-        my_nozzles |= NozzleType.hover
-        my_nozzles |= NozzleType.splasher
-    if state.has("Rocket Nozzle", world.player):
-        my_nozzles |= NozzleType.rocket
-    if state.has("Turbo Nozzle", world.player):
-        my_nozzles |= NozzleType.turbo
-    if state.has("Yoshi", world.player):
-        my_nozzles |= NozzleType.yoshi
-
-    for req in requirements.nozzles:
-        if my_nozzles & req == NozzleType(0):
-            return False
-
-    if requirements.shines is not None and not state.has("Shine Sprite", world.player, requirements.shines):
-        return False
-
-    if requirements.blues is not None and not state.has("Blue Coin", world.player, requirements.blues):
-        return False
-
-    if requirements.corona and not state.has("Shine Sprite", world.player, world.options.corona_mountain_shines.value):
-        return False
-
-    if requirements.location != "" and not state.can_reach(requirements.location, "Location", world.player):
-        return False
-
-    return True
-
-
-def sms_can_get_shine(state: CollectionState, shine: Shine, world: "SmsWorld"):
-    return sms_requirements_satisfied(state, shine.requirements, world)
-
-def sms_can_get_blue_coin(state: CollectionState, blue_coin: BlueCoin, world: "SmsWorld"):
-    return sms_requirements_satisfied(state, blue_coin.requirements, world)
-
-def sms_can_get_one_up(state: CollectionState, one_up: OneUp, world: "SmsWorld"):
-    return sms_requirements_satisfied(state, one_up.requirements, world)
-
-def sms_can_get_nozzle_box(state: CollectionState, nozzle_box: NozzleBox, world: "SmsWorld"):
-    return sms_requirements_satisfied(state, nozzle_box.requirements, world)
-
-def sms_can_use_entrance(state: CollectionState, region: SmsRegion, world: "SmsWorld"):
-    if region.ticketed and world.options.level_access == 1:
-        return state.has(region.ticketed, world.player)
-    else:
-        return sms_requirements_satisfied(state, region.requirements, world)
-
-
-def make_shine_lambda(shine: Shine, world: "SmsWorld"):
-    return lambda state: sms_can_get_shine(state, shine, world)
-
-def make_blue_coin_lambda(blue_coin: BlueCoin, world: "SmsWorld"):
-    return lambda state: sms_can_get_blue_coin(state, blue_coin, world)
-
-def make_one_up_lambda(one_up: OneUp, world: "SmsWorld"):
-    return lambda state: sms_can_get_one_up(state, one_up, world)
-
-def make_nozzle_box_lambda(nozzle_box: NozzleBox, world: "SmsWorld"):
-    return lambda state: sms_can_get_nozzle_box(state, nozzle_box, world)
-
-def make_entrance_lambda(region: SmsRegion, world: "SmsWorld"):
-    return lambda state: sms_can_use_entrance(state, region, world)"""
-
-
-def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[Requirements], world: "SmsWorld") -> \
-    (Callable[[CollectionState], bool]):
+def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[Requirements], world: "SmsWorld") -> None:
+    """Correctly applies and interprets requirements for a given entrance/location."""
     # If a region/location does not have any items required, make the section(s) return no logic.
     if requirement_set is None or len(requirement_set) < 1:
-        return spot.access_rule
+        return
 
     # Otherwise, if a region/location DOES have items required, make the section(s) return list of logic.
     skip_forward_locs: bool = world.options.starting_nozzle.value == 2 or world.options.level_access.value == 1
@@ -139,34 +67,22 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
         elif not (skip_forward_locs and any_skip_locs) and single_req.skip_forward:
             continue
 
-        req_rule = None
-        nozzle_rule = None
+        req_rules: list[Callable[[CollectionState], bool]] = []
+        nozzle_rules: list[Callable[[CollectionState], bool]] = []
 
         if single_req.nozzles:
             for nozzle_req in single_req.nozzles:
-                if nozzle_rule is None:
-                    nozzle_rule = lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player)
-                else:
-                    nozzle_rule = nozzle_rule or (lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player))
+                nozzle_rules.append(lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player))
 
-        if nozzle_rule:
-            req_rule = nozzle_rule
+            req_rules.append(lambda state: any(nozz_req(state) for nozz_req in nozzle_rules))
 
         if single_req.blue_coins:
-            blue_rule = lambda state, coin_count=single_req.blue_coins, item_name="Blue Coin": (
-                state.has(item_name, world.player, coin_count))
-            if req_rule:
-                req_rule = req_rule and blue_rule
-            else:
-                req_rule = blue_rule
+            req_rules.append(lambda state, coin_count=single_req.blue_coins, item_name="Blue Coin": (
+                state.has(item_name, world.player, coin_count)))
+
 
         if single_req.location:
-            location_rule = lambda state, loc_name=single_req.location: state.can_reach_location(loc_name, world.player)
-            if req_rule:
-                req_rule = req_rule and location_rule
-            else:
-                req_rule = location_rule
-
+            req_rules.append(lambda state, loc_name=single_req.location: state.can_reach_location(loc_name, world.player))
             if isinstance(spot, Entrance):
                 #  We use this to explicitly tell the generator that, when a given region becomes accessible,
                 #   it is necessary to re-check a specific entrance, as we determine if a user has access to a region if they
@@ -174,15 +90,14 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
                 world.multiworld.register_indirect_condition(spot.parent_region, spot)
 
         if single_req.corona:
-            corona_rule = lambda state, item_name="Shine Sprite", shine_count=world.options.corona_mountain_shines.value: (
-                state.has(item_name, world.player, shine_count))
-            if req_rule:
-                req_rule = req_rule and corona_rule
-            else:
-                req_rule = corona_rule
+            req_rules.append(lambda state, item_name="Shine Sprite",
+                shine_count=world.options.corona_mountain_shines.value: (state.has(item_name, world.player, shine_count)))
 
-        add_rule(spot, req_rule, combine="or")
-    return spot.access_rule
+        if spot.access_rule is SmsLocation.access_rule or spot.access_rule is Entrance.access_rule:
+            add_rule(spot, (lambda state: all(req_rule(state) for req_rule in req_rules)), combine="and")
+        else:
+            add_rule(spot, (lambda state: all(req_rule(state) for req_rule in req_rules)), combine="or")
+    return
 
 
 def create_region(region: SmsRegion, world: "SmsWorld"):
@@ -191,13 +106,13 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     curr_region = Region(region.name, world.player, world.multiworld)
     if region.name == "Menu":
         return curr_region
-    elif region.name == SmsRegionName and world.options.starting_nozzle.value == 2:
+    elif region.name == SmsRegionName.AIRSTRIP and world.options.starting_nozzle.value == 2:
             region.requirements = None
 
     # Add Entrance Logic to lock the region until you properly have access.
     parent_region: Region = world.get_region(region.parent_region)
     new_entrance: Entrance = parent_region.connect(curr_region)
-    new_entrance.access_rule = interpret_requirements(new_entrance, region.requirements, world)
+    interpret_requirements(new_entrance, region.requirements, world)
     if world.options.level_access.value == 1:
         add_rule(new_entrance, (lambda state, ticket_str=region.ticketed:
             state.has(ticket_str, world.player)), combine="and")
@@ -215,12 +130,12 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
                 continue
 
         shine_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {shine.name}", curr_region)
-        shine_loc.access_rule = interpret_requirements(shine_loc, shine.requirements, world)
+        interpret_requirements(shine_loc, shine.requirements, world)
         curr_region.locations.append(shine_loc)
 
     for blue_coin in region.blue_coins:
         blue_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {blue_coin.name}", curr_region)
-        blue_loc.access_rule = interpret_requirements(blue_loc, blue_coin.requirements, world)
+        interpret_requirements(blue_loc, blue_coin.requirements, world)
         if world.options.blue_coin_sanity.value != 1:
             curr_region.add_event(f"{curr_region.name} - {blue_coin.name}", "Blue Coin",
                 blue_loc.access_rule, Location, Item)
@@ -229,7 +144,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
 
     for nozzle_box in region.nozzle_boxes:
         nozzle_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {nozzle_box.name}", curr_region)
-        nozzle_loc.access_rule = interpret_requirements(nozzle_loc, nozzle_box.requirements, world)
+        interpret_requirements(nozzle_loc, nozzle_box.requirements, world)
         curr_region.locations.append(nozzle_loc)
 
     return curr_region
