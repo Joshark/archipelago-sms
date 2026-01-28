@@ -32,7 +32,14 @@ class SmsRegionName(StrEnum):
     RICCO_THREE = "Ricco Harbor 3"
     RICCO_FOUR_SEVEN = "Ricco Harbor 4-7"
     RICCO_EIGHT = "Ricco Harbor 8"
-    GELATO = "Gelato Beach"
+    GELATO_ENTRANCE = "Gelato Beach"
+    GELATO_ONE = "Gelato Beach 1"
+    GELATO_ONE_TWO_FOUR = "Gelato 1/2/4 Only"
+    GELATO_NOT_THREE = "Gelato Any Except 3"
+    GELATO_TWO_FOUR_THRU_EIGHT = "Gelato 2 and 4-8"
+    GELATO_FOUR_ONLY = "Gelato 4 Only"
+    GELATO_FIVE_EIGHT = "Gelato 5-8"
+    GELATO_SIX = "Gelato 6 Only"
     PINNA = "Pinna Park"
     SIRENA = "Sirena Beach"
     NOKI = "Noki Bay"
@@ -146,4 +153,20 @@ SPRAY_AND_HOVER: list[list[str]] = [
 SPRAY_AND_ROCKET_OR_HOVER: list[list[str]] = [
     [NozzleType.spray, NozzleType.rocket],
     [NozzleType.hover]
+]
+TURBO_OR_HOVER: list[list[str]] = [
+    [NozzleType.hover],
+    [NozzleType.turbo]
+]
+TURBO_OR_SPLASHER: list[list[str]] = [
+    [NozzleType.spray, NozzleType.hover, NozzleType.yoshi],
+    [NozzleType.turbo]
+]
+ROCKET_OR_SPLASHER: list[list[str]] = [
+    [NozzleType.spray, NozzleType.hover, NozzleType.yoshi],
+    [NozzleType.rocket]
+]
+YOSHI_AND_SPRAY_OR_YOSHI_AND_HOVER: list[list[str]] = [
+    [NozzleType.yoshi, NozzleType.spray],
+    [NozzleType.yoshi, NozzleType.hover]
 ]
