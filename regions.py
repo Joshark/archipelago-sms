@@ -1,3 +1,4 @@
+import copy
 from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState, Entrance, Region, Item, Location
@@ -51,6 +52,7 @@ ALL_REGIONS: dict[str, SmsRegion] = {
 
 def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[Requirements], world: "SmsWorld") -> None:
     """Correctly applies and interprets requirements for a given entrance/location."""
+    import inspect
     # If a region/location does not have any items required, make the section(s) return no logic.
     if requirement_set is None or len(requirement_set) < 1:
         return
@@ -104,15 +106,17 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     #coin_counter = world.options.blue_coin_maximum.value
     #shine_limiter = world.options.trade_shine_maximum.value
     curr_region = Region(region.name, world.player, world.multiworld)
+    entrance_reqs: list[Requirements] = copy.deepcopy(region.requirements)
     if region.name == "Menu":
         return curr_region
-    elif region.name == SmsRegionName.AIRSTRIP and world.options.starting_nozzle.value == 2:
-            region.requirements = None
+    elif region.name in SmsRegionName.PLAZA and (world.options.starting_nozzle.value == 2 or
+        world.options.level_access.value == 1):
+        entrance_reqs = []
 
     # Add Entrance Logic to lock the region until you properly have access.
     parent_region: Region = world.get_region(region.parent_region)
     new_entrance: Entrance = parent_region.connect(curr_region)
-    interpret_requirements(new_entrance, region.requirements, world)
+    interpret_requirements(new_entrance, entrance_reqs, world)
     if world.options.level_access.value == 1:
         add_rule(new_entrance, (lambda state, ticket_str=region.ticketed:
             state.has(ticket_str, world.player)), combine="and")
