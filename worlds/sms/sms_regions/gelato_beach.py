@@ -68,7 +68,7 @@ GELATO_BEACH_FIVE_EIGHT: SmsRegion = SmsRegion(SmsRegionName.GELATO_FIVE_EIGHT,
     parent_region=SmsRegionName.GELATO_ENTRANCE)
 
 GELATO_BEACH_SIX: SmsRegion = SmsRegion(SmsRegionName.GELATO_SIX,
-    requirements=[Requirements(location=f"{SmsRegionName.GELATO_FIVE_EIGHT}  - Il Piantissimo's Sand Sprint")],
+    requirements=[Requirements(location=f"{SmsRegionName.GELATO_FIVE_EIGHT} - Il Piantissimo's Sand Sprint")],
     blue_coins=[BlueCoin("Yellow Goo Dune Bud", [Requirements([[NozzleType.yoshi]])]),
         BlueCoin("Beehive", [Requirements([[NozzleType.yoshi]])])],
     parent_region=SmsRegionName.GELATO_ENTRANCE)
