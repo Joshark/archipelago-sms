@@ -1,5 +1,4 @@
 from .sms_region_helper import *
-from .sms_region_helper import SmsRegionName, ROCKET_OR_HOVER
 
 RICCO_HARBOR_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ENTRANCE,
     requirements=[Requirements(ALL_SPLASHER, shines=3), Requirements(SPRAY_OR_YOSHI, skip_forward=True)],
