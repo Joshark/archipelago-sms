@@ -33,14 +33,14 @@ RICCO_HARBOR_ONE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ONE,
     ], ticketed="Ricco Harbor Ticket", parent_region=SmsRegionName.RICCO_ENTRANCE)
 
 RICCO_HARBOR_TWO: SmsRegion = SmsRegion(SmsRegionName.RICCO_TWO,
-    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ENTRANCE} - Gooper Blooper Breaks Out")],
+    requirements=[Requirements(location=f"{SmsRegionName.RICCO_ONE} - Ricco 1 Only - Gooper Blooper Breaks Out")],
     shines=[Shine("Blooper Surfing Safari"),
         Shine("Blooper-Surfing Sequel")],
     blue_coins=[BlueCoin("Blooper Underground Entrance")],
     parent_region=SmsRegionName.RICCO_ENTRANCE)
 
 RICCO_HARBOR_THREE: SmsRegion = SmsRegion(SmsRegionName.RICCO_THREE,
-    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ENTRANCE} - Blooper Surfing Safari")],
+    requirements=[Requirements(location=f"{SmsRegionName.RICCO_TWO} - Blooper Surfing Safari")],
     shines=[Shine("The Caged Shine Sprite", [Requirements(ROCKET_OR_HOVER)])],
     blue_coins=[BlueCoin("Mesh Wall Klamber"),
         BlueCoin("Mesh Ceiling Klamber")],
@@ -49,7 +49,7 @@ RICCO_HARBOR_THREE: SmsRegion = SmsRegion(SmsRegionName.RICCO_THREE,
 
 
 RICCO_HARBOR_FOUR_SEVEN: SmsRegion = SmsRegion(SmsRegionName.RICCO_FOUR_SEVEN,
-    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ENTRANCE} - The Caged Shine Sprite")],
+    requirements=[Requirements(location=f"{SmsRegionName.RICCO_THREE} - The Caged Shine Sprite")],
     shines=[Shine("The Secret of Ricco Tower", [Requirements(ROCKET_OR_HOVER)]),
         Shine("Gooper Blooper Returns", [Requirements([[NozzleType.spray]])]),
         Shine("Red Coins on the Water"),
@@ -58,7 +58,7 @@ RICCO_HARBOR_FOUR_SEVEN: SmsRegion = SmsRegion(SmsRegionName.RICCO_FOUR_SEVEN,
     blue_coins=[BlueCoin("Caged Blooper", [Requirements(ROCKET_OR_HOVER)])],
     parent_region=SmsRegionName.RICCO_ENTRANCE)
 RICCO_HARBOR_EIGHT: SmsRegion = SmsRegion(SmsRegionName.RICCO_EIGHT,
-    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ENTRANCE} - Shadow Mario Revisited")],
+    requirements=[Requirements(location=f"{SmsRegionName.RICCO_FOUR_SEVEN} - Shadow Mario Revisited")],
     shines=[Shine("Yoshi's Fruit Adventure", [Requirements([[NozzleType.yoshi]])])],
     blue_coins=[BlueCoin("Butterflies", [Requirements([[NozzleType.yoshi]])]),
         BlueCoin("Wall Klamber", [Requirements([[NozzleType.yoshi]])]),
