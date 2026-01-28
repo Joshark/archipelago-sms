@@ -6,7 +6,7 @@ RICCO_HARBOR_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ENTRANCE,
     parent_region=SmsRegionName.PLAZA)
 
 RICCO_HARBOR_ONE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ONE, 
-        shines=[Shine("Gooper Blooper Breaks Out", [Requirements([[NozzleType.spray]])]),
+        shines=[Shine("Ricco 1 Only - Gooper Blooper Breaks Out", [Requirements([[NozzleType.spray]])]),
         Shine("100 Coins", [Requirements([[NozzleType.hover]])], hundred=True)],
         blue_coins=[BlueCoin("Tower Wall", [Requirements([[NozzleType.spray]])]),
         BlueCoin("Outer Ship M", [Requirements(ANY_SPLASHER)]),
@@ -26,10 +26,10 @@ RICCO_HARBOR_ONE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ONE,
         BlueCoin("Fountain M", [Requirements(ANY_SPLASHER)]),
         BlueCoin("Tower Crate"),
         BlueCoin("Tower Rocket", [Requirements([[NozzleType.rocket]])]),
-        BlueCoin("Tower Ground M", [Requirements(ANY_SPLASHER)]),
-        BlueCoin("Spawn Building Side M", [Requirements(ANY_SPLASHER)]),
-        BlueCoin("Inner Ship M", [Requirements(ANY_SPLASHER)]),
-        BlueCoin("Yellow Submarine", [Requirements([[NozzleType.spray]])])
+        BlueCoin("Ricco 1 Only - Tower Ground M", [Requirements(ANY_SPLASHER)]),
+        BlueCoin("Ricco 1 Only - Spawn Building Side M", [Requirements(ANY_SPLASHER)]),
+        BlueCoin("Ricco 1 Only - Inner Ship M", [Requirements(ANY_SPLASHER)]),
+        BlueCoin("Ricco 1 Only - Yellow Submarine", [Requirements([[NozzleType.spray]])])
     ], ticketed="Ricco Harbor Ticket", parent_region=SmsRegionName.RICCO_ENTRANCE)
 
 RICCO_HARBOR_TWO: SmsRegion = SmsRegion(SmsRegionName.RICCO_TWO,
