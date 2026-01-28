@@ -214,7 +214,6 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
             if world.options.starting_nozzle.value == 2 and shine.name == "Delfino Airstrip Dilemma":
                 continue
 
-        # TODO add Airstrip Dilemma to be ignored when skip_forward is true.
         shine_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {shine.name}", curr_region)
         shine_loc.access_rule = interpret_requirements(shine_loc, shine.requirements, world)
         curr_region.locations.append(shine_loc)
