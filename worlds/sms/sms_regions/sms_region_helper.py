@@ -66,19 +66,19 @@ class Requirements(NamedTuple):
 
 class Shine(NamedTuple):
     name: str
-    requirements: list[Optional[Requirements]] = None
-    hard: list[Optional[Requirements]] = None
-    advanced: list[Optional[Requirements]] = None
-    tears: list[Optional[Requirements]] = None
+    requirements: list[Optional[Requirements]] | None = None
+    hard: list[Optional[Requirements]] | None = None
+    advanced: list[Optional[Requirements]] | None = None
+    tears: list[Optional[Requirements]] | None = None
     hundred: bool = False # 100 coin Shines
 
 
 class BlueCoin(NamedTuple):
     name: str
-    requirements: list[Optional[Requirements]] = None
-    hard: list[Optional[Requirements]] = None
-    advanced: list[Optional[Requirements]] = None
-    tears: list[Optional[Requirements]] = None
+    requirements: list[Optional[Requirements]] | None = None
+    hard: list[Optional[Requirements]] | None = None
+    advanced: list[Optional[Requirements]] | None = None
+    tears: list[Optional[Requirements]] | None = None
 
 
 class OneUp(NamedTuple):
@@ -89,18 +89,18 @@ class OneUp(NamedTuple):
 # Yes, I'm going to include Shadow Mario Plaza chases as NozzleBox Locations
 class NozzleBox(NamedTuple):
     name: str
-    requirements: list[Optional[Requirements]] = None
-    hard: list[Optional[Requirements]] = None
-    advanced: list[Optional[Requirements]] = None
-    tears: list[Optional[Requirements]] = None
+    requirements: list[Optional[Requirements]] | None = None
+    hard: list[Optional[Requirements]] | None = None
+    advanced: list[Optional[Requirements]] | None = None
+    tears: list[Optional[Requirements]] | None = None
 
 
 class SmsRegion(NamedTuple):
     name: str
-    requirements: list[Optional[Requirements]] = None
-    shines: Optional[list[Shine]] = []
-    blue_coins: Optional[list[BlueCoin]] = []
-    nozzle_boxes: Optional[list[NozzleBox]] = []
+    requirements: list[Optional[Requirements]] | None = None
+    shines: Optional[list[Shine]] | None = []
+    blue_coins: Optional[list[BlueCoin]] | None = []
+    nozzle_boxes: Optional[list[NozzleBox]] | None = []
     ticketed: str = ""
     trade: bool = False
     parent_region: str = None
