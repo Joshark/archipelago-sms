@@ -198,6 +198,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         if shine.hundred and not world.options.enable_coin_shines.value == 1:
             continue
 
+        # TODO add Airstrip Dilemma to be ignored when skip_forward is true.
         shine_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {shine.name}", curr_region)
         shine_loc.access_rule = interpret_requirements(shine_loc, shine.requirements, world)
         curr_region.locations.append(shine_loc)
@@ -215,10 +216,6 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         nozzle_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {nozzle_box.name}", curr_region)
         nozzle_loc.access_rule = interpret_requirements(nozzle_loc, nozzle_box.requirements, world)
         curr_region.locations.append(nozzle_loc)
-
-    if region.name == SmsRegionName.CORONA:
-        add_rule(new_entrance, lambda state, item_name="Shine Sprite", shine_count=world.options.corona_mountain_shines.value: (
-            state.has(item_name, world.player, shine_count)), combine="and")
 
     return curr_region
 

@@ -1,7 +1,7 @@
 from .sms_region_helper import *
 
 CORONA_MOUNTAIN: SmsRegion = SmsRegion(SmsRegionName.CORONA,
-    requirements=[Requirements(SPRAY_AND_HOVER)],
+    requirements=[Requirements(SPRAY_AND_HOVER, corona=True)],
     shines=[],
     blue_coins=[BlueCoin("Platform", [Requirements([[NozzleType.hover]])]),
         BlueCoin("Back Right Lava", [Requirements(SPRAY_AND_HOVER)]),
