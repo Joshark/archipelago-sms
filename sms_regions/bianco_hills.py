@@ -25,7 +25,7 @@ BIANCO_HILLS_ONE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ONE,
     ], ticketed="Bianco Hills Ticket", parent_region=SmsRegionName.BIANCO_ENTRANCE)
 
 BIANCO_HILLS_THREE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_THREE,
-    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ENTRANCE} - Down with Petey Piranha!")],
+    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ONE} - Down with Petey Piranha!")],
     shines=[Shine("The Hillside Cave Secret", [Requirements(ROCKET_OR_HOVER)]),
         Shine("Red Coins of the Hillside Cave", [Requirements(ROCKET_OR_HOVER)])],
     blue_coins=[BlueCoin("Treetop", [Requirements(ANY_SPLASHER)]),
@@ -45,14 +45,14 @@ BIANCO_HILLS_FOUR: SmsRegion = SmsRegion(SmsRegionName.BIANCO_FOUR,
     parent_region=SmsRegionName.BIANCO_ENTRANCE)
 
 BIANCO_HILLS_FIVE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_FIVE,
-    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ENTRANCE} - Red Coins of Windmill Village")],
+    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_FOUR} - Red Coins of Windmill Village")],
     shines=[Shine("Petey Piranha Strikes Back", [Requirements(SPRAY_AND_ROCKET_OR_HOVER)])],
     blue_coins=[BlueCoin("Wall Tower Pianta", [Requirements(SPRAY_AND_ROCKET_OR_HOVER)]),
         BlueCoin("Platforms Cross", [Requirements(ROCKET_OR_HOVER)]),
     ], parent_region=SmsRegionName.BIANCO_ENTRANCE)
 
 BIANCO_HILLS_SIX: SmsRegion = SmsRegion(SmsRegionName.BIANCO_SIX,
-    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ENTRANCE} - Petey Piranha Strikes Back")],
+    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_FIVE} - Petey Piranha Strikes Back")],
     shines=[Shine("The Secret of the Dirty Lake", [Requirements(ANY_SPLASHER)]),
         Shine("Red Coins of the Dirty Lake", [Requirements([[NozzleType.hover]])])
     ],
@@ -65,14 +65,14 @@ BIANCO_HILLS_SIX: SmsRegion = SmsRegion(SmsRegionName.BIANCO_SIX,
     parent_region=SmsRegionName.BIANCO_ENTRANCE)
 
 BIANCO_HILLS_SEVEN: SmsRegion = SmsRegion(SmsRegionName.BIANCO_SEVEN,
-    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ENTRANCE} - The Secret of the Dirty Lake")],
+    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_SIX} - The Secret of the Dirty Lake")],
     shines=[Shine("Shadow Mario on the Loose", [Requirements([[NozzleType.spray]])])],
     blue_coins=[BlueCoin("Towers House O", [Requirements(ANY_SPLASHER)]),
         BlueCoin("Balcony House O", [Requirements(ANY_SPLASHER)])
     ], parent_region=SmsRegionName.BIANCO_ENTRANCE)
 
 BIANCO_HILLS_EIGHT: SmsRegion = SmsRegion(SmsRegionName.BIANCO_EIGHT,
-    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ENTRANCE} - Shadow Mario on the Loose")],
+    requirements=[Requirements(location=f"{SmsRegionName.BIANCO_SEVEN} - Shadow Mario on the Loose")],
     shines=[Shine("The Red Coins of the Lake", [Requirements(ROCKET_OR_HOVER)])],
     blue_coins=[BlueCoin("Beehive", [Requirements([[NozzleType.yoshi]])]),
         BlueCoin("Butterfly", [Requirements([[NozzleType.yoshi]])])
