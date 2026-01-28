@@ -191,6 +191,8 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     curr_region = Region(region.name, world.player, world.multiworld)
     if region.name == "Menu":
         return curr_region
+    elif region.name == SmsRegionName and world.options.starting_nozzle.value == 2:
+            region.requirements = None
 
     # Add Entrance Logic to lock the region until you properly have access.
     parent_region: Region = world.get_region(region.parent_region)
@@ -207,6 +209,10 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         # Ignore any 100 Coin shinies if not enabled.
         if shine.hundred and not world.options.enable_coin_shines.value == 1:
             continue
+        elif region.name == SmsRegionName.AIRSTRIP:
+            # If User chose to be fluddless, don't create the Dilemma shine.
+            if world.options.starting_nozzle.value == 2 and shine.name == "Delfino Airstrip Dilemma":
+                continue
 
         # TODO add Airstrip Dilemma to be ignored when skip_forward is true.
         shine_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {shine.name}", curr_region)
@@ -232,10 +238,4 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
 
 def create_regions(world: "SmsWorld"):
     for region_name, region_data in ALL_REGIONS.items():
-        if world.options.starting_nozzle.value == 2: # User chose to be fluddless
-            if region_name == SmsRegionName.AIRSTRIP:
-                continue
-            elif region_name == SmsRegionName.PLAZA:
-                region_name.parent_region = "Menu"
-                region_name.requirements = None
         world.multiworld.regions.append(create_region(region_data, world))
