@@ -43,7 +43,8 @@ class SmsRegionName(StrEnum):
     GELATO_FOUR_ONLY = "Gelato 4 Only"
     GELATO_FIVE_EIGHT = "Gelato 5-8"
     GELATO_SIX = "Gelato 6 Only"
-    PINNA = "Pinna Park"
+    PINNA_ENTRANCE = "Pinna Park"
+    PINNA_ONE = "Pinna Park 1"
     SIRENA = "Sirena Beach"
     NOKI = "Noki Bay"
     PIANTA = "Pianta Village"
@@ -69,19 +70,19 @@ class Requirements(NamedTuple):
 
 class Shine(NamedTuple):
     name: str
-    requirements: list[Optional[Requirements]] | None = None
-    hard: list[Optional[Requirements]] | None = None
-    advanced: list[Optional[Requirements]] | None = None
-    tears: list[Optional[Requirements]] | None = None
+    requirements: Optional[list[Requirements]] | None = None
+    hard: Optional[list[Requirements]] | None = None
+    advanced: Optional[list[Requirements]] | None = None
+    tears: Optional[list[Requirements]] | None = None
     hundred: bool = False # 100 coin Shines
 
 
 class BlueCoin(NamedTuple):
     name: str
-    requirements: list[Optional[Requirements]] | None = None
-    hard: list[Optional[Requirements]] | None = None
-    advanced: list[Optional[Requirements]] | None = None
-    tears: list[Optional[Requirements]] | None = None
+    requirements: Optional[list[Requirements]] | None = None
+    hard: Optional[list[Requirements]] | None = None
+    advanced: Optional[list[Requirements]] | None = None
+    tears: Optional[list[Requirements]] | None = None
 
 
 class OneUp(NamedTuple):
@@ -92,15 +93,15 @@ class OneUp(NamedTuple):
 # Yes, I'm going to include Shadow Mario Plaza chases as NozzleBox Locations
 class NozzleBox(NamedTuple):
     name: str
-    requirements: list[Optional[Requirements]] | None = None
-    hard: list[Optional[Requirements]] | None = None
-    advanced: list[Optional[Requirements]] | None = None
-    tears: list[Optional[Requirements]] | None = None
+    requirements: Optional[list[Requirements]] | None = None
+    hard: Optional[list[Requirements]] | None = None
+    advanced: Optional[list[Requirements]] | None = None
+    tears: Optional[list[Requirements]] | None = None
 
 
 class SmsRegion(NamedTuple):
     name: str
-    requirements: list[Optional[Requirements]] | None = None
+    requirements: Optional[list[Requirements]] | None = None
     shines: Optional[list[Shine]] | None = []
     blue_coins: Optional[list[BlueCoin]] | None = []
     nozzle_boxes: Optional[list[NozzleBox]] | None = []
