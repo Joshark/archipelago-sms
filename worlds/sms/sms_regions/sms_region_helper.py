@@ -114,7 +114,8 @@ class SmsRegion(NamedTuple):
 ANY_SPLASHER: list[list[str]] = [
     [NozzleType.spray],
     [NozzleType.hover],
-    [NozzleType.yoshi]]
+    [NozzleType.yoshi]
+]
 SPROVER_OR_YOSHI: list[list[str]] = [
     [NozzleType.spray, NozzleType.hover],
     [NozzleType.yoshi]
