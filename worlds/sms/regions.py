@@ -1,7 +1,7 @@
 import copy
 from typing import TYPE_CHECKING, Callable
 
-from BaseClasses import CollectionState, Entrance, Region, Item, Location
+from BaseClasses import CollectionState, Entrance, Region
 from .sms_regions.ricco_harbor import RICCO_HARBOR_ENTRANCE, RICCO_HARBOR_ONE, RICCO_HARBOR_EIGHT, \
     RICCO_HARBOR_FOUR_SEVEN, RICCO_HARBOR_THREE, RICCO_HARBOR_TWO
 from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements
@@ -133,21 +133,21 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
             if world.options.starting_nozzle.value == 2 and shine.name == "Delfino Airstrip Dilemma":
                 continue
 
-        shine_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {shine.name}", curr_region)
+        shine_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {shine.name}", curr_region)
         interpret_requirements(shine_loc, shine.requirements, world)
         curr_region.locations.append(shine_loc)
 
     for blue_coin in region.blue_coins:
-        blue_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {blue_coin.name}", curr_region)
+        blue_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {blue_coin.name}", curr_region)
         interpret_requirements(blue_loc, blue_coin.requirements, world)
         if world.options.blue_coin_sanity.value != 1:
             curr_region.add_event(f"{curr_region.name} - {blue_coin.name}", "Blue Coin",
-                blue_loc.access_rule, Location, Item)
+                (lambda state: blue_loc.access_rule(state)))
         else:
             curr_region.locations.append(blue_loc)
 
     for nozzle_box in region.nozzle_boxes:
-        nozzle_loc: SmsLocation = SmsLocation(world.player, f"{curr_region.name} - {nozzle_box.name}", curr_region)
+        nozzle_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {nozzle_box.name}", curr_region)
         interpret_requirements(nozzle_loc, nozzle_box.requirements, world)
         curr_region.locations.append(nozzle_loc)
 
@@ -157,3 +157,6 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
 def create_regions(world: "SmsWorld"):
     for region_name, region_data in ALL_REGIONS.items():
         world.multiworld.regions.append(create_region(region_data, world))
+
+    corona_region: Region = world.get_region(SmsRegionName.CORONA)
+    corona_region.add_event(f"{SmsRegionName.CORONA} - Father and Son Shine!", "Victory")
