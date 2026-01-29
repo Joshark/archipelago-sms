@@ -47,7 +47,7 @@ GELATO_BEACH_TWO_FOUR_THRU_EIGHT: SmsRegion = SmsRegion(SmsRegionName.GELATO_TWO
     parent_region=SmsRegionName.GELATO_ENTRANCE)
 
 GELATO_BEACH_FOUR_ONLY: SmsRegion = SmsRegion(SmsRegionName.GELATO_FOUR_ONLY, 
-    requirements=[Requirements([[NozzleType.hover]], location=f"{SmsRegionName.GELATO_ONE} - Wiggler Ahoy! Full Steam Ahead!")],
+    requirements=[Requirements(location=f"{SmsRegionName.GELATO_ONE} - Wiggler Ahoy! Full Steam Ahead!")],
     shines=[Shine("The Sand Bird is Born", [Requirements([[NozzleType.hover]])])],
     blue_coins=[BlueCoin("Sand Bird A", [Requirements([[NozzleType.hover]])]),
         BlueCoin("Sand Bird B", [Requirements([[NozzleType.hover]])]),
