@@ -1,7 +1,7 @@
 from .sms_region_helper import *
 
 RICCO_HARBOR_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ENTRANCE,
-    requirements=[Requirements(ALL_SPLASHER, shines=3), Requirements(SPRAY_OR_YOSHI, skip_forward=True)],
+    requirements=[Requirements(ALL_SPLASHER, shines=3), Requirements(ANY_SPLASHER, skip_forward=True)],
     parent_region=SmsRegionName.PLAZA)
 
 RICCO_HARBOR_ONE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ONE, 
