@@ -76,7 +76,7 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
             for nozzle_req in single_req.nozzles:
                 nozzle_rules.append(lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player))
 
-            req_rules.append(lambda state: any(nozz_req(state) for nozz_req in nozzle_rules))
+            req_rules.append(lambda state, nozz_rules=tuple(nozzle_rules): any(nozz_req(state) for nozz_req in nozz_rules))
 
         if single_req.blue_coins:
             req_rules.append(lambda state, coin_count=single_req.blue_coins, item_name="Blue Coin": (
@@ -96,9 +96,9 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
                 shine_count=world.options.corona_mountain_shines.value: (state.has(item_name, world.player, shine_count)))
 
         if spot.access_rule is SmsLocation.access_rule or spot.access_rule is Entrance.access_rule:
-            add_rule(spot, (lambda state: all(req_rule(state) for req_rule in req_rules)), combine="and")
+            add_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in all_rules)))
         else:
-            add_rule(spot, (lambda state: all(req_rule(state) for req_rule in req_rules)), combine="or")
+            add_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in req_rules)), combine="or")
     return
 
 
