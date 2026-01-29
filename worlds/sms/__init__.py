@@ -96,15 +96,15 @@ class SmsWorld(World):
 
     def generate_early(self):
         if self.options.starting_nozzle.value == 0:
-            self.options.start_inventory.value["Spray Nozzle"] = 1
+            self.multiworld.push_precollected(self.create_item("Spray Nozzle"))
         elif self.options.starting_nozzle.value == 1:
-            self.options.start_inventory.value["Hover Nozzle"] = 1
+            self.multiworld.push_precollected(self.create_item("Hover Nozzle"))
 
         if self.options.level_access.value == 1:
             pick = self.random.choice(list(TICKET_ITEMS.keys()))
             tick = str(pick)
             print(tick)
-            self.options.start_inventory.value[tick] = 1
+            self.multiworld.push_precollected(self.create_item(tick))
 
     def create_regions(self):
         create_regions(self)
