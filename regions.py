@@ -109,7 +109,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     entrance_reqs: list[Requirements] = copy.deepcopy(region.requirements)
     if region.name == "Menu":
         return curr_region
-    elif region.name in SmsRegionName.PLAZA and (world.options.starting_nozzle.value == 2 or
+    elif region.name == SmsRegionName.PLAZA and (world.options.starting_nozzle.value == 2 or
         world.options.level_access.value == 1):
         entrance_reqs = []
 
@@ -117,7 +117,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     parent_region: Region = world.get_region(region.parent_region)
     new_entrance: Entrance = parent_region.connect(curr_region)
     interpret_requirements(new_entrance, entrance_reqs, world)
-    if world.options.level_access.value == 1:
+    if world.options.level_access.value == 1 and region.ticketed:
         add_rule(new_entrance, (lambda state, ticket_str=region.ticketed:
             state.has(ticket_str, world.player)), combine="and")
 
