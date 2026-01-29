@@ -5,7 +5,6 @@ GELATO_BEACH_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.GELATO_ENTRANCE,
     parent_region=SmsRegionName.PLAZA)
 
 GELATO_BEACH_ONE: SmsRegion = SmsRegion(SmsRegionName.GELATO_ONE,
-    requirements=[],
     shines=[Shine("Dune Bud Sand Castle Secret", [Requirements(ANY_SPLASHER)]),
         Shine("Mirror Madness! Tilt, Slam, Bam!", [Requirements([[NozzleType.spray]])]),
         Shine("Wiggler Ahoy! Full Steam Ahead!", [Requirements(ANY_SPLASHER, location=f"{SmsRegionName.GELATO_ONE} - Mirror Madness! Tilt, Slam, Bam!")]),
