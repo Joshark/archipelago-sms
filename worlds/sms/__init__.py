@@ -62,6 +62,17 @@ class SmsWebWorld(WebWorld):
 
     tutorials = [setup]
 
+def get_location_name_to_id():
+    dict_locs: dict[str, int] = {}
+    for sms_reg in ALL_REGIONS.values():
+        for shine_loc in sms_reg.shines:
+            dict_locs.update({f"{sms_reg.name} - {shine_loc.name}": len(dict_locs)+1})
+        for blue_loc in sms_reg.blue_coins:
+            dict_locs.update({f"{sms_reg.name} - {blue_loc.name}": len(dict_locs)+1})
+        for nozz_loc in sms_reg.nozzle_boxes:
+            dict_locs.update({f"{sms_reg.name} - {nozz_loc.name}": len(dict_locs)+1})
+    return dict_locs
+
 class SmsWorld(World):
     """
     The second Super Mario game to feature 3D gameplay. Coupled with F.L.U.D.D. (a talking water tank that can be used
@@ -76,12 +87,7 @@ class SmsWorld(World):
     options: SmsOptions
 
     item_name_to_id = ALL_ITEMS_TABLE
-    location_name_to_id = {
-    f"{sms_region.name} - {loc.name}": index
-    for index, (sms_region, loc) in enumerate(
-        (sms_region, loc)
-        for sms_region in ALL_REGIONS.values()
-        for loc in (list(sms_region.shines) + list(sms_region.blue_coins) + list(sms_region.nozzle_boxes)))}
+    location_name_to_id = get_location_name_to_id()
 
     settings: ClassVar[SuperMarioSunshineSettings]
 
@@ -182,7 +188,6 @@ class SmsWorld(World):
             f"{SMSPlayerContainer.patch_file_ending}")
         sms_container = SMSPlayerContainer(output_data, patch_path, self.multiworld.player_name[self.player], self.player)
         sms_container.write()
-
 
 # def launch_client():
 #     from .SMSClient import main

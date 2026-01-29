@@ -1,7 +1,10 @@
 from enum import StrEnum
-from typing import Optional, NamedTuple
+from typing import Optional, NamedTuple, TYPE_CHECKING
 
 from BaseClasses import Location, Region
+
+if TYPE_CHECKING:
+    from worlds.sms import SmsWorld
 
 
 class SmsLocation(Location):
@@ -9,9 +12,9 @@ class SmsLocation(Location):
     address: Optional[int]
     region: "SmsRegion"
 
-    def __init__(self, player: int, name: str, sms_region: Region):
-        self.address = len(sms_region.locations) + 1
-        super(SmsLocation, self).__init__(player, name, address=self.address, parent=sms_region)
+    def __init__(self, world: "SmsWorld", name: str, sms_region: Region):
+        self.address = world.location_name_to_id[name]
+        super(SmsLocation, self).__init__(world.player, name, address=self.address, parent=sms_region)
 
 
 class SmsRegionName(StrEnum):
