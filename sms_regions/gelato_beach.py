@@ -1,7 +1,7 @@
 from .sms_region_helper import *
 
 GELATO_BEACH_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.GELATO_ENTRANCE,
-    requirements=[Requirements(ANY_SPLASHER, shines=5), Requirements(ANY_SPLASHER, skip_forward=True)],
+    requirements=[Requirements(ANY_SPLASHER, shines=5), Requirements(skip_forward=True)],
     parent_region=SmsRegionName.PLAZA)
 
 GELATO_BEACH_ONE: SmsRegion = SmsRegion(SmsRegionName.GELATO_ONE,
