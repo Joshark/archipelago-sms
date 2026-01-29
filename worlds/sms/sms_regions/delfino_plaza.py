@@ -2,7 +2,7 @@ from .sms_region_helper import *
 
 
 DELFINO_PLAZA: SmsRegion = SmsRegion(SmsRegionName.PLAZA,
-    [Requirements(location=SmsRegionName.AIRSTRIP + " - Delfino Airstrip Dilemma")],
+    requirements=[Requirements(location=SmsRegionName.AIRSTRIP + " - Delfino Airstrip Dilemma")],
     shines=[Shine("Shine Sprite in the Sand", [Requirements(HOVORSHI)]),
         Shine("Clean the West Bell", [Requirements(ANY_SPLASHER)]),
         Shine("Super Slide", [Requirements(ROCKET_OR_HOVER_OR_YOSHI)]),
