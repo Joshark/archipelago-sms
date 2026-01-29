@@ -46,7 +46,6 @@ RICCO_HARBOR_THREE: SmsRegion = SmsRegion(SmsRegionName.RICCO_THREE,
     nozzle_boxes=[NozzleBox("Rocket Box", [Requirements([[NozzleType.hover]])])],
     parent_region=SmsRegionName.RICCO_ENTRANCE)
 
-
 RICCO_HARBOR_FOUR_SEVEN: SmsRegion = SmsRegion(SmsRegionName.RICCO_FOUR_SEVEN,
     requirements=[Requirements(location=f"{SmsRegionName.RICCO_THREE} - The Caged Shine Sprite")],
     shines=[Shine("The Secret of Ricco Tower", [Requirements(ROCKET_OR_HOVER)]),
@@ -56,6 +55,7 @@ RICCO_HARBOR_FOUR_SEVEN: SmsRegion = SmsRegion(SmsRegionName.RICCO_FOUR_SEVEN,
         Shine("Red Coins in Ricco Tower")],
     blue_coins=[BlueCoin("Caged Blooper", [Requirements(ROCKET_OR_HOVER)])],
     parent_region=SmsRegionName.RICCO_ENTRANCE)
+
 RICCO_HARBOR_EIGHT: SmsRegion = SmsRegion(SmsRegionName.RICCO_EIGHT,
     requirements=[Requirements(location=f"{SmsRegionName.RICCO_FOUR_SEVEN} - Shadow Mario Revisited")],
     shines=[Shine("Yoshi's Fruit Adventure", [Requirements([[NozzleType.yoshi]])])],
