@@ -62,7 +62,7 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
     any_skip_locs: bool = any([reqs for reqs in requirement_set if reqs.skip_forward])
     for single_req in requirement_set:
         # If entry is set to ticket mode or fludless and this location is not set to skip forward
-        if skip_forward_locs and any_skip_locs and not single_req.skip_forward:
+        if (skip_forward_locs and any_skip_locs) and not single_req.skip_forward:
                 continue
 
         # Else if entry is NOT set to ticket mode or fludless and this location is set to skip forward
