@@ -2,6 +2,8 @@ import copy
 from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState, Entrance, Region
+from .sms_regions.pinna_park import PINNA_PARK_ENTRANCE, PINNA_PARK_ONE, PINNA_PARK_ONE_THREE_FIVE_EIGHT, \
+    PINNA_PARK_FIVE_EIGHT, PINNA_PARK_SIX, PINNA_PARK_TWO
 from .sms_regions.ricco_harbor import RICCO_HARBOR_ENTRANCE, RICCO_HARBOR_ONE, RICCO_HARBOR_EIGHT, \
     RICCO_HARBOR_FOUR_SEVEN, RICCO_HARBOR_THREE, RICCO_HARBOR_TWO
 from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements
@@ -45,6 +47,12 @@ ALL_REGIONS: dict[str, SmsRegion] = {
     SmsRegionName.GELATO_FOUR_ONLY: GELATO_BEACH_FOUR_ONLY,
     SmsRegionName.GELATO_FIVE_EIGHT: GELATO_BEACH_FIVE_EIGHT,
     SmsRegionName.GELATO_SIX: GELATO_BEACH_SIX,
+    SmsRegionName.PINNA_ENTRANCE: PINNA_PARK_ENTRANCE,
+    SmsRegionName.PINNA_ONE: PINNA_PARK_ONE,
+    SmsRegionName.PINNA_ONE_THREE_FIVE_EIGHT: PINNA_PARK_ONE_THREE_FIVE_EIGHT,
+    SmsRegionName.PINNA_TWO: PINNA_PARK_TWO,
+    SmsRegionName.PINNA_FIVE_EIGHT: PINNA_PARK_FIVE_EIGHT,
+    SmsRegionName.PINNA_SIX: PINNA_PARK_SIX,
 
     SmsRegionName.CORONA: CORONA_MOUNTAIN
 }
