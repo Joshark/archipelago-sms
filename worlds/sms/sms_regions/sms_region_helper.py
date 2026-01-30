@@ -45,6 +45,10 @@ class SmsRegionName(StrEnum):
     GELATO_SIX = "Gelato 6 Only"
     PINNA_ENTRANCE = "Pinna Park"
     PINNA_ONE = "Pinna Park 1"
+    PINNA_ONE_THREE_FIVE_EIGHT = "Pinna 1, 3 and 5-8"
+    PINNA_TWO = "Pinna 2 Only"
+    PINNA_FIVE_EIGHT = "Pinna 5-8"
+    PINNA_SIX = "Pinna 6 Only"
     SIRENA = "Sirena Beach"
     NOKI = "Noki Bay"
     PIANTA = "Pianta Village"
@@ -152,8 +156,15 @@ SPRAY_OR_YOSHI: list[list[str]] = [
 TURSPRAY: list[list[str]] = [
     [NozzleType.spray, NozzleType.turbo]
 ]
+YOSHI_AND_HOVER: list[list[str]] = [
+    [NozzleType.yoshi, NozzleType.hover]
+]
 SPRAY_AND_HOVER: list[list[str]] = [
     [NozzleType.spray, NozzleType.hover]
+]
+SPRAY_OR_HOVER: list[list[str]] = [
+    [NozzleType.spray],
+    [NozzleType.rocket]
 ]
 SPRAY_AND_ROCKET_OR_HOVER: list[list[str]] = [
     [NozzleType.spray, NozzleType.rocket],
