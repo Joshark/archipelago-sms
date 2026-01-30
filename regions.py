@@ -2,6 +2,7 @@ import copy
 from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState, Entrance, Region
+from .sms_regions.noki_bay import NOKI_BAY_ENTRANCE, NOKI_BAY_ALL, NOKI_BAY_FOUR_EIGHT, NOKI_BAY_SIX_EIGHT, NOKI_BAY_TWO_FOUR_EIGHT
 from .sms_regions.pinna_park import PINNA_PARK_ENTRANCE, PINNA_PARK_ONE, PINNA_PARK_ONE_THREE_FIVE_EIGHT, \
     PINNA_PARK_FIVE_EIGHT, PINNA_PARK_SIX, PINNA_PARK_TWO
 from .sms_regions.ricco_harbor import RICCO_HARBOR_ENTRANCE, RICCO_HARBOR_ONE, RICCO_HARBOR_EIGHT, \
@@ -53,6 +54,11 @@ ALL_REGIONS: dict[str, SmsRegion] = {
     SmsRegionName.PINNA_TWO: PINNA_PARK_TWO,
     SmsRegionName.PINNA_FIVE_EIGHT: PINNA_PARK_FIVE_EIGHT,
     SmsRegionName.PINNA_SIX: PINNA_PARK_SIX,
+    SmsRegionName.NOKI_ENTRANCE: NOKI_BAY_ENTRANCE,
+    SmsRegionName.NOKI_ALL: NOKI_BAY_ALL,
+    SmsRegionName.NOKI_TWO_FOUR_EIGHT: NOKI_BAY_TWO_FOUR_EIGHT,
+    SmsRegionName.NOKI_FOUR_EIGHT: NOKI_BAY_FOUR_EIGHT,
+    SmsRegionName.NOKI_SIX_EIGHT: NOKI_BAY_SIX_EIGHT,
 
     SmsRegionName.CORONA: CORONA_MOUNTAIN
 }
