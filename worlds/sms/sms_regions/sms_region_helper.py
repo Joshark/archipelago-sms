@@ -50,7 +50,11 @@ class SmsRegionName(StrEnum):
     PINNA_FIVE_EIGHT = "Pinna 5-8"
     PINNA_SIX = "Pinna 6 Only"
     SIRENA = "Sirena Beach"
-    NOKI = "Noki Bay"
+    NOKI_ENTRANCE = "Noki Bay"
+    NOKI_ALL = "Noki All Except 3"
+    NOKI_TWO_FOUR_EIGHT = "Noki 2 and 4-8"
+    NOKI_FOUR_EIGHT = "Noki 4 and 8"
+    NOKI_SIX_EIGHT = "Noki 6-8"
     PIANTA = "Pianta Village"
     CORONA = "Corona Mountain"
 
