@@ -133,6 +133,10 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
             req_rules.append(lambda state, item_name="Shine Sprite",
                 shine_count=world.options.corona_mountain_shines.value: (state.has(item_name, world.player, shine_count)))
 
+        # If no requirement rules are found, don't set any rules and continue
+        if not req_rules:
+            continue
+
         if spot.access_rule is SmsLocation.access_rule or spot.access_rule is Entrance.access_rule:
             add_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in all_rules)))
         else:
