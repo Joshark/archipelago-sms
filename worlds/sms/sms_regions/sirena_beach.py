@@ -4,7 +4,7 @@ from .sms_region_helper import *
     # Sirena Beach
 SIRENA_BEACH_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.SIRENA_ENTRANCE,
     requirements=[Requirements([[NozzleType.yoshi]])],
-    ticketed="Sirena Beach Ticket", parent_region=SmsRegionName.SIRENA_ENTRANCE)
+    ticketed="Sirena Beach Ticket", parent_region=SmsRegionName.PLAZA)
 
 SIRENA_BEACH_ONE_SIX: SmsRegion = SmsRegion(SmsRegionName.SIRENA_ONE_SIX,
     shines=[Shine("The Manta Storm", [Requirements([[NozzleType.spray]])])],
