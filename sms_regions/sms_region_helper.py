@@ -65,6 +65,14 @@ class SmsRegionName(StrEnum):
     SIRENA_SIX_ONLY = "Sirena 6 Only"
     SIRENA_SEVEN_EIGHT = "Sirena 7-8"
     PIANTA_ENTRANCE = "Pianta Village"
+    PIANTA_ANY = "Pianta Village: Any"
+    PIANTA_ODD = "Pianta 1/3/5/7"
+    PIANTA_EVEN = "Pianta 2/4/6/8"
+    PIANTA_THREE = "Pianta 3 Only"
+    PIANTA_FIVE_ONLY = "Pianta 5 Only"
+    PIANTA_FIVE_BEYOND = "Pianta 5 and Beyond"
+    PIANTA_SIX = "Pianta 6 Only"
+    PIANTA_EIGHT = "Pianta 8 Only"
     CORONA = "Corona Mountain"
 
 
@@ -154,6 +162,9 @@ ROCKET_AND_SPLASHER: list[list[str]] = [
 ALL_SPLASHER: list[list[str]] = [
     [NozzleType.spray, NozzleType.hover, NozzleType.yoshi]
 ]
+ROCKET_AND_SPRAY_AND_HOVER: list[list[str]]=[
+    [NozzleType.rocket, NozzleType.spray, NozzleType.hover]
+]
 ROCKET_OR_HOVER_AND_SPRAY: list[list[str]] = [
     [NozzleType.rocket, NozzleType.spray],
     [NozzleType.hover, NozzleType.spray],
@@ -182,6 +193,10 @@ SPRAY_OR_HOVER: list[list[str]] = [
 SPRAY_AND_ROCKET_OR_HOVER: list[list[str]] = [
     [NozzleType.spray, NozzleType.rocket],
     [NozzleType.hover]
+]
+SPRAY_AND_HOVER_OR_ROCKET: list[list[str]] = [
+    [NozzleType.spray, NozzleType.hover],
+    [NozzleType.rocket]
 ]
 TURBO_OR_HOVER: list[list[str]] = [
     [NozzleType.hover],
