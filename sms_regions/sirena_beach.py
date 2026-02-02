@@ -25,7 +25,7 @@ SIRENA_BEACH_TWO_EIGHT: SmsRegion = SmsRegion(SmsRegionName.SIRENA_TWO_EIGHT,
     ], parent_region=SmsRegionName.SIRENA_ENTRANCE)
 
 SIRENA_BEACH_THREE_EIGHT: SmsRegion = SmsRegion(SmsRegionName.SIRENA_THREE_EIGHT,
-    requirements=[Requirements(nozzles=[[NozzleType.yoshi]], location=f"{SIRENA_BEACH_TWO_EIGHT} - The Hotel Lobby's Secret")],
+    requirements=[Requirements(nozzles=[[NozzleType.yoshi]], location=f"{SmsRegionName.SIRENA_TWO_EIGHT} - The Hotel Lobby's Secret")],
     shines=[Shine("Mysterious Hotel Delfino", [Requirements(SPRAY_AND_HOVER)]),
         Shine("The Secret of Casino Delfino", [Requirements(SPRAY_AND_HOVER)]),
         # Technically only needs Spray below but then it'll think it's doable without doing the above Shine first...
@@ -45,30 +45,30 @@ SIRENA_BEACH_THREE_EIGHT: SmsRegion = SmsRegion(SmsRegionName.SIRENA_THREE_EIGHT
     ], parent_region=SmsRegionName.SIRENA_ENTRANCE)
 
 SIRENA_BEACH_FOUR_FIVE: SmsRegion = SmsRegion(SmsRegionName.SIRENA_FOUR_FIVE,
-    requirements=[Requirements(location=f"{SIRENA_BEACH_THREE_EIGHT} - Mysterious Hotel Delfino")],
+    requirements=[Requirements(location=f"{SmsRegionName.SIRENA_THREE_EIGHT} - Mysterious Hotel Delfino")],
     blue_coins=[BlueCoin("Casino Torch", [Requirements(ANY_SPLASHER)]),
         BlueCoin("Slot machine")
     ], parent_region=SmsRegionName.SIRENA_ENTRANCE)
 
 SIRENA_BEACH_FOUR_EIGHT: SmsRegion = SmsRegion(SmsRegionName.SIRENA_FOUR_EIGHT,
-    requirements=[Requirements(location=f"{SIRENA_BEACH_THREE_EIGHT} - Mysterious Hotel Delfino")],
+    requirements=[Requirements(location=f"{SmsRegionName.SIRENA_THREE_EIGHT} - Mysterious Hotel Delfino")],
     blue_coins=[BlueCoin("Crate"),
         BlueCoin("Attic Boo")
     ], parent_region=SmsRegionName.SIRENA_ENTRANCE)
 
 SIRENA_BEACH_FIVE_ONLY: SmsRegion = SmsRegion(SmsRegionName.SIRENA_FIVE_ONLY,
-    requirements=[Requirements(location=f"{SIRENA_BEACH_THREE_EIGHT} - The Secret of Casino Delfino")],
+    requirements=[Requirements(location=f"{SmsRegionName.SIRENA_THREE_EIGHT} - The Secret of Casino Delfino")],
     blue_coins=[BlueCoin("Casino M", [Requirements([[NozzleType.spray]])])
     ], parent_region=SmsRegionName.SIRENA_ENTRANCE)
 
 SIRENA_BEACH_SIX_ONLY: SmsRegion = SmsRegion(SmsRegionName.SIRENA_SIX_ONLY,
-    requirements=[Requirements(location=f"{SIRENA_BEACH_THREE_EIGHT} - King Boo Down Below")],
+    requirements=[Requirements(location=f"{SmsRegionName.SIRENA_THREE_EIGHT} - King Boo Down Below")],
     blue_coins=[BlueCoin("Left Male Noki", [Requirements(ANY_SPLASHER)]),
         BlueCoin("Left Female Noki", [Requirements(ANY_SPLASHER)])
     ], parent_region=SmsRegionName.SIRENA_ENTRANCE)
 
 SIRENA_BEACH_SEVEN_EIGHT: SmsRegion = SmsRegion(SmsRegionName.SIRENA_SEVEN_EIGHT,
-    requirements=[Requirements(location=f"{SIRENA_BEACH_THREE_EIGHT} - Scrubbing Sirena Beach")],
+    requirements=[Requirements(location=f"{SmsRegionName.SIRENA_THREE_EIGHT} - Scrubbing Sirena Beach")],
     blue_coins=[BlueCoin("Outside M", [Requirements(ANY_SPLASHER)]),
         BlueCoin("Second Floor M", [Requirements(ANY_SPLASHER)]),
         BlueCoin("Ground Floor Triangle", [Requirements(SPRAY_AND_HOVER)]),
