@@ -10,6 +10,7 @@ import settings
 
 import Options
 from BaseClasses import ItemClassification, MultiWorld, Tutorial
+from Utils import visualize_regions
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
 
@@ -17,6 +18,7 @@ from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_I
 from .options import *
 from .regions import create_regions, ALL_REGIONS
 from .iso_helper.sms_rom import SMSPlayerContainer
+from ..ror2.items import classification
 
 logger = logging.getLogger()
 
@@ -106,6 +108,10 @@ class SmsWorld(World):
             print(tick)
             self.multiworld.push_precollected(self.create_item(tick))
 
+        # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
+        if self.options.blue_coin_sanity.value > 0:
+            self.options.trade_shine_maximum.value = int(self.options.blue_coin_maximum.value / 10)
+
     def create_regions(self):
         create_regions(self)
 
@@ -123,8 +129,8 @@ class SmsWorld(World):
                 pool.append((self.create_item("Blue Coin")))
 
         # Adds the minimum amount required of shines for Corona Mountain access
-        self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value,
-                len(self.multiworld.get_unfilled_locations(self.player)) - len(pool))
+        required_shine_locations: int = len([shine_loc for shine_loc in self.get_locations() if hasattr(shine_loc, "shine")])
+        self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, int(required_shine_locations*0.9))
         for _ in range(0, self.options.corona_mountain_shines.value):
             pool.append(self.create_item("Shine Sprite"))
 
@@ -149,7 +155,10 @@ class SmsWorld(World):
             raise Exception(f"Invalid SMS item name: {name}")
 
         if name in ALL_PROGRESSION_ITEMS:
-            classification = ItemClassification.progression
+            if name == "Shine Sprite":
+                classification = ItemClassification.progression_deprioritized_skip_balancing
+            else:
+                classification = ItemClassification.progression
         else:
             classification = ItemClassification.filler
 
