@@ -176,9 +176,11 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
                 continue
 
         shine_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {shine.name}", curr_region)
+        shine_loc.shine = True
         interpret_requirements(shine_loc, shine.requirements, world)
         curr_region.locations.append(shine_loc)
 
+    # TODO In Regions, if trade shine amount required is above trade shine max, dont include the location
     for blue_coin in region.blue_coins:
         blue_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {blue_coin.name}", curr_region)
         interpret_requirements(blue_loc, blue_coin.requirements, world)
