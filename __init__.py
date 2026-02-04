@@ -129,7 +129,7 @@ class SmsWorld(World):
                 pool.append((self.create_item("Blue Coin")))
 
         # Adds the minimum amount required of shines for Corona Mountain access
-        required_shine_locations: int = len([shine_loc for shine_loc in self.get_locations() if hasattr(shine_loc, "shine")])
+        required_shine_locations: int = len([reg_loc for reg_loc in self.get_locations() if not hasattr(reg_loc, "corona")])
         self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, int(required_shine_locations*0.9))
         for _ in range(0, self.options.corona_mountain_shines.value):
             pool.append(self.create_item("Shine Sprite"))
