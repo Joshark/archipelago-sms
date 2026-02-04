@@ -31,8 +31,8 @@ class ExtraShines(Range):
     If more shines would be added than locations possible it will add as many as it can"""
     display_name = "Extra Shines"
     range_start = 0
-    range_end = 100
-    default = 50
+    range_end = 90
+    default = 15
 
 
 class BlueCoinSanity(Choice):
