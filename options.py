@@ -17,13 +17,15 @@ class EnableCoinShines(Toggle):
     You can still collect them, but they don't do anything."""
     display_name = "Enable 100 Coin Shines"
 
-
+# Keep in mind this needs to account for blue coins, nozzles, tickets, and any other progression items and still have
+# Several locations to place filler/move around.
 class CoronaMountainShines(Range):
     """How many Shine Sprites are required to access Corona Mountain and the Delfino Airstrip revisit.
-    If less than this number of Shines exist in the pool, it will be adjusted to the total Shine count."""
+    If less than this number of Shines exist in the pool, it will be adjusted to be 95% of the rest of locations available
+    after all other progression items are created / accounted for."""
     display_name = "Corona Mountain Shines"
     range_start = 0
-    range_end = 86 # 333
+    range_end = 345
     default = 50
 
 class ExtraShines(Range):
