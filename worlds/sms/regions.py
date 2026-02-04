@@ -132,6 +132,8 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
         if single_req.corona:
             req_rules.append(lambda state, item_name="Shine Sprite",
                 shine_count=world.options.corona_mountain_shines.value: (state.has(item_name, world.player, shine_count)))
+            if isinstance(spot, SmsLocation):
+                spot.corona = True
 
         # If no requirement rules are found, don't set any rules and continue
         if not req_rules:
@@ -145,8 +147,6 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
 
 
 def create_region(region: SmsRegion, world: "SmsWorld"):
-    #coin_counter = world.options.blue_coin_maximum.value
-    #shine_limiter = world.options.trade_shine_maximum.value
     curr_region = Region(region.name, world.player, world.multiworld)
     entrance_reqs: list[Requirements] = copy.deepcopy(region.requirements)
     if region.name == "Menu":
@@ -174,9 +174,11 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
             # If User chose to be fluddless, don't create the Dilemma shine.
             if world.options.starting_nozzle.value == 2 and shine.name == "Delfino Airstrip Dilemma":
                 continue
+        elif (region.trade and world.options.blue_coin_sanity.value > 0 and
+            len([reg_loc for reg_loc in curr_region.get_locations()]) >= world.options.trade_shine_maximum.value):
+            continue
 
         shine_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {shine.name}", curr_region)
-        shine_loc.shine = True
         interpret_requirements(shine_loc, shine.requirements, world)
         curr_region.locations.append(shine_loc)
 
