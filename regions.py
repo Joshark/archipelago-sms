@@ -1,10 +1,10 @@
 import copy
 from typing import TYPE_CHECKING, Callable
 
-from ..generic.Rules import add_rule
+from ..generic.Rules import add_rule, set_rule
 from BaseClasses import CollectionState, Entrance, Region
 
-from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements
+from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements, NozzleType
 from .sms_regions.delfino_plaza import DELFINO_PLAZA
 from .sms_regions.delfino_airstrip import DELFINO_AIRSTRIP
 from .sms_regions.corona_mountain import CORONA_MOUNTAIN
@@ -108,18 +108,26 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
             continue
 
         req_rules: list[Callable[[CollectionState], bool]] = []
-        nozzle_rules: list[Callable[[CollectionState], bool]] = []
 
         if single_req.nozzles:
-            for nozzle_req in single_req.nozzles:
-                nozzle_rules.append(lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player))
+            default_rule: Callable[[CollectionState], bool] = lambda state: True
+            nozz_rule: Callable[[CollectionState], bool] = default_rule
 
-            req_rules.append(lambda state, nozz_rules=tuple(nozzle_rules): any(nozz_req(state) for nozz_req in nozz_rules))
+            for nozzle_req in single_req.nozzles:
+                if nozz_rule is default_rule:
+                    nozz_rule = lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player)
+                else:
+                    nozz_rule = lambda state, item_set=tuple(nozzle_req), current_rule=nozz_rule: \
+                        current_rule(state) or state.has_all(item_set, world.player)
+            req_rules.append(lambda state: nozz_rule(state))
+
+        if single_req.shines:
+            req_rules.append(lambda state, shine_req_count=single_req.shines:
+                state.has("Shine Sprite", world.player, shine_req_count))
 
         if single_req.blue_coins:
-            req_rules.append(lambda state, coin_count=single_req.blue_coins, item_name="Blue Coin": (
-                state.has(item_name, world.player, coin_count)))
-
+            req_rules.append(lambda state, coin_count=single_req.blue_coins: (
+                state.has("Blue Coin", world.player, coin_count)))
 
         if single_req.location:
             req_rules.append(lambda state, loc_name=single_req.location: state.can_reach_location(loc_name, world.player))
@@ -130,17 +138,16 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
                 world.multiworld.register_indirect_condition(spot.parent_region, spot)
 
         if single_req.corona:
-            req_rules.append(lambda state, item_name="Shine Sprite",
-                shine_count=world.options.corona_mountain_shines.value: (state.has(item_name, world.player, shine_count)))
-            if isinstance(spot, SmsLocation):
-                spot.corona = True
+            req_rules.append(lambda state, shine_count=world.options.corona_mountain_shines.value:
+                state.has("Shine Sprite", world.player, shine_count))
+            spot.corona = True
 
         # If no requirement rules are found, don't set any rules and continue
         if not req_rules:
             continue
 
         if spot.access_rule is SmsLocation.access_rule or spot.access_rule is Entrance.access_rule:
-            add_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in all_rules)))
+            set_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in all_rules)))
         else:
             add_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in req_rules)), combine="or")
     return
@@ -149,6 +156,10 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
 def create_region(region: SmsRegion, world: "SmsWorld"):
     curr_region = Region(region.name, world.player, world.multiworld)
     entrance_reqs: list[Requirements] = copy.deepcopy(region.requirements)
+    corona_req: bool = False
+    if region.requirements:
+        corona_req = any(reg_req.corona for reg_req in region.requirements)
+
     if region.name == "Menu":
         return curr_region
     elif region.name == SmsRegionName.PLAZA and (world.options.starting_nozzle.value == 2 or
@@ -180,20 +191,27 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
 
         shine_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {shine.name}", curr_region)
         interpret_requirements(shine_loc, shine.requirements, world)
+        if corona_req:
+            shine_loc.corona = True
         curr_region.locations.append(shine_loc)
 
     for blue_coin in region.blue_coins:
         blue_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {blue_coin.name}", curr_region)
         interpret_requirements(blue_loc, blue_coin.requirements, world)
+        if corona_req:
+            blue_loc.corona = True
         if world.options.blue_coin_sanity.value != 1:
             curr_region.add_event(blue_loc.name, "Blue Coin",
                 (lambda state, temp_loc=blue_loc: temp_loc.access_rule(state)))
         else:
+            blue_loc.blue = True
             curr_region.locations.append(blue_loc)
 
     for nozzle_box in region.nozzle_boxes:
         nozzle_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {nozzle_box.name}", curr_region)
         interpret_requirements(nozzle_loc, nozzle_box.requirements, world)
+        if corona_req:
+            nozzle_loc.corona = True
         curr_region.locations.append(nozzle_loc)
 
     return curr_region
