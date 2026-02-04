@@ -10,8 +10,6 @@ import settings
 
 import Options
 from BaseClasses import ItemClassification, MultiWorld, Tutorial
-from MultiServer import get_remaining
-from Utils import visualize_regions
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
 
@@ -19,7 +17,6 @@ from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_I
 from .options import *
 from .regions import create_regions, ALL_REGIONS
 from .iso_helper.sms_rom import SMSPlayerContainer
-from ..ror2.items import classification
 
 logger = logging.getLogger()
 
