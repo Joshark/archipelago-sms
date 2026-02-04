@@ -120,7 +120,6 @@ class SmsWorld(World):
         # Adds the minimum amount required of shines for Corona Mountain access
         required_shine_locations: int = len([reg_loc for reg_loc in self.multiworld.get_unfilled_locations(self.player)
             if not hasattr(reg_loc, "corona")])
-        max_location_count: int = required_shine_locations - len(REGULAR_PROGRESSION_ITEMS.keys())
 
         start_inv: list[str] = [start_item.name for start_item in self.multiworld.precollected_items[self.player]]
 
@@ -129,15 +128,14 @@ class SmsWorld(World):
 
         if self.options.level_access.value == 1:
             pool += [self.create_item(tick_name) for tick_name in TICKET_ITEMS.keys() if tick_name not in start_inv]
-            max_location_count -= len(TICKET_ITEMS.keys())
 
         if self.options.blue_coin_sanity == "full_shuffle":
             for _ in range(0, self.options.blue_coin_maximum.value):
                 pool.append((self.create_item("Blue Coin")))
 
-        max_location_count = int(math.ceil(max_location_count * 0.95))
+        max_location_count = int(math.ceil((required_shine_locations - len(pool)) * 0.95))
         if self.options.corona_mountain_shines.value > max_location_count:
-            logger.warning(f"Player's Yaml {self.player_name} had shine count higher than maximum locations "
+            print(f"Player's Yaml {self.player_name} had shine count higher than maximum locations "
                 f"available to them. Adjusting their shine count down to {str(max_location_count)}...")
             self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, max_location_count)
 
