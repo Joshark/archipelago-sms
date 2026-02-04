@@ -55,7 +55,7 @@ class SmsRegionName(StrEnum):
     NOKI_TWO_FOUR_EIGHT = "Noki 2 and 4-8"
     NOKI_FOUR_EIGHT = "Noki 4 and 8"
     NOKI_SIX_EIGHT = "Noki 6-8"
-    SIRENA_ENTRANCE = "Sirena Entrance"
+    SIRENA_ENTRANCE = "Sirena Beach"
     SIRENA_ONE_SIX = "Sirena 1 and 6"
     SIRENA_TWO_EIGHT = "Sirena 2-8"
     SIRENA_THREE_EIGHT = "Sirena 3-8"
