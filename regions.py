@@ -182,13 +182,12 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         interpret_requirements(shine_loc, shine.requirements, world)
         curr_region.locations.append(shine_loc)
 
-    # TODO In Regions, if trade shine amount required is above trade shine max, dont include the location
     for blue_coin in region.blue_coins:
         blue_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {blue_coin.name}", curr_region)
         interpret_requirements(blue_loc, blue_coin.requirements, world)
         if world.options.blue_coin_sanity.value != 1:
             curr_region.add_event(blue_loc.name, "Blue Coin",
-                (lambda state: blue_loc.access_rule(state)))
+                (lambda state, temp_loc=blue_loc: temp_loc.access_rule(state)))
         else:
             curr_region.locations.append(blue_loc)
 
