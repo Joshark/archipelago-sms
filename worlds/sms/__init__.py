@@ -10,6 +10,7 @@ import settings
 
 import Options
 from BaseClasses import ItemClassification, MultiWorld, Tutorial
+from MultiServer import get_remaining
 from Utils import visualize_regions
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
@@ -116,33 +117,37 @@ class SmsWorld(World):
         create_regions(self)
 
     def create_items(self):
+        # Adds the minimum amount required of shines for Corona Mountain access
+        required_shine_locations: int = len([reg_loc for reg_loc in self.multiworld.get_unfilled_locations(self.player)
+            if not hasattr(reg_loc, "corona")])
+        max_location_count: int = required_shine_locations - len(REGULAR_PROGRESSION_ITEMS.keys())
+
         start_inv: list[str] = [start_item.name for start_item in self.multiworld.precollected_items[self.player]]
 
         # Removes any progression item not in the starting items
         pool = [self.create_item(prog_name) for prog_name in REGULAR_PROGRESSION_ITEMS.keys() if not prog_name in start_inv]
 
-        if self.options.level_access == 1:
+        if self.options.level_access.value == 1:
             pool += [self.create_item(tick_name) for tick_name in TICKET_ITEMS.keys() if tick_name not in start_inv]
+            max_location_count -= len(TICKET_ITEMS.keys())
 
         if self.options.blue_coin_sanity == "full_shuffle":
             for _ in range(0, self.options.blue_coin_maximum.value):
                 pool.append((self.create_item("Blue Coin")))
 
-        # Adds the minimum amount required of shines for Corona Mountain access
-        required_shine_locations: int = len([reg_loc for reg_loc in self.get_locations() if not hasattr(reg_loc, "corona")])
-        self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, int(required_shine_locations*0.9))
+        max_location_count = int(math.ceil(max_location_count * 0.95))
+        if self.options.corona_mountain_shines.value > max_location_count:
+            logger.warning(f"Player's Yaml {self.player_name} had shine count higher than maximum locations "
+                f"available to them. Adjusting their shine count down to {str(max_location_count)}...")
+            self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, max_location_count)
+
         for _ in range(0, self.options.corona_mountain_shines.value):
             pool.append(self.create_item("Shine Sprite"))
 
-        extra_shines = math.floor(self.options.corona_mountain_shines.value * self.options.extra_shines.value * .01)
-
-        # Adjusts Extra shines to be minimum amount of locations left if there would be too many
-        if extra_shines > len(self.multiworld.get_unfilled_locations(self.player)) - len(pool):
-            extra_shines = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
-            logger.info(f"Too many extra shines added, lowered amount to {extra_shines}")
-
-        # Adds extra shines to the pool if possible
-        for i in range(0, len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)):
+        remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
+        extra_shines = int(math.floor(remaining_locs * self.options.extra_shines.value * .01))
+        for i in range(0, remaining_locs):
+            # Adds extra shines to the pool if possible
             if i < extra_shines:
                 pool.append(self.create_item("Shine Sprite"))
             else:
