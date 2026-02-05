@@ -9,16 +9,16 @@ import settings
 
 
 import Options
-from BaseClasses import ItemClassification, MultiWorld, Tutorial, Entrance
+from BaseClasses import ItemClassification, MultiWorld, Tutorial
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
-from worlds.generic.Rules import set_rule
 
 from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, TICKET_ITEMS, JUNK_ITEMS, SmsItem
 from .options import *
-from .regions import create_regions, ALL_REGIONS, interpret_requirements
+from .regions import create_regions, ALL_REGIONS
 from .iso_helper.sms_rom import SMSPlayerContainer
 from .sms_regions.sms_region_helper import SmsRegionName, SmsLocation, Requirements, NozzleType, TURSPRAY
+from .sms_rules import create_sms_region_and_entrance_rules
 
 logger = logging.getLogger()
 
@@ -102,10 +102,10 @@ class SmsWorld(World):
         elif self.options.starting_nozzle.value == 1:
             self.multiworld.push_precollected(self.create_item("Hover Nozzle"))
 
-        if self.options.level_access.value == 0:
+        if self.options.level_access.value == 0 and self.options.corona_mountain_shines.value < 20:
             logger.info(f"Player's Yaml {self.player_name} had vanilla access turned on and had the required shine count"
                 " too low. Adjusting their shine count down to 20...")
-            self.options.corona_mountain_shines.value = max(self.options.corona_mountain_shines.value, 20)
+            self.options.corona_mountain_shines.value = 20
         elif self.options.level_access.value == 1:
             pick = self.random.choice(list(TICKET_ITEMS.keys()))
             tick = str(pick)
@@ -122,7 +122,7 @@ class SmsWorld(World):
     def create_items(self):
         # Adds the minimum amount required of shines for Corona Mountain access
         possible_shine_locations: int = len([reg_loc for reg_loc in self.multiworld.get_unfilled_locations(self.player)
-            if not hasattr(reg_loc, "corona")])
+            if hasattr(reg_loc, "corona") and not reg_loc.corona])
 
         start_inv: list[str] = [start_item.name for start_item in self.multiworld.precollected_items[self.player]]
 
@@ -145,8 +145,12 @@ class SmsWorld(World):
         for _ in range(0, self.options.corona_mountain_shines.value):
             pool.append(self.create_item("Shine Sprite"))
 
+        # Get the remaining locations that need to be filled, then calculate the max shine filler percentage that can be used
+        #   (on super restrictive settings, 90 of 14 would result in 12, causing high generation failures)
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
-        extra_shines = int(math.floor(remaining_locs * self.options.extra_shines.value * .01))
+        max_shine_percentage: int = min(self.options.extra_shines.value, 30 + (10 * int(remaining_locs / 10))) if remaining_locs > 10 else 0
+        extra_shines = int(math.floor(remaining_locs * max_shine_percentage * .01))
+
         for i in range(0, remaining_locs):
             # Adds extra shines to the pool if possible
             if i < extra_shines:
@@ -172,7 +176,7 @@ class SmsWorld(World):
 
     def set_rules(self):
         # Since we potentially update the shine requirement in generate_early to be lower, remake the rule for Corona Mountain.
-        corona_entrance: Entrance = self.get_entrance(f"{SmsRegionName.PLAZA} -> {SmsRegionName.CORONA}")
+        """corona_entrance: Entrance = self.get_entrance(f"{SmsRegionName.PLAZA} -> {SmsRegionName.CORONA}")
         set_rule(corona_entrance, (lambda state: Entrance.access_rule(state)))
         interpret_requirements(corona_entrance, ALL_REGIONS[SmsRegionName.CORONA].requirements, self)
 
@@ -182,7 +186,8 @@ class SmsWorld(World):
         interpret_requirements(corona_entrance, [Requirements([[NozzleType.turbo]], corona=True)], self)
         airstrip_red_coins = self.get_location("Delfino Airstrip - Ice Cube")
         set_rule(airstrip_red_coins, (lambda state: SmsLocation.access_rule(state)))
-        interpret_requirements(corona_entrance, [Requirements(TURSPRAY, corona=True)], self)
+        interpret_requirements(corona_entrance, [Requirements(TURSPRAY, corona=True)], self)"""
+        create_sms_region_and_entrance_rules(self)
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 
     def fill_slot_data(self) -> Dict[str, Any]:
