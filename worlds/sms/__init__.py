@@ -107,10 +107,9 @@ class SmsWorld(World):
                 " too low. Adjusting their shine count down to 20...")
             self.options.corona_mountain_shines.value = 20
         elif self.options.level_access.value == 1:
-            pick = self.random.choice(list(TICKET_ITEMS.keys()))
-            tick = str(pick)
-            print(tick)
-            self.multiworld.push_precollected(self.create_item(tick))
+            chosen_tick: str = str(self.random.choice(list(TICKET_ITEMS.keys())))
+            print(chosen_tick)
+            self.multiworld.push_precollected(self.create_item(chosen_tick))
 
         # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
         if self.options.blue_coin_sanity.value > 0:
@@ -132,12 +131,13 @@ class SmsWorld(World):
         if self.options.level_access.value == 1:
             pool += [self.create_item(tick_name) for tick_name in TICKET_ITEMS.keys() if tick_name not in start_inv]
 
-        if self.options.blue_coin_sanity == "full_shuffle":
+        if self.options.blue_coin_sanity.value == 1:
             for _ in range(0, self.options.blue_coin_maximum.value):
                 pool.append((self.create_item("Blue Coin")))
 
-        max_required_percentage: float = 0.95 if (possible_shine_locations - len(pool)) > 100 else 0.90
-        max_location_count = int(math.ceil((possible_shine_locations - len(pool)) * max_required_percentage))
+        leftover_locations: int = possible_shine_locations - len(pool)
+        max_required_percentage: float = 0.90 if leftover_locations > 105 else 0.85 if leftover_locations > 95 else 0.80
+        max_location_count: int = int(math.ceil(leftover_locations * max_required_percentage))
         if self.options.corona_mountain_shines.value > max_location_count:
             logger.info(f"Player's Yaml {self.player_name} had shine count higher than maximum locations "
                 f"available to them. Adjusting their shine count down to {str(max_location_count)}...")
