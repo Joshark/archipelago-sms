@@ -9,14 +9,16 @@ import settings
 
 
 import Options
-from BaseClasses import ItemClassification, MultiWorld, Tutorial
+from BaseClasses import ItemClassification, MultiWorld, Tutorial, Entrance
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
+from worlds.generic.Rules import set_rule
 
 from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, TICKET_ITEMS, JUNK_ITEMS, SmsItem
 from .options import *
-from .regions import create_regions, ALL_REGIONS
+from .regions import create_regions, ALL_REGIONS, interpret_requirements
 from .iso_helper.sms_rom import SMSPlayerContainer
+from .sms_regions.sms_region_helper import SmsRegionName
 
 logger = logging.getLogger()
 
@@ -165,6 +167,10 @@ class SmsWorld(World):
         return SmsItem(name, classification, ALL_ITEMS_TABLE[name], self.player)
 
     def set_rules(self):
+        # Since we potentially update the shine requirement in generate_early to be lower, remake the rule for Corona Mountain.
+        corona_entrance: Entrance = self.get_entrance(f"{SmsRegionName.PLAZA} -> {SmsRegionName.CORONA}")
+        set_rule(corona_entrance, (lambda state: True))
+        interpret_requirements(corona_entrance, ALL_REGIONS[SmsRegionName.CORONA].requirements, self)
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 
     def fill_slot_data(self) -> Dict[str, Any]:
