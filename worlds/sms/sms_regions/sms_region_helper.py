@@ -10,11 +10,18 @@ if TYPE_CHECKING:
 class SmsLocation(Location):
     name: str
     address: Optional[int]
-    region: "SmsRegion"
+    sms_region: "SmsRegion"
+    loc_reqs: list["Requirements"]
+    corona: bool
 
-    def __init__(self, world: "SmsWorld", name: str, sms_region: Region):
+    def __init__(self, world: "SmsWorld", name: str, parent_region: "SmsRegion", reqs: list["Requirements"]):
         self.address = world.location_name_to_id[name]
-        super(SmsLocation, self).__init__(world.player, name, address=self.address, parent=sms_region)
+        self.loc_reqs = reqs
+        self.sms_region = parent_region
+        self.corona = False if not reqs else any(loc_req.corona for loc_req in reqs)
+        if parent_region.requirements:
+            self.corona = self.corona or any(reg_loc.corona for reg_loc in parent_region.requirements)
+        super(SmsLocation, self).__init__(world.player, name, address=self.address, parent=world.get_region(parent_region.name))
 
 
 class SmsRegionName(StrEnum):
@@ -172,6 +179,9 @@ ROCKET_OR_HOVER_AND_SPRAY: list[list[str]] = [
 ROCKET_OR_HOVER: list[list[str]] = [
     [NozzleType.hover],
     [NozzleType.rocket]
+]
+ROCKET_AND_SPRAY: list[list[str]] = [
+    [NozzleType.spray, NozzleType.rocket]
 ]
 SPRAY_OR_YOSHI: list[list[str]] = [
     [NozzleType.spray],
