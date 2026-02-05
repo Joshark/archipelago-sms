@@ -1,10 +1,10 @@
 import copy
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
-from ..generic.Rules import add_rule, set_rule
-from BaseClasses import CollectionState, Entrance, Region
+from ..generic.Rules import add_rule
+from BaseClasses import Entrance, Region
 
-from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements, NozzleType
+from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements
 from .sms_regions.delfino_plaza import DELFINO_PLAZA
 from .sms_regions.delfino_airstrip import DELFINO_AIRSTRIP
 from .sms_regions.corona_mountain import CORONA_MOUNTAIN
@@ -83,135 +83,59 @@ ALL_REGIONS: dict[str, SmsRegion] = {
     SmsRegionName.PIANTA_FIVE_BEYOND: PIANTA_VILLAGE_FIVE_BEYOND,
     SmsRegionName.PIANTA_SIX: PIANTA_VILLAGE_SIX,
     SmsRegionName.PIANTA_EIGHT: PIANTA_VILLAGE_EIGHT,
-
     SmsRegionName.CORONA: CORONA_MOUNTAIN
 }
 
 
-def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[Requirements], world: "SmsWorld") -> None:
-    """Correctly applies and interprets requirements for a given entrance/location."""
-    import inspect
-    # If a region/location does not have any items required, make the section(s) return no logic.
-    if requirement_set is None or len(requirement_set) < 1:
-        return
-
-    # Otherwise, if a region/location DOES have items required, make the section(s) return list of logic.
-    skip_forward_locs: bool = world.options.starting_nozzle.value == 2 or world.options.level_access.value == 1
-    any_skip_locs: bool = any([reqs for reqs in requirement_set if reqs.skip_forward])
-    for single_req in requirement_set:
-        # If entry is set to ticket mode or fludless and this location is not set to skip forward
-        if (skip_forward_locs and any_skip_locs) and not single_req.skip_forward:
-                continue
-
-        # Else if entry is NOT set to ticket mode or fludless and this location is set to skip forward
-        elif not (skip_forward_locs and any_skip_locs) and single_req.skip_forward:
-            continue
-
-        req_rules: list[Callable[[CollectionState], bool]] = []
-
-        if single_req.nozzles:
-            default_rule: Callable[[CollectionState], bool] = lambda state: True
-            nozz_rule: Callable[[CollectionState], bool] = default_rule
-
-            for nozzle_req in single_req.nozzles:
-                if nozz_rule is default_rule:
-                    nozz_rule = lambda state, item_set=tuple(nozzle_req): state.has_all(item_set, world.player)
-                else:
-                    nozz_rule = lambda state, item_set=tuple(nozzle_req), current_rule=nozz_rule: \
-                        current_rule(state) or state.has_all(item_set, world.player)
-            req_rules.append(lambda state: nozz_rule(state))
-
-        if single_req.shines:
-            req_rules.append(lambda state, shine_req_count=single_req.shines:
-                state.has("Shine Sprite", world.player, shine_req_count))
-
-        if single_req.blue_coins:
-            req_rules.append(lambda state, coin_count=single_req.blue_coins: (
-                state.has("Blue Coin", world.player, coin_count)))
-
-        if single_req.location:
-            req_rules.append(lambda state, loc_name=single_req.location: state.can_reach_location(loc_name, world.player))
-            if isinstance(spot, Entrance):
-                #  We use this to explicitly tell the generator that, when a given region becomes accessible,
-                #   it is necessary to re-check a specific entrance, as we determine if a user has access to a region if they
-                #   complete previous stars/regions.
-                world.multiworld.register_indirect_condition(world.get_location(single_req.location).parent_region, spot)
-
-        if single_req.corona:
-            req_rules.append(lambda state, shine_count=world.options.corona_mountain_shines.value:
-                state.has("Shine Sprite", world.player, shine_count))
-            spot.corona = True
-
-        # If no requirement rules are found, don't set any rules and continue
-        if not req_rules:
-            continue
-
-        if spot.access_rule is SmsLocation.access_rule or spot.access_rule is Entrance.access_rule:
-            set_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in all_rules)))
-        else:
-            add_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in req_rules)), combine="or")
-    return
-
-
 def create_region(region: SmsRegion, world: "SmsWorld"):
     curr_region = Region(region.name, world.player, world.multiworld)
-    entrance_reqs: list[Requirements] = copy.deepcopy(region.requirements)
-    corona_req: bool = False
-    if region.requirements:
-        corona_req = any(reg_req.corona for reg_req in region.requirements)
+    world.multiworld.regions.append(curr_region)
 
     if region.name == "Menu":
         return curr_region
-    elif region.name == SmsRegionName.PLAZA and (world.options.starting_nozzle.value == 2 or
-        world.options.level_access.value == 1):
-        entrance_reqs = []
 
-    # Add Entrance Logic to lock the region until you properly have access.
-    parent_region: Region = world.get_region(region.parent_region)
-    new_entrance: Entrance = parent_region.connect(curr_region)
-    interpret_requirements(new_entrance, entrance_reqs, world)
+    # Add Entrance to the parent region and set the requirements to be used later on
+    new_entrance: Entrance = world.get_region(region.parent_region).connect(curr_region)
+    new_entrance.requirements = region.requirements
+
+    # If the user is fludd-less or access is in ticket mode, change the PLAZA entrance requirements to nothing.
+    if region.name == SmsRegionName.PLAZA and (world.options.starting_nozzle.value == 2 or
+        world.options.level_access.value == 1):
+        new_entrance.requirements = []
+
+    # Require that the player has the ticket required for the region when ticket mode is enabled
     if world.options.level_access.value == 1 and region.ticketed:
-        add_rule(new_entrance, (lambda state, ticket_str=region.ticketed:
-            state.has(ticket_str, world.player)), combine="and")
+        add_rule(new_entrance, (lambda state, ticket_str=region.ticketed: state.has(ticket_str, world.player)))
 
     if world.options.trade_shine_maximum.value == 0 and region.trade:
         return curr_region
 
     for shine in region.shines:
-        # Ignore any 100 Coin shinies if not enabled.
+        # Ignore any 100 Coin shines if not enabled.
         if shine.hundred and not world.options.enable_coin_shines.value == 1:
             continue
         elif region.name == SmsRegionName.AIRSTRIP:
-            # If User chose to be fluddless, don't create the Dilemma shine.
+            # If User chose to be fludd-less, don't create the Dilemma shine.
             if world.options.starting_nozzle.value == 2 and shine.name == "Delfino Airstrip Dilemma":
                 continue
         elif (region.trade and world.options.blue_coin_sanity.value > 0 and
             len([reg_loc for reg_loc in curr_region.get_locations()]) >= world.options.trade_shine_maximum.value):
             continue
 
-        shine_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {shine.name}", curr_region)
-        interpret_requirements(shine_loc, shine.requirements, world)
-        if corona_req:
-            shine_loc.corona = True
+        shine_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {shine.name}", region, shine.requirements)
+        shine_loc.requirements = shine.requirements
         curr_region.locations.append(shine_loc)
 
     for blue_coin in region.blue_coins:
-        blue_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {blue_coin.name}", curr_region)
-        interpret_requirements(blue_loc, blue_coin.requirements, world)
-        if corona_req:
-            blue_loc.corona = True
+        blue_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {blue_coin.name}", region, blue_coin.requirements)
         if world.options.blue_coin_sanity.value != 1:
             curr_region.add_event(blue_loc.name, "Blue Coin",
                 (lambda state, temp_loc=blue_loc: temp_loc.access_rule(state)))
         else:
-            blue_loc.blue = True
             curr_region.locations.append(blue_loc)
 
     for nozzle_box in region.nozzle_boxes:
-        nozzle_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {nozzle_box.name}", curr_region)
-        interpret_requirements(nozzle_loc, nozzle_box.requirements, world)
-        if corona_req:
-            nozzle_loc.corona = True
+        nozzle_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {nozzle_box.name}", region, nozzle_box.requirements)
         curr_region.locations.append(nozzle_loc)
 
     return curr_region
@@ -219,7 +143,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
 
 def create_regions(world: "SmsWorld"):
     for region_name, region_data in ALL_REGIONS.items():
-        world.multiworld.regions.append(create_region(region_data, world))
+        create_region(region_data, world)
 
     corona_region: Region = world.get_region(SmsRegionName.CORONA)
     corona_region.add_event(f"{SmsRegionName.CORONA} - Father and Son Shine!", "Victory")
