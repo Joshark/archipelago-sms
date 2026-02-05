@@ -123,7 +123,6 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
             continue
 
         shine_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {shine.name}", region, shine.requirements)
-        shine_loc.requirements = shine.requirements
         curr_region.locations.append(shine_loc)
 
     if world.options.blue_coin_sanity.value > 0:
