@@ -5,7 +5,6 @@ NOKI_BAY_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.NOKI_ENTRANCE,
     requirements = [Requirements(shines=20), Requirements(skip_forward=True)],
     ticketed="Noki Bay Ticket", parent_region = SmsRegionName.PLAZA)
 
-
 NOKI_BAY_ALL: SmsRegion = SmsRegion(SmsRegionName.NOKI_ALL,
     shines=[Shine("Uncork the Waterfall", [Requirements(SPRAY_AND_HOVER)]),
         Shine("The Boss of Tricky Ruins", [Requirements(SPRAY_AND_HOVER)]),
