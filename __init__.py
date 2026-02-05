@@ -136,7 +136,8 @@ class SmsWorld(World):
             for _ in range(0, self.options.blue_coin_maximum.value):
                 pool.append((self.create_item("Blue Coin")))
 
-        max_location_count = int(math.ceil((possible_shine_locations - len(pool)) * 0.95))
+        max_required_percentage: float = 0.95 if (possible_shine_locations - len(pool)) > 100 else 0.90
+        max_location_count = int(math.ceil((possible_shine_locations - len(pool)) * max_required_percentage))
         if self.options.corona_mountain_shines.value > max_location_count:
             logger.info(f"Player's Yaml {self.player_name} had shine count higher than maximum locations "
                 f"available to them. Adjusting their shine count down to {str(max_location_count)}...")
