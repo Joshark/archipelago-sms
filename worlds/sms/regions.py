@@ -135,7 +135,7 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
                 #  We use this to explicitly tell the generator that, when a given region becomes accessible,
                 #   it is necessary to re-check a specific entrance, as we determine if a user has access to a region if they
                 #   complete previous stars/regions.
-                world.multiworld.register_indirect_condition(spot.parent_region, spot)
+                world.multiworld.register_indirect_condition(world.get_location(single_req.location).parent_region, spot)
 
         if single_req.corona:
             req_rules.append(lambda state, shine_count=world.options.corona_mountain_shines.value:
