@@ -126,13 +126,14 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
         shine_loc.requirements = shine.requirements
         curr_region.locations.append(shine_loc)
 
-    for blue_coin in region.blue_coins:
-        blue_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {blue_coin.name}", region, blue_coin.requirements)
-        if world.options.blue_coin_sanity.value != 1:
-            curr_region.add_event(blue_loc.name, "Blue Coin",
-                (lambda state, temp_loc=blue_loc: temp_loc.access_rule(state)))
-        else:
-            curr_region.locations.append(blue_loc)
+    if world.options.blue_coin_sanity.value > 0:
+        for blue_coin in region.blue_coins:
+            blue_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {blue_coin.name}", region, blue_coin.requirements)
+            if world.options.blue_coin_sanity.value != 1:
+                curr_region.add_event(blue_loc.name, "Blue Coin",
+                    (lambda state, temp_loc=blue_loc: temp_loc.access_rule(state)))
+            else:
+                curr_region.locations.append(blue_loc)
 
     for nozzle_box in region.nozzle_boxes:
         nozzle_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {nozzle_box.name}", region, nozzle_box.requirements)
