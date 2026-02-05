@@ -3,7 +3,7 @@ from .sms_region_helper import *
 
 NOKI_BAY_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.NOKI_ENTRANCE,
     requirements = [Requirements(shines=20), Requirements(skip_forward=True)],
-    parent_region = SmsRegionName.PLAZA)
+    ticketed="Noki Bay Ticket", parent_region = SmsRegionName.PLAZA)
 
 
 NOKI_BAY_ALL: SmsRegion = SmsRegion(SmsRegionName.NOKI_ALL,
@@ -44,7 +44,7 @@ NOKI_BAY_ALL: SmsRegion = SmsRegion(SmsRegionName.NOKI_ALL,
         BlueCoin("Top Secret Path M", [Requirements(SPRAY_AND_HOVER)])
     ],
     nozzle_boxes=[NozzleBox("Rocket Box", [Requirements(ROCKET_OR_HOVER)])],
-    ticketed="Noki Bay Ticket", parent_region=SmsRegionName.NOKI_ENTRANCE)
+    parent_region=SmsRegionName.NOKI_ENTRANCE)
 
 NOKI_BAY_TWO_FOUR_EIGHT: SmsRegion = SmsRegion(SmsRegionName.NOKI_TWO_FOUR_EIGHT,
     requirements=[Requirements(location=f"{SmsRegionName.NOKI_ALL} - Uncork the Waterfall")],

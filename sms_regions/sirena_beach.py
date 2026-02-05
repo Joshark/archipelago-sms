@@ -25,7 +25,7 @@ SIRENA_BEACH_TWO_EIGHT: SmsRegion = SmsRegion(SmsRegionName.SIRENA_TWO_EIGHT,
     ], parent_region=SmsRegionName.SIRENA_ENTRANCE)
 
 SIRENA_BEACH_THREE_EIGHT: SmsRegion = SmsRegion(SmsRegionName.SIRENA_THREE_EIGHT,
-    requirements=[Requirements(nozzles=[[NozzleType.yoshi]], location=f"{SmsRegionName.SIRENA_TWO_EIGHT} - The Hotel Lobby's Secret")],
+    requirements=[Requirements(location=f"{SmsRegionName.SIRENA_TWO_EIGHT} - The Hotel Lobby's Secret")],
     shines=[Shine("Mysterious Hotel Delfino", [Requirements(SPRAY_AND_HOVER)]),
         Shine("The Secret of Casino Delfino", [Requirements(SPRAY_AND_HOVER)]),
         # Technically only needs Spray below but then it'll think it's doable without doing the above Shine first...

@@ -2,7 +2,7 @@ from .sms_region_helper import *
 
 RICCO_HARBOR_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ENTRANCE,
     requirements=[Requirements(ALL_SPLASHER, shines=3), Requirements(skip_forward=True)],
-    parent_region=SmsRegionName.PLAZA)
+    ticketed="Ricco Harbor Ticket", parent_region=SmsRegionName.PLAZA)
 
 RICCO_HARBOR_ONE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ONE, 
         shines=[Shine("Ricco 1 Only - Gooper Blooper Breaks Out", [Requirements([[NozzleType.spray]])]),
@@ -28,8 +28,8 @@ RICCO_HARBOR_ONE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ONE,
         BlueCoin("Ricco 1 Only - Tower Ground M", [Requirements(ANY_SPLASHER)]),
         BlueCoin("Ricco 1 Only - Spawn Building Side M", [Requirements(ANY_SPLASHER)]),
         BlueCoin("Ricco 1 Only - Inner Ship M", [Requirements(ANY_SPLASHER)]),
-        BlueCoin("Ricco 1 Only - Yellow Submarine", [Requirements([[NozzleType.spray]])])
-    ], ticketed="Ricco Harbor Ticket", parent_region=SmsRegionName.RICCO_ENTRANCE)
+        BlueCoin("Ricco 1 Only - Yellow Submarine", [Requirements([[NozzleType.spray]])])],
+    parent_region=SmsRegionName.RICCO_ENTRANCE)
 
 RICCO_HARBOR_TWO: SmsRegion = SmsRegion(SmsRegionName.RICCO_TWO,
     requirements=[Requirements(location=f"{SmsRegionName.RICCO_ONE} - Ricco 1 Only - Gooper Blooper Breaks Out")],
