@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import Optional, NamedTuple, TYPE_CHECKING
 
-from BaseClasses import Location, Region
+from BaseClasses import Location
 
 if TYPE_CHECKING:
     from worlds.sms import SmsWorld
