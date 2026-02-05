@@ -6,10 +6,10 @@ PIANTA_VILLAGE_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.PIANTA_ENTRANCE,
     ticketed="Pianta Village Ticket", parent_region=SmsRegionName.PLAZA)
 
 PIANTA_VILLAGE_ANY: SmsRegion = SmsRegion(SmsRegionName.PIANTA_ANY,
-    shines=[Shine("Chain Chomplets Unchained", [Requirements(ALL_SPLASHER)]),
+    shines=[Shine("Chain Chomplets Unchained", [Requirements(ANY_SPLASHER)]),
         Shine("Il Piantissimo's Crazy Climb", [Requirements(location=f"{SmsRegionName.PIANTA_ANY} - Chain Chomplets Unchained")]),  # Req. None
         Shine("The Goopy Inferno", [Requirements([[NozzleType.hover]])]),
-        Shine("Chain Chomp's Bath", [Requirements(ALL_SPLASHER)]),
+        Shine("Chain Chomp's Bath", [Requirements(ANY_SPLASHER)]),
         Shine("100 Coins", [Requirements(ALL_SPLASHER)], hundred=True)],
     blue_coins=[BlueCoin("Giant M", [Requirements([[NozzleType.spray]])]),
         BlueCoin("River End"),
