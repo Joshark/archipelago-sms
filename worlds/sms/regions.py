@@ -108,7 +108,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
     if world.options.level_access.value == 1 and region.ticketed:
         add_rule(new_entrance, (lambda state, ticket_str=region.ticketed: state.has(ticket_str, world.player)))
 
-    if world.options.trade_shine_maximum.value == 0 and region.trade:
+    if (world.options.trade_shine_maximum.value == 0 or world.options.blue_coin_sanity.value == 0) and region.trade:
         return curr_region
 
     for shine in region.shines:
