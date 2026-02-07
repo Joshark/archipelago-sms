@@ -103,7 +103,7 @@ class SmsWorld(World):
             self.multiworld.push_precollected(self.create_item("Hover Nozzle"))
 
         if self.options.level_access.value == 0 and self.options.corona_mountain_shines.value < 20:
-            logger.info(f"Player's Yaml {self.player_name} had vanilla access turned on and had the required shine count"
+            logger.warning(f"Player's Yaml {self.player_name} had vanilla access turned on and had the required shine count"
                 " too low. Adjusting their shine count down to 20...")
             self.options.corona_mountain_shines.value = 20
         elif self.options.level_access.value == 1:
@@ -113,7 +113,10 @@ class SmsWorld(World):
 
         # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
         if self.options.blue_coin_sanity.value > 0:
-            self.options.trade_shine_maximum.value = int(self.options.blue_coin_maximum.value / 10)
+            if self.options.trade_shine_maximum.value > int(self.options.blue_coin_maximum.value / 10):
+                logger.warning(f"Player's Yaml {self.player_name} had more trade shines required than blue coins in the "
+                    f"item pool. Adjusting theirs down to: {int(self.options.blue_coin_maximum.value / 10)}")
+                self.options.trade_shine_maximum.value = int(self.options.blue_coin_maximum.value / 10)
 
     def create_regions(self):
         create_regions(self)
@@ -139,7 +142,7 @@ class SmsWorld(World):
         max_required_percentage: float = 0.90 if leftover_locations > 105 else 0.85 if leftover_locations > 95 else 0.80
         max_location_count: int = int(math.ceil(leftover_locations * max_required_percentage))
         if self.options.corona_mountain_shines.value > max_location_count:
-            logger.info(f"Player's Yaml {self.player_name} had shine count higher than maximum locations "
+            logger.warning(f"Player's Yaml {self.player_name} had shine count higher than maximum locations "
                 f"available to them. Adjusting their shine count down to {str(max_location_count)}...")
             self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, max_location_count)
 
