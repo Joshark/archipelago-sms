@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 from ..generic.Rules import add_rule
 from BaseClasses import Entrance, Region
 
-from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion, Requirements
-from .sms_regions.delfino_plaza import DELFINO_PLAZA
+from .sms_regions.sms_region_helper import SmsLocation, SmsRegionName, SmsRegion
+from .sms_regions.delfino_plaza import DELFINO_PLAZA, BOATHOUSE_TRADERS
 from .sms_regions.delfino_airstrip import DELFINO_AIRSTRIP
 from .sms_regions.corona_mountain import CORONA_MOUNTAIN
 from .sms_regions.bianco_hills import (BIANCO_HILLS_ENTRANCE, BIANCO_HILLS_ONE, BIANCO_HILLS_THREE, BIANCO_HILLS_FOUR,
@@ -32,6 +32,7 @@ ALL_REGIONS: dict[str, SmsRegion] = {
     "Menu": SmsRegion("Menu"),
     SmsRegionName.AIRSTRIP: DELFINO_AIRSTRIP,
     SmsRegionName.PLAZA: DELFINO_PLAZA,
+    SmsRegionName.BOATHOUSE: BOATHOUSE_TRADERS,
     SmsRegionName.BIANCO_ENTRANCE: BIANCO_HILLS_ENTRANCE,
     SmsRegionName.BIANCO_ONE: BIANCO_HILLS_ONE,
     SmsRegionName.BIANCO_THREE: BIANCO_HILLS_THREE,
