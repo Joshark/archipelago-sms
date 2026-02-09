@@ -21,7 +21,7 @@ class EnableCoinShines(Toggle):
 # Several locations to place filler/move around.
 class CoronaMountainShines(Range):
     """How many Shine Sprites are required to access Corona Mountain and the Delfino Airstrip revisit.
-    If this is more than the locations available, This will be automatically adjusted to 80-90% of locations available
+    If this is more than the locations available, This will be automatically adjusted to 85-85% of locations available
     after all other progression items are created / accounted for."""
     display_name = "Corona Mountain Shines"
     range_start = 0
@@ -29,7 +29,7 @@ class CoronaMountainShines(Range):
     default = 50
 
 class ExtraShines(Range):
-    """How many extra shine sprites you want added to the pool. This is a percentage so it ranges from 0 to 100
+    """How many extra shine sprites you want added to the pool. This is a percentage so it ranges from 0 to 90
     If more shines would be added than locations possible it will add as many as it can"""
     display_name = "Extra Shines"
     range_start = 0
