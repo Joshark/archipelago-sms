@@ -105,6 +105,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
 
     # Require that the player has the ticket required for the region when ticket mode is enabled
     if world.options.level_access.value == 1 and region.ticketed:
+        curr_region.ticket_str = region.ticketed
         add_rule(new_entrance, (lambda state, ticket_str=region.ticketed: state.has(ticket_str, world.player)))
 
     if (world.options.trade_shine_maximum.value == 0 or world.options.blue_coin_sanity.value == 0) and region.trade:
@@ -123,6 +124,8 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
             continue
 
         shine_loc: SmsLocation = SmsLocation(world, f"{curr_region.name} - {shine.name}", region, shine.requirements)
+        if region.trade:
+            shine_loc.trades_req = True
         curr_region.locations.append(shine_loc)
 
     if world.options.blue_coin_sanity.value > 0:
