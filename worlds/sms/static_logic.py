@@ -93,7 +93,7 @@ ALL_REGIONS: list[SmsRegion] = [
     # Delfino Plaza
     SmsRegion(INIT, PLAZA, Requirements([NozzleType.splasher], skip_into=True),
     [
-        Shine("Shine Sprite in the Sand", 523117, Requirements([NozzleType.hover])),
+        Shine("Shine Sprite in the Sand", 523117, Requirements([NozzleType.hover | NozzleType.yoshi])),
         Shine("Clean the West Bell", 523096, Requirements([NozzleType.hover | NozzleType.yoshi])),
         Shine("Super Slide", 523090, Requirements([NozzleType.hover | NozzleType.rocket | NozzleType.yoshi])),
         Shine("The Gold Bird", 523118, Requirements([NozzleType.spray, NozzleType.hover | NozzleType.yoshi])),
