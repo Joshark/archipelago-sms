@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, Callable, Optional
 
 from BaseClasses import Entrance, CollectionState
-from .sms_regions.sms_region_helper import SmsLocation, Requirements
-from ..generic.Rules import set_rule, add_rule
+from .sms_regions.sms_region_helper import SmsLocation, Requirements, SmsRegionName
+from ..generic.Rules import set_rule, add_rule, add_item_rule
 
 if TYPE_CHECKING:
     from . import SmsWorld
@@ -73,8 +73,10 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
         if spot.access_rule is SmsLocation.access_rule or spot.access_rule is Entrance.access_rule:
             set_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in all_rules)))
         else:
-            add_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in req_rules)), combine="or")
-
+            if isinstance(spot, SmsLocation):
+                add_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in req_rules)), combine="or")
+            else:
+                add_rule(spot, (lambda state, all_rules=tuple(req_rules): all(req_rule(state) for req_rule in req_rules)))
     return
 
 
@@ -91,3 +93,11 @@ def create_sms_region_and_entrance_rules(world: "SmsWorld"):
                 # Skip any event based locations that do not have this attribute
                 if hasattr(sms_loc, "loc_reqs"):
                     interpret_requirements(sms_loc, sms_loc.loc_reqs, world)
+
+                # A Region cannot have its own ticket item in ticket mode, so prevent that.
+                if hasattr(sms_reg, "ticket_str") or any([hasattr(entr_reg.parent_region, "ticket_str") for entr_reg
+                    in sms_reg.entrances]):
+                    reg_ticket: str = sms_reg.ticket_str if hasattr(sms_reg, "ticket_str") else \
+                        [entr_reg.parent_region.ticket_str for entr_reg in sms_reg.entrances if
+                        hasattr(entr_reg.parent_region, "ticket_str")][0]
+                    add_item_rule(sms_loc, (lambda item, reg_tick=reg_ticket: item.name != reg_tick))
