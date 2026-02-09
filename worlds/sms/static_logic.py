@@ -95,8 +95,8 @@ ALL_REGIONS: list[SmsRegion] = [
     [
         Shine("Shine Sprite in the Sand", 523117, Requirements([NozzleType.hover])),
         Shine("Clean the West Bell", 523096, Requirements([NozzleType.hover | NozzleType.yoshi])),
-        Shine("Super Slide", 523090, Requirements([NozzleType.hover | NozzleType.rocket])),
-        Shine("The Gold Bird", 523118, Requirements([NozzleType.spray, NozzleType.hover])),
+        Shine("Super Slide", 523090, Requirements([NozzleType.hover | NozzleType.rocket | NozzleType.yoshi])),
+        Shine("The Gold Bird", 523118, Requirements([NozzleType.spray, NozzleType.hover | NozzleType.yoshi])),
         Shine("Turbo Dash!", 523116, Requirements([NozzleType.turbo])),
         Shine("Lighthouse Roof", 523093, Requirements([NozzleType.rocket])),
         Shine("Clean the East Bell", 523097, Requirements([NozzleType.rocket, NozzleType.splasher])),
