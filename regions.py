@@ -1,4 +1,3 @@
-import copy
 from typing import TYPE_CHECKING
 
 from ..generic.Rules import add_rule
@@ -133,6 +132,7 @@ def create_region(region: SmsRegion, world: "SmsWorld"):
                 curr_region.add_event(blue_loc.name, "Blue Coin",
                     (lambda state, temp_loc=blue_loc: temp_loc.access_rule(state)))
             else:
+                blue_loc.blue = True
                 curr_region.locations.append(blue_loc)
 
     for nozzle_box in region.nozzle_boxes:
