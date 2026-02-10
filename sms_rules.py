@@ -60,7 +60,7 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
                 #   complete previous stars/regions.
                 world.multiworld.register_indirect_condition(world.get_location(single_req.location).parent_region, spot)
 
-        if single_req.corona or (hasattr(spot, "corona") and spot.corona):
+        if single_req.corona or (hasattr(spot, "corona") and spot.corona) and world.corona_mountain_shines > 0:
             # Player requires all shine sprites that are required to reach corona mountain as well.
             req_rules.append(lambda state, shine_count=world.options.corona_mountain_shines.value:
                 state.has("Shine Sprite", world.player, shine_count))
