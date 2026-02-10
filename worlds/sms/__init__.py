@@ -8,7 +8,7 @@ from typing import Dict, Any, ClassVar
 import settings
 
 import Options
-from BaseClasses import ItemClassification, MultiWorld, Tutorial
+from BaseClasses import ItemClassification, MultiWorld, Tutorial, Item, Location
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
 
@@ -92,6 +92,8 @@ class SmsWorld(World):
     location_name_to_id = get_location_name_to_id()
 
     settings: ClassVar[SuperMarioSunshineSettings]
+    corona_mountain_shines: int = 0
+    blue_coins_required: int = 0
 
     def __init__(self, multiworld: MultiWorld, player: int):
         super().__init__(multiworld, player)
@@ -102,12 +104,7 @@ class SmsWorld(World):
         elif self.options.starting_nozzle.value == 1:
             self.multiworld.push_precollected(self.create_item("Hover Nozzle"))
 
-        # TODO try to remove after fixing other gen issues.
-        if self.options.level_access.value == 0 and self.options.corona_mountain_shines.value < 20:
-            logger.warning(f"Player's Yaml {self.player_name} had vanilla access turned on and had the required shine count"
-                " too low. Adjusting their shine count down to 20...")
-            self.options.corona_mountain_shines.value = 20
-        elif self.options.level_access.value == 1:
+        if self.options.level_access.value == 1:
             chosen_tick: str = str(self.random.choice(list(TICKET_ITEMS.keys())))
             logger.info(f"Chosen Ticket for player {self.player_name}: {chosen_tick}")
             self.multiworld.push_precollected(self.create_item(chosen_tick))
@@ -134,15 +131,6 @@ class SmsWorld(World):
                     f"item pool. Adjusting theirs down to: {trade_shines_req}")
                 self.options.trade_shine_maximum.value = trade_shines_req
 
-        # If there is only a handful of location turned on, extra shine sprites will be disabled to help generation.
-        # TODO remove this after fixing other gen issues.
-        if self.options.blue_coin_sanity.value == 0 and self.options.level_access.value == 1 and \
-            self.options.accessibility.value == 2:
-            extra_shinys: int = self.random.randint(0, 10)
-            logger.warning(f"Player's Yaml {self.player_name} has access on minimal and does not not have a high "
-                f"amount of checks enabled, changing extra shine value to: {extra_shinys}")
-            self.options.extra_shines.value = extra_shinys
-
     def create_regions(self):
         create_regions(self)
 
@@ -164,12 +152,16 @@ class SmsWorld(World):
                 pool.append((self.create_item("Blue Coin")))
 
         leftover_locations: int = possible_shine_locations - len(pool)
-        max_required_percentage: float = 0.90 if leftover_locations > 125 else 0.85 if leftover_locations > 110 else 0.80
+        max_required_percentage: float = 0.85 if leftover_locations > 125 else 0.80 if leftover_locations > 110 else 0.75
         max_location_count: int = int(math.ceil(leftover_locations * max_required_percentage))
         if self.options.corona_mountain_shines.value > max_location_count:
             logger.warning(f"Player's Yaml {self.player_name} had shine count higher than maximum locations "
                 f"available to them. Adjusting their shine count down to {max_location_count}...")
             self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, max_location_count)
+
+        # Set the world's corona mountain shines based on the updated/rolled value.
+        self.corona_mountain_shines = self.options.corona_mountain_shines.value
+        self.blue_coins_required = self.options.blue_coin_maximum.value if self.options.blue_coin_sanity.value > 0 else 0
 
         for _ in range(0, self.options.corona_mountain_shines.value):
             pool.append(self.create_item("Shine Sprite"))
@@ -206,6 +198,45 @@ class SmsWorld(World):
     def set_rules(self):
         create_sms_region_and_entrance_rules(self)
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
+
+    @classmethod
+    def stage_fill_hook(cls, multiworld: MultiWorld, progitempool: list[Item], usefulitempool: list[Item],
+        filleritempool: list[Item], fill_locations: list[Location]) -> None:
+
+        # Credit to @Mysteryem for this hook and the sort_fuc.
+        game_players = multiworld.get_game_players(cls.game)
+        # Get all player IDs that require either corona mountain shines to complete their goal or have blue coins
+        sms_excessive_prog_items = {player for player in game_players if
+            multiworld.worlds[player].corona_mountain_shines > 0 or multiworld.worlds[player].blue_coins_required > 0}
+        # Get the player IDs of those that are using minimal accessibility.
+        sms_minimal_players = {player for player in game_players
+            if multiworld.worlds[player].options.accessibility == "minimal"}
+
+        def sort_func(item: Item):
+            # Credit once again for @Mysteryem for this function AND very nice description
+            if item.player in sms_excessive_prog_items and item.name in ["Shine Sprite", "Blue Coin"]:
+                if item.player in sms_minimal_players:
+                    # For minimal players, place goal macguffins first. This helps prevent fill from dumping logically
+                    # relevant items into unreachable locations and reducing the number of reachable locations to fewer
+                    # than the number of items remaining to be placed.
+                    #
+                    # Placing only the non-required goal macguffins first or slightly more than the number of
+                    # non-required goal macguffins first was also tried, but placing all goal macguffins first seems to
+                    # give fill the best chance of succeeding.
+                    #
+                    # All shine sprites and blue coins are given the *deprioritized* classification for minimal players,
+                    # which avoids them being placed on priority locations, which would otherwise occur due to them
+                    # being sorted to be placed first. They also skip progression balancing in larger multiworlds.
+                    return 1
+                else:
+                    # For non-minimal players, place goal macguffins last. The helps prevent fill from filling most/all
+                    # reachable locations with the goal macguffins that are only required for the goal.
+                    return -1
+            else:
+                # Python sorting is stable, so this will leave everything else in its original order.
+                return 0
+
+        progitempool.sort(key=sort_func)
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
