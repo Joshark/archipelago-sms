@@ -7,7 +7,6 @@ import os, logging
 from typing import Dict, Any, ClassVar
 import settings
 
-
 import Options
 from BaseClasses import ItemClassification, MultiWorld, Tutorial
 from worlds.AutoWorld import WebWorld, World
@@ -15,6 +14,7 @@ from worlds.LauncherComponents import Component, SuffixIdentifier, Type, compone
 
 from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, TICKET_ITEMS, JUNK_ITEMS, SmsItem
 from .options import *
+from .world_logic_constants import *
 from .regions import create_regions, ALL_REGIONS
 from .iso_helper.sms_rom import SMSPlayerContainer
 from .sms_regions.sms_region_helper import SmsRegionName, SmsLocation, Requirements, NozzleType, TURSPRAY
@@ -102,21 +102,46 @@ class SmsWorld(World):
         elif self.options.starting_nozzle.value == 1:
             self.multiworld.push_precollected(self.create_item("Hover Nozzle"))
 
+        # TODO try to remove after fixing other gen issues.
         if self.options.level_access.value == 0 and self.options.corona_mountain_shines.value < 20:
             logger.warning(f"Player's Yaml {self.player_name} had vanilla access turned on and had the required shine count"
                 " too low. Adjusting their shine count down to 20...")
             self.options.corona_mountain_shines.value = 20
         elif self.options.level_access.value == 1:
             chosen_tick: str = str(self.random.choice(list(TICKET_ITEMS.keys())))
-            print(chosen_tick)
+            logger.info(f"Chosen Ticket for player {self.player_name}: {chosen_tick}")
             self.multiworld.push_precollected(self.create_item(chosen_tick))
 
+            # TODO try to remove after fixing other gen issues.
+            if self.options.starting_nozzle.value == 2:
+                early_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
+                self.multiworld.early_items[self.player].update({early_nozzle: 1})
+
         # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
-        if self.options.blue_coin_sanity.value > 0:
-            if self.options.trade_shine_maximum.value > int(self.options.blue_coin_maximum.value / 10):
+        if self.options.blue_coin_sanity.value == 1:
+            trade_blue_coins_req: int = int(self.options.trade_shine_maximum.value * 10)
+            max_blue_coins_needed: int = int(trade_blue_coins_req * MAXIMUM_BLUE_COIN_PERCENTAGE)
+            trade_shines_req: int = int(self.options.blue_coin_maximum.value / 10)
+
+            if self.options.blue_coin_maximum.value > max_blue_coins_needed:
+                percentage_used: int = int((MAXIMUM_BLUE_COIN_PERCENTAGE - 1)*100)
+                logger.warning(f"Player's Yaml {self.player_name} had more blue coins required than trade shines max "
+                    f" + {percentage_used}%. Adjusting their count down to: {max_blue_coins_needed}")
+                self.options.blue_coin_maximum.value = min(max_blue_coins_needed, self.options.blue_coin_maximum.range_end)
+
+            elif self.options.trade_shine_maximum.value > trade_shines_req:
                 logger.warning(f"Player's Yaml {self.player_name} had more trade shines required than blue coins in the "
-                    f"item pool. Adjusting theirs down to: {int(self.options.blue_coin_maximum.value / 10)}")
-                self.options.trade_shine_maximum.value = int(self.options.blue_coin_maximum.value / 10)
+                    f"item pool. Adjusting theirs down to: {trade_shines_req}")
+                self.options.trade_shine_maximum.value = trade_shines_req
+
+        # If there is only a handful of location turned on, extra shine sprites will be disabled to help generation.
+        # TODO remove this after fixing other gen issues.
+        if self.options.blue_coin_sanity.value == 0 and self.options.level_access.value == 1 and \
+            self.options.accessibility.value == 2:
+            extra_shinys: int = self.random.randint(0, 10)
+            logger.warning(f"Player's Yaml {self.player_name} has access on minimal and does not not have a high "
+                f"amount of checks enabled, changing extra shine value to: {extra_shinys}")
+            self.options.extra_shines.value = extra_shinys
 
     def create_regions(self):
         create_regions(self)
@@ -139,11 +164,11 @@ class SmsWorld(World):
                 pool.append((self.create_item("Blue Coin")))
 
         leftover_locations: int = possible_shine_locations - len(pool)
-        max_required_percentage: float = 0.90 if leftover_locations > 105 else 0.85 if leftover_locations > 95 else 0.80
+        max_required_percentage: float = 0.90 if leftover_locations > 125 else 0.85 if leftover_locations > 110 else 0.80
         max_location_count: int = int(math.ceil(leftover_locations * max_required_percentage))
         if self.options.corona_mountain_shines.value > max_location_count:
             logger.warning(f"Player's Yaml {self.player_name} had shine count higher than maximum locations "
-                f"available to them. Adjusting their shine count down to {str(max_location_count)}...")
+                f"available to them. Adjusting their shine count down to {max_location_count}...")
             self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, max_location_count)
 
         for _ in range(0, self.options.corona_mountain_shines.value):
@@ -152,7 +177,7 @@ class SmsWorld(World):
         # Get the remaining locations that need to be filled, then calculate the max shine filler percentage that can be used
         #   (on super restrictive settings, 90 of 14 would result in 12, causing high generation failures)
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
-        max_shine_percentage: int = min(self.options.extra_shines.value, 30 + (10 * int(remaining_locs / 10))) if remaining_locs > 10 else 0
+        max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (5 * int(remaining_locs / 20))) if remaining_locs > 20 else 0
         extra_shines = int(math.floor(remaining_locs * max_shine_percentage * .01))
 
         for i in range(0, remaining_locs):
@@ -169,7 +194,7 @@ class SmsWorld(World):
             raise Exception(f"Invalid SMS item name: {name}")
 
         if name in ALL_PROGRESSION_ITEMS:
-            if name == "Shine Sprite":
+            if name == "Shine Sprite" or name == "Blue Coin":
                 classification = ItemClassification.progression_deprioritized_skip_balancing
             else:
                 classification = ItemClassification.progression
@@ -179,18 +204,6 @@ class SmsWorld(World):
         return SmsItem(name, classification, ALL_ITEMS_TABLE[name], self.player)
 
     def set_rules(self):
-        # Since we potentially update the shine requirement in generate_early to be lower, remake the rule for Corona Mountain.
-        """corona_entrance: Entrance = self.get_entrance(f"{SmsRegionName.PLAZA} -> {SmsRegionName.CORONA}")
-        set_rule(corona_entrance, (lambda state: Entrance.access_rule(state)))
-        interpret_requirements(corona_entrance, ALL_REGIONS[SmsRegionName.CORONA].requirements, self)
-
-        # Similarly, update Delfino Airstrip locations that require an updated Corona Mountain count.
-        airstrip_red_coins = self.get_location("Delfino Airstrip - Red Coin Waterworks")
-        set_rule(airstrip_red_coins, (lambda state: SmsLocation.access_rule(state)))
-        interpret_requirements(corona_entrance, [Requirements([[NozzleType.turbo]], corona=True)], self)
-        airstrip_red_coins = self.get_location("Delfino Airstrip - Ice Cube")
-        set_rule(airstrip_red_coins, (lambda state: SmsLocation.access_rule(state)))
-        interpret_requirements(corona_entrance, [Requirements(TURSPRAY, corona=True)], self)"""
         create_sms_region_and_entrance_rules(self)
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 
