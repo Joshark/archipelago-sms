@@ -42,9 +42,12 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
                         current_rule(state) or state.has_all(item_set, world.player)
             req_rules.append(lambda state: nozz_rule(state))
 
-        if single_req.shines:
+        if single_req.shines and world.corona_mountain_shines > 0:
             # Requires X amount of shine sprites to access
-            req_rules.append(lambda state, shine_req_count=single_req.shines:
+            required_shines: int = single_req.shines
+            if single_req.shines > world.corona_mountain_shines:
+                required_shines = world.corona_mountain_shines
+            req_rules.append(lambda state, shine_req_count=required_shines:
                 state.has("Shine Sprite", world.player, shine_req_count))
 
         if single_req.blue_coins:
