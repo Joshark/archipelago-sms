@@ -1,15 +1,14 @@
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import Entrance, CollectionState
-from .sms_regions.sms_region_helper import SmsLocation, Requirements, SmsRegionName
+from .sms_regions.sms_region_helper import SmsLocation, Requirements
 from ..generic.Rules import set_rule, add_rule, add_item_rule
 
 if TYPE_CHECKING:
     from . import SmsWorld
 
 
-def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[Requirements], world: "SmsWorld",
-    ticket_mode: Optional[str] = None) -> None:
+def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[Requirements], world: "SmsWorld") -> None:
     """Correctly applies and interprets custom requirements namedtuple for a given entrance/location."""
     # If a region/location does not have any items required, make the section(s) return no logic.
     if requirement_set is None or len(requirement_set) < 1:
