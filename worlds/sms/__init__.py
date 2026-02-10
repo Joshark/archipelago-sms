@@ -109,11 +109,6 @@ class SmsWorld(World):
             logger.info(f"Chosen Ticket for player {self.player_name}: {chosen_tick}")
             self.multiworld.push_precollected(self.create_item(chosen_tick))
 
-            # TODO try to remove after fixing other gen issues.
-            if self.options.starting_nozzle.value == 2:
-                early_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
-                self.multiworld.early_items[self.player].update({early_nozzle: 1})
-
         # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
         if self.options.blue_coin_sanity.value == 1:
             trade_blue_coins_req: int = int(self.options.trade_shine_maximum.value * 10)
