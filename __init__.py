@@ -94,6 +94,8 @@ class SmsWorld(World):
     settings: ClassVar[SuperMarioSunshineSettings]
     corona_mountain_shines: int = 0
     blue_coins_required: int = 0
+    large_shine_count: bool = False  # Used in rules to know if corona mountain should block tickets in their region
+    # otherwise generation would fail significantly more in swap.
 
     def __init__(self, multiworld: MultiWorld, player: int):
         super().__init__(multiworld, player)
@@ -154,6 +156,10 @@ class SmsWorld(World):
                 f"available to them. Adjusting their shine count down to {max_location_count}...")
             self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, max_location_count)
 
+        # Check if this world's item pool has a large amount of shine sprites, used for item rules later on.
+        if self.options.corona_mountain_shines.value > int(math.ceil(leftover_locations * 0.5)):
+            self.large_shine_count = True
+
         # Set the world's corona mountain shines based on the updated/rolled value.
         self.corona_mountain_shines = self.options.corona_mountain_shines.value
         self.blue_coins_required = self.options.blue_coin_maximum.value if self.options.blue_coin_sanity.value > 0 else 0
@@ -164,8 +170,18 @@ class SmsWorld(World):
         # Get the remaining locations that need to be filled, then calculate the max shine filler percentage that can be used
         #   (on super restrictive settings, 90 of 14 would result in 12, causing high generation failures)
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
-        max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (5 * int(remaining_locs / 20))) if remaining_locs > 20 else 0
-        extra_shines = int(math.floor(remaining_locs * max_shine_percentage * .01))
+        if remaining_locs > MIN_SHINE_SPRITE_LOCATIONS:
+            logger.warning(f"Player's Yaml {self.player_name} had extra shinies enabled, however there was not enough "
+                "space to place them. Setting this to 0...")
+            self.options.extra_shines.value = 0
+            extra_shines: int = 0
+        else:
+            max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (5 * int(remaining_locs / 20)))
+            if self.options.extra_shines.value > max_shine_percentage:
+                logger.warning(f"Player's Yaml {self.player_name} had extra shinies enabled and was above the amount "
+                    f"possible based on locations available. Setting this to {max_shine_percentage}...")
+                self.options.extra_shines.value = max_shine_percentage
+            extra_shines: int = int(math.floor(remaining_locs * max_shine_percentage * .01))
 
         for i in range(0, remaining_locs):
             # Adds extra shines to the pool if possible
