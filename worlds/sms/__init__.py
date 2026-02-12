@@ -119,13 +119,13 @@ class SmsWorld(World):
 
             if self.options.blue_coin_maximum.value > max_blue_coins_needed:
                 percentage_used: int = int((MAXIMUM_BLUE_COIN_PERCENTAGE - 1)*100)
-                logger.warning(f"Player's Yaml {self.player_name} had more blue coins required than trade shines max "
-                    f" + {percentage_used}%. Adjusting their count down to: {max_blue_coins_needed}")
+                logger.warning(f"SMS: Player's Yaml {self.player_name} had more blue coins required than trade shines "
+                    f"max  + {percentage_used}%. Adjusting their count down to: {max_blue_coins_needed}")
                 self.options.blue_coin_maximum.value = min(max_blue_coins_needed, self.options.blue_coin_maximum.range_end)
 
             elif self.options.trade_shine_maximum.value > trade_shines_req:
-                logger.warning(f"Player's Yaml {self.player_name} had more trade shines required than blue coins in the "
-                    f"item pool. Adjusting theirs down to: {trade_shines_req}")
+                logger.warning(f"SMS: Player's Yaml {self.player_name} had more trade shines required than blue coins "
+                    f"in the item pool. Adjusting theirs down to: {trade_shines_req}")
                 self.options.trade_shine_maximum.value = trade_shines_req
 
     def create_regions(self):
@@ -152,7 +152,7 @@ class SmsWorld(World):
         max_required_percentage: float = 0.85 if leftover_locations > 125 else 0.80 if leftover_locations > 110 else 0.75
         max_location_count: int = int(math.ceil(leftover_locations * max_required_percentage))
         if self.options.corona_mountain_shines.value > max_location_count:
-            logger.warning(f"Player's Yaml {self.player_name} had shine count higher than maximum locations "
+            logger.warning(f"SMS: Player's Yaml {self.player_name} had shine count higher than maximum locations "
                 f"available to them. Adjusting their shine count down to {max_location_count}...")
             self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, max_location_count)
 
@@ -171,15 +171,15 @@ class SmsWorld(World):
         #   (on super restrictive settings, 90 of 14 would result in 12, causing high generation failures)
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
         if remaining_locs > MIN_SHINE_SPRITE_LOCATIONS:
-            logger.warning(f"Player's Yaml {self.player_name} had extra shinies enabled, however there was not enough "
-                "space to place them. Setting this to 0...")
+            logger.warning(f"SMS: Player's Yaml {self.player_name} had extra shinies enabled, however there was not "
+                "enough space to place them. Setting this to 0...")
             self.options.extra_shines.value = 0
             extra_shines: int = 0
         else:
             max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (5 * int(remaining_locs / 20)))
             if self.options.extra_shines.value > max_shine_percentage:
-                logger.warning(f"Player's Yaml {self.player_name} had extra shinies enabled and was above the amount "
-                    f"possible based on locations available. Setting this to {max_shine_percentage}...")
+                logger.warning(f"SMS: Player's Yaml {self.player_name} had extra shinies enabled and was above the "
+                    f"amount possible based on locations available. Setting this to {max_shine_percentage}...")
                 self.options.extra_shines.value = max_shine_percentage
             extra_shines: int = int(math.floor(remaining_locs * max_shine_percentage * .01))
 
