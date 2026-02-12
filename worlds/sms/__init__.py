@@ -157,7 +157,7 @@ class SmsWorld(World):
             self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, max_location_count)
 
         # Check if this world's item pool has a large amount of shine sprites, used for item rules later on.
-        if self.options.corona_mountain_shines.value > int(math.ceil(leftover_locations * 0.5)):
+        if self.options.corona_mountain_shines.value > int(math.ceil(leftover_locations * MAX_PROGRESSION_FLAG)):
             self.large_shine_count = True
 
         # Set the world's corona mountain shines based on the updated/rolled value.
