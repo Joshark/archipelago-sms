@@ -103,8 +103,10 @@ def create_sms_region_and_entrance_rules(world: "SmsWorld"):
                     reg_ticket: str = sms_reg.ticket_str if hasattr(sms_reg, "ticket_str") else \
                         [entr_reg.parent_region.ticket_str for entr_reg in sms_reg.entrances if
                         hasattr(entr_reg.parent_region, "ticket_str")][0]
-                    add_item_rule(sms_loc, (lambda item, reg_tick=reg_ticket: item.name != reg_tick))
+                    add_item_rule(sms_loc, (lambda item, reg_tick=reg_ticket: item.game == world.game and
+                        item.name != reg_tick))
 
                 # Corona can never have any tickets at high shine counts, otherwise generation is guaranteed to fail.
+                nozzles_and_tickets: list[str] = [*TICKET_ITEMS, *REGULAR_PROGRESSION_ITEMS]
                 if hasattr(sms_loc, "corona") and sms_loc.corona and world.large_shine_count:
-                    add_item_rule(sms_loc, (lambda item: not item.name in TICKET_ITEMS and not item.name in REGULAR_PROGRESSION_ITEMS))
+                    add_item_rule(sms_loc, (lambda item: item.game == world.game and not item.name in nozzles_and_tickets))
