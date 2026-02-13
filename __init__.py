@@ -101,14 +101,20 @@ class SmsWorld(World):
         super().__init__(multiworld, player)
 
     def generate_early(self):
+        logger.info(f"SMS: Accessibility - {"Full" if self.options.accessibility.value == 0 else "Minimal"}")
         if self.options.starting_nozzle.value == 0:
             self.multiworld.push_precollected(self.create_item("Spray Nozzle"))
         elif self.options.starting_nozzle.value == 1:
             self.multiworld.push_precollected(self.create_item("Hover Nozzle"))
+        elif self.options.starting_nozzle.value == 2:
+            any_early_nozzles: bool = any([nozzle_item for nozzle_item in REGULAR_PROGRESSION_ITEMS.keys() if
+                nozzle_item in self.multiworld.early_items[self.player]])
+            if not any_early_nozzles:
+                chosen_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
+                self.multiworld.early_items[self.player].update({chosen_nozzle: 1})
 
         if self.options.level_access.value == 1:
             chosen_tick: str = str(self.random.choice(list(TICKET_ITEMS.keys())))
-            logger.info(f"Chosen Ticket for player {self.player_name}: {chosen_tick}")
             self.multiworld.push_precollected(self.create_item(chosen_tick))
 
         # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
