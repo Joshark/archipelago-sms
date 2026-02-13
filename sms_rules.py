@@ -1,13 +1,15 @@
 from typing import TYPE_CHECKING, Callable
 
-from BaseClasses import Entrance, CollectionState, Item
-from .sms_regions.sms_region_helper import SmsLocation, Requirements
+from BaseClasses import Entrance, CollectionState
+from .sms_regions.sms_region_helper import SmsLocation, Requirements, SmsRegionName
 from ..generic.Rules import set_rule, add_rule, add_item_rule
 from .items import TICKET_ITEMS, REGULAR_PROGRESSION_ITEMS
-#from .world_logic_constants import MAX_CORONA_PROGRESSION_PERC, MAX_NONMACGUFFIN_ITEMS
 
 if TYPE_CHECKING:
     from . import SmsWorld
+
+
+#YOSHI_REQUIRED_REGIONS: list[str] = [SmsRegionName.]
 
 
 def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[Requirements], world: "SmsWorld") -> None:
@@ -113,13 +115,12 @@ def create_sms_region_and_entrance_rules(world: "SmsWorld"):
                 if hasattr(sms_loc, "corona") and sms_loc.corona:
                     # Since Corona requires Spray Nozzle and Hover Nozzle to complete, ensure those items can never
                     # be placed. Additionally, Yoshi is required for basically every late game stage.
-                    required_nozz: list[str] = ["Spray Nozzle", "Hover Nozzle", "Yoshi"]
+                    required_nozz: list[str] = ["Spray Nozzle", "Hover Nozzle", *TICKET_ITEMS]
                     add_item_rule(sms_loc, (lambda item, nozzles=tuple(required_nozz):
                         item.game == world.game and not item.name in required_nozz))
 
                     # If there is a high amount of progression items, the world is too restrictive for non-macguffin
                     # items to be placed in corona, especially with previous levels required to be beaten.
                     if world.large_shine_count:
-                        nozzles_and_tickets: list[str] = [*TICKET_ITEMS, *REGULAR_PROGRESSION_ITEMS]
                         add_item_rule(sms_loc, (lambda item: item.game == world.game and
-                            not item.name in nozzles_and_tickets))
+                            not item.name in REGULAR_PROGRESSION_ITEMS))
