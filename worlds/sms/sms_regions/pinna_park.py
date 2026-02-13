@@ -65,7 +65,7 @@ PINNA_PARK_FIVE_EIGHT: SmsRegion = SmsRegion(SmsRegionName.PINNA_FIVE_EIGHT,
     ], parent_region=SmsRegionName.PINNA_ENTRANCE)
 
 PINNA_PARK_SIX: SmsRegion = SmsRegion(SmsRegionName.PINNA_SIX,
-    requirements=[Requirements(location=f"{SmsRegionName.PINNA_FIVE_EIGHT} - The Runaway Ferris Wheel")],
+    requirements=[Requirements([[NozzleType.yoshi]], location=f"{SmsRegionName.PINNA_FIVE_EIGHT} - The Runaway Ferris Wheel")],
     shines=[Shine("The Yoshi-Go-Round's Secret", [Requirements([[NozzleType.yoshi]])]),
         Shine("Red Coins in the Yoshi-Go-Round", [Requirements(YOSHI_AND_HOVER)])],
     blue_coins=[BlueCoin("Park Butterfly", [Requirements([[NozzleType.yoshi]])])],
