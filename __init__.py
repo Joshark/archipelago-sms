@@ -124,7 +124,7 @@ class SmsWorld(World):
             trade_shines_req: int = int(self.options.blue_coin_maximum.value / 10)
 
             if self.options.blue_coin_maximum.value > max_blue_coins_needed:
-                percentage_used: int = int((MAXIMUM_BLUE_COIN_PERCENTAGE - 1)*100)
+                percentage_used: int = int((MAXIMUM_BLUE_COIN_PERCENTAGE - 1) * 100)
                 logger.warning(f"SMS: Player's Yaml {self.player_name} had more blue coins required than trade shines "
                     f"max  + {percentage_used}%. Adjusting their count down to: {max_blue_coins_needed}")
                 self.options.blue_coin_maximum.value = min(max_blue_coins_needed, self.options.blue_coin_maximum.range_end)
