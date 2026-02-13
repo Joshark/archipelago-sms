@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING, Callable
 
-from BaseClasses import Entrance, CollectionState
+from BaseClasses import Entrance, CollectionState, Item
 from .sms_regions.sms_region_helper import SmsLocation, Requirements
 from ..generic.Rules import set_rule, add_rule, add_item_rule
 from .items import TICKET_ITEMS, REGULAR_PROGRESSION_ITEMS
+#from .world_logic_constants import MAX_CORONA_PROGRESSION_PERC, MAX_NONMACGUFFIN_ITEMS
 
 if TYPE_CHECKING:
     from . import SmsWorld
@@ -85,11 +86,16 @@ def interpret_requirements(spot: Entrance | SmsLocation, requirement_set: list[R
 
 def create_sms_region_and_entrance_rules(world: "SmsWorld"):
     for sms_reg in world.get_regions():
+        region_ticket: str = ""
         if sms_reg.entrances:
             # Add the entrance rule for all entrances in the region based on the Requirements NamedTuple defined.
             for sms_entrance in sms_reg.entrances:
                 if hasattr(sms_entrance, "requirements"):
                     interpret_requirements(sms_entrance, sms_entrance.requirements, world)
+
+                # If a parent region has any ticket str, get that ticket as well
+                if hasattr(sms_entrance.parent_region, "ticket_str") and sms_entrance.parent_region.ticket_str:
+                    region_ticket = sms_entrance.parent_region.ticket_str
 
             # Add the location rules within this region.
             for sms_loc in sms_reg.locations:
@@ -98,15 +104,22 @@ def create_sms_region_and_entrance_rules(world: "SmsWorld"):
                     interpret_requirements(sms_loc, sms_loc.loc_reqs, world)
 
                 # A Region cannot have its own ticket item in ticket mode, so prevent that.
-                if hasattr(sms_reg, "ticket_str") or any([hasattr(entr_reg.parent_region, "ticket_str") for entr_reg
-                    in sms_reg.entrances]):
-                    reg_ticket: str = sms_reg.ticket_str if hasattr(sms_reg, "ticket_str") else \
-                        [entr_reg.parent_region.ticket_str for entr_reg in sms_reg.entrances if
-                        hasattr(entr_reg.parent_region, "ticket_str")][0]
+                if hasattr(sms_reg, "ticket_str") or region_ticket:
+                    reg_ticket: str = sms_reg.ticket_str if hasattr(sms_reg, "ticket_str") else region_ticket
                     add_item_rule(sms_loc, (lambda item, reg_tick=reg_ticket: item.game == world.game and
                         item.name != reg_tick))
 
                 # Corona can never have any tickets at high shine counts, otherwise generation is guaranteed to fail.
-                nozzles_and_tickets: list[str] = [*TICKET_ITEMS, *REGULAR_PROGRESSION_ITEMS]
-                if hasattr(sms_loc, "corona") and sms_loc.corona and world.large_shine_count:
-                    add_item_rule(sms_loc, (lambda item: item.game == world.game and not item.name in nozzles_and_tickets))
+                if hasattr(sms_loc, "corona") and sms_loc.corona:
+                    # Since Corona requires Spray Nozzle and Hover Nozzle to complete, ensure those items can never
+                    # be placed. Additionally, Yoshi is required for basically every late game stage.
+                    required_nozz: list[str] = ["Spray Nozzle", "Hover Nozzle", "Yoshi"]
+                    add_item_rule(sms_loc, (lambda item, nozzles=tuple(required_nozz):
+                        item.game == world.game and not item.name in required_nozz))
+
+                    # If there is a high amount of progression items, the world is too restrictive for non-macguffin
+                    # items to be placed in corona, especially with previous levels required to be beaten.
+                    if world.large_shine_count:
+                        nozzles_and_tickets: list[str] = [*TICKET_ITEMS, *REGULAR_PROGRESSION_ITEMS]
+                        add_item_rule(sms_loc, (lambda item: item.game == world.game and
+                            not item.name in nozzles_and_tickets))
