@@ -59,7 +59,7 @@ PIANTA_VILLAGE_FIVE_BEYOND: SmsRegion = SmsRegion(SmsRegionName.PIANTA_FIVE_BEYO
     ], parent_region=SmsRegionName.PIANTA_ENTRANCE)
 
 PIANTA_VILLAGE_SIX: SmsRegion = SmsRegion(SmsRegionName.PIANTA_SIX,
-    requirements=[Requirements(location=f"{SmsRegionName.PIANTA_FIVE_BEYOND} - Secret of the Village Underside")],
+    requirements=[Requirements([[NozzleType.yoshi]], location=f"{SmsRegionName.PIANTA_FIVE_BEYOND} - Secret of the Village Underside")],
     blue_coins=[BlueCoin("Pianta in Need A", [Requirements([[NozzleType.spray]])]),
         BlueCoin("Pianta in Need B", [Requirements([[NozzleType.spray]])]),
         BlueCoin("Pianta in Need C", [Requirements([[NozzleType.spray]])]),
@@ -71,7 +71,7 @@ PIANTA_VILLAGE_SIX: SmsRegion = SmsRegion(SmsRegionName.PIANTA_SIX,
     ], parent_region=SmsRegionName.PIANTA_ENTRANCE)
 
 PIANTA_VILLAGE_EIGHT: SmsRegion = SmsRegion(SmsRegionName.PIANTA_EIGHT,
-    requirements=[Requirements(location=f"{SmsRegionName.PIANTA_FIVE_BEYOND} - Shadow Mario Runs Wild")],
+    requirements=[Requirements([[NozzleType.yoshi]], location=f"{SmsRegionName.PIANTA_FIVE_BEYOND} - Shadow Mario Runs Wild")],
     shines=[Shine("Soak the Sun", [Requirements(SPRAY_AND_HOVER_OR_ROCKET)])],
     blue_coins=[BlueCoin("Bird", [Requirements(SPRAY_AND_HOVER)])],
     nozzle_boxes=[NozzleBox("Rocket Box", [Requirements([[NozzleType.hover]])])],
