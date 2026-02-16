@@ -116,6 +116,16 @@ class SmsWorld(World):
             chosen_tick: str = str(self.random.choice(list(TICKET_ITEMS.keys())))
             self.multiworld.push_precollected(self.create_item(chosen_tick))
 
+            # If the starting nozzle is hover, although the generator succeeds in most conditions, if the starting area
+            # is either Gelato Beach or Pinna Park, we will need to give another nozzle early to avoid failures.
+            if chosen_tick in ["Gelato Beach Ticket", "Pinna Park Ticket"] and self.options.starting_nozzle.value == 1:
+                early_nozzles: bool = any([nozzle_item for nozzle_item in REGULAR_PROGRESSION_ITEMS.keys() if
+                    nozzle_item in self.multiworld.early_items[self.player] or
+                    nozzle_item in self.multiworld.precollected_items[1]])
+                if not early_nozzles:
+                    chosen_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
+                    self.multiworld.early_items[self.player].update({chosen_nozzle: 1})
+
         # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
         if self.options.blue_coin_sanity.value == 1:
             trade_blue_coins_req: int = int(self.options.trade_shine_maximum.value * 10)
