@@ -132,6 +132,9 @@ class SmsWorld(World):
             max_blue_coins_needed: int = int(trade_blue_coins_req * MAXIMUM_BLUE_COIN_PERCENTAGE)
             trade_shines_req: int = int(self.options.blue_coin_maximum.value / 10)
 
+            # Since the player can set a blue coin amount well over the max coins needed, this can cause a lot of
+            # extra progression items that are not required. Since every progression item will need to be checked
+            # against accessibility, we remove the extra amounts to be more reasonable (20% extra currently).
             if self.options.blue_coin_maximum.value > max_blue_coins_needed:
                 percentage_used: int = int((MAXIMUM_BLUE_COIN_PERCENTAGE - 1) * 100)
                 logger.warning(f"SMS: Player's Yaml {self.player_name} had more blue coins required than trade shines "
