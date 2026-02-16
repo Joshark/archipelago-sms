@@ -101,15 +101,14 @@ class SmsWorld(World):
         super().__init__(multiworld, player)
 
     def generate_early(self):
-        logger.info(f"SMS: Accessibility - {"Full" if self.options.accessibility.value == 0 else "Minimal"}")
         if self.options.starting_nozzle.value == 0:
             self.multiworld.push_precollected(self.create_item("Spray Nozzle"))
         elif self.options.starting_nozzle.value == 1:
             self.multiworld.push_precollected(self.create_item("Hover Nozzle"))
         elif self.options.starting_nozzle.value == 2:
-            any_early_nozzles: bool = any([nozzle_item for nozzle_item in REGULAR_PROGRESSION_ITEMS.keys() if
-                nozzle_item in self.multiworld.early_items[self.player]])
-            if not any_early_nozzles:
+            early_nozzles: bool = any([nozzle_item for nozzle_item in REGULAR_PROGRESSION_ITEMS.keys() if nozzle_item
+                in self.multiworld.early_items[self.player] or nozzle_item in self.multiworld.precollected_items[1]])
+            if not early_nozzles:
                 chosen_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
                 self.multiworld.early_items[self.player].update({chosen_nozzle: 1})
 
