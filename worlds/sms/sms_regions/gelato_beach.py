@@ -2,13 +2,15 @@ from .sms_region_helper import *
 
 GELATO_BEACH_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.GELATO_ENTRANCE,
     requirements=[Requirements(ANY_SPLASHER, shines=5), Requirements(skip_forward=True)],
-    parent_region=SmsRegionName.PLAZA)
+    ticketed="Gelato Beach Ticket", parent_region=SmsRegionName.PLAZA)
 
 GELATO_BEACH_ONE: SmsRegion = SmsRegion(SmsRegionName.GELATO_ONE,
     shines=[Shine("Dune Bud Sand Castle Secret", [Requirements(ANY_SPLASHER)]),
         Shine("Mirror Madness! Tilt, Slam, Bam!", [Requirements([[NozzleType.spray]])]),
-        Shine("Wiggler Ahoy! Full Steam Ahead!", [Requirements(ANY_SPLASHER, location=f"{SmsRegionName.GELATO_ONE} - Mirror Madness! Tilt, Slam, Bam!")]),
-        Shine("Red Coins in the Sand Castle", [Requirements([[NozzleType.hover]], location=f"{SmsRegionName.GELATO_ONE} - Wiggler Ahoy! Full Steam Ahead!")]),
+        Shine("Wiggler Ahoy! Full Steam Ahead!", [Requirements(ANY_SPLASHER,
+            location=f"{SmsRegionName.GELATO_ONE} - Mirror Madness! Tilt, Slam, Bam!")]),
+        Shine("Red Coins in the Sand Castle", [Requirements([[NozzleType.hover]],
+            location=f"{SmsRegionName.GELATO_ONE} - Wiggler Ahoy! Full Steam Ahead!")]),
         Shine("Sandy Shine Sprite", [Requirements(ANY_SPLASHER)])],
     blue_coins=[BlueCoin("Juicer"),
         BlueCoin("Rocket M", [Requirements(ANY_SPLASHER)]),
@@ -24,7 +26,7 @@ GELATO_BEACH_ONE: SmsRegion = SmsRegion(SmsRegionName.GELATO_ONE,
         BlueCoin("Crevice"),
         BlueCoin("Sand Cabana Roof"),
         BlueCoin("Shack", [Requirements([[NozzleType.rocket]])])], 
-    ticketed="Gelato Beach Ticket", parent_region=SmsRegionName.GELATO_ENTRANCE)
+    parent_region=SmsRegionName.GELATO_ENTRANCE)
 
 GELATO_BEACH_ONE_TWO_FOUR: SmsRegion = SmsRegion(SmsRegionName.GELATO_ONE_TWO_FOUR,
     blue_coins=[BlueCoin("Red Cataquack", [Requirements(ANY_SPLASHER)])], 

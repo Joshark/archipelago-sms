@@ -1,13 +1,13 @@
 from .sms_region_helper import *
 
 BIANCO_HILLS_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ENTRANCE,
-    requirements=[Requirements(SPRAY_OR_YOSHI), Requirements(skip_forward=True)],
-    parent_region=SmsRegionName.PLAZA)
+    requirements=[Requirements(ANY_SPLASHER), Requirements(skip_forward=True)],
+    ticketed="Bianco Hills Ticket", parent_region=SmsRegionName.PLAZA)
 
 BIANCO_HILLS_ONE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ONE,
     shines=[Shine("Road to the Big Windmill", [Requirements(ANY_SPLASHER)]),
         Shine("Down with Petey Piranha!", [Requirements([[NozzleType.spray]])]),
-        Shine("100 Coins", [Requirements(SPRAY_AND_HOVER)], hundred=True)
+        Shine("100 Coins", [Requirements(ALL_SPLASHER)], hundred=True)
     ],
     blue_coins=[BlueCoin("Windmill M", [Requirements([[NozzleType.hover]])]),
         BlueCoin("Windmill Pillar", [Requirements(ANY_SPLASHER)]),
@@ -22,7 +22,7 @@ BIANCO_HILLS_ONE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ONE,
         BlueCoin("River End"),
         BlueCoin("X Between Walls", [Requirements(ANY_SPLASHER)]),
         BlueCoin("Sail Platform", [Requirements([[NozzleType.hover]])]),  # Could also be done with just Spray...
-    ], ticketed="Bianco Hills Ticket", parent_region=SmsRegionName.BIANCO_ENTRANCE)
+    ], parent_region=SmsRegionName.BIANCO_ENTRANCE)
 
 BIANCO_HILLS_THREE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_THREE,
     requirements=[Requirements(location=f"{SmsRegionName.BIANCO_ONE} - Down with Petey Piranha!")],
