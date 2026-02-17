@@ -7,17 +7,18 @@ import os, logging
 from typing import Dict, Any, ClassVar
 import settings
 
-
 import Options
-from BaseClasses import ItemClassification, MultiWorld, Tutorial
+from BaseClasses import ItemClassification, MultiWorld, Tutorial, Item, Location
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
 
 from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_ITEMS, TICKET_ITEMS, JUNK_ITEMS, SmsItem
-from .locations import ALL_LOCATIONS_TABLE
 from .options import *
-from .regions import create_regions
+from .world_logic_constants import *
+from .regions import create_regions, ALL_REGIONS
 from .iso_helper.sms_rom import SMSPlayerContainer
+from .sms_regions.sms_region_helper import SmsRegionName, SmsLocation, Requirements, NozzleType, TURSPRAY
+from .sms_rules import create_sms_region_and_entrance_rules
 
 logger = logging.getLogger()
 
@@ -63,6 +64,17 @@ class SmsWebWorld(WebWorld):
 
     tutorials = [setup]
 
+def get_location_name_to_id():
+    dict_locs: dict[str, int] = {}
+    for sms_reg in ALL_REGIONS.values():
+        for shine_loc in sms_reg.shines:
+            dict_locs.update({f"{sms_reg.name} - {shine_loc.name}": len(dict_locs)+1})
+        for blue_loc in sms_reg.blue_coins:
+            dict_locs.update({f"{sms_reg.name} - {blue_loc.name}": len(dict_locs)+1})
+        for nozz_loc in sms_reg.nozzle_boxes:
+            dict_locs.update({f"{sms_reg.name} - {nozz_loc.name}": len(dict_locs)+1})
+    return dict_locs
+
 class SmsWorld(World):
     """
     The second Super Mario game to feature 3D gameplay. Coupled with F.L.U.D.D. (a talking water tank that can be used
@@ -77,80 +89,183 @@ class SmsWorld(World):
     options: SmsOptions
 
     item_name_to_id = ALL_ITEMS_TABLE
-    location_name_to_id = ALL_LOCATIONS_TABLE
+    location_name_to_id = get_location_name_to_id()
 
     settings: ClassVar[SuperMarioSunshineSettings]
-
-    corona_goal: int
-    possible_shines: int
-    blue_coins: int
+    corona_mountain_shines: int = 0
+    blue_coins_required: int = 0
+    large_shine_count: bool = False  # Used in rules to know if corona mountain should block tickets in their region
+    # otherwise generation would fail significantly more in swap.
 
     def __init__(self, multiworld: MultiWorld, player: int):
         super().__init__(multiworld, player)
-        self.corona_goal = 50
-        self.possible_shines = 0
-        self.blue_coins = 0
 
     def generate_early(self):
         if self.options.starting_nozzle.value == 0:
-            self.options.start_inventory.value["Spray Nozzle"] = 1
+            self.multiworld.push_precollected(self.create_item("Spray Nozzle"))
         elif self.options.starting_nozzle.value == 1:
-            self.options.start_inventory.value["Hover Nozzle"] = 1
+            self.multiworld.push_precollected(self.create_item("Hover Nozzle"))
+        elif self.options.starting_nozzle.value == 2:
+            early_nozzles: bool = any([nozzle_item for nozzle_item in REGULAR_PROGRESSION_ITEMS.keys() if nozzle_item
+                in self.multiworld.early_items[self.player] or nozzle_item in self.multiworld.precollected_items[1]])
+            if not early_nozzles:
+                chosen_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
+                self.multiworld.early_items[self.player].update({chosen_nozzle: 1})
 
         if self.options.level_access.value == 1:
-            pick = self.random.choice(list(TICKET_ITEMS.keys()))
-            tick = str(pick)
-            print(tick)
-            self.options.start_inventory.value[tick] = 1
+            chosen_tick: str = str(self.random.choice(list(TICKET_ITEMS.keys())))
+            self.multiworld.push_precollected(self.create_item(chosen_tick))
+
+            # If the starting nozzle is hover, although the generator succeeds in most conditions, if the starting area
+            # is either Gelato Beach or Pinna Park, we will need to give another nozzle early to avoid failures.
+            if chosen_tick in ["Gelato Beach Ticket", "Pinna Park Ticket"] and self.options.starting_nozzle.value == 1:
+                early_nozzles: bool = any([nozzle_item for nozzle_item in REGULAR_PROGRESSION_ITEMS.keys() if
+                    nozzle_item in self.multiworld.early_items[self.player] or
+                    nozzle_item in self.multiworld.precollected_items[1]])
+                if not early_nozzles:
+                    chosen_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
+                    self.multiworld.early_items[self.player].update({chosen_nozzle: 1})
+
+        # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
+        if self.options.blue_coin_sanity.value == 1:
+            trade_blue_coins_req: int = int(self.options.trade_shine_maximum.value * 10)
+            max_blue_coins_needed: int = int(trade_blue_coins_req * MAXIMUM_BLUE_COIN_PERCENTAGE)
+            trade_shines_req: int = int(self.options.blue_coin_maximum.value / 10)
+
+            # Since the player can set a blue coin amount well over the max coins needed, this can cause a lot of
+            # extra progression items that are not required. Since every progression item will need to be checked
+            # against accessibility, we remove the extra amounts to be more reasonable (20% extra currently).
+            if self.options.blue_coin_maximum.value > max_blue_coins_needed:
+                percentage_used: int = int((MAXIMUM_BLUE_COIN_PERCENTAGE - 1) * 100)
+                logger.warning(f"SMS: Player's Yaml {self.player_name} had more blue coins required than trade shines "
+                    f"max  + {percentage_used}%. Adjusting their count down to: {max_blue_coins_needed}")
+                self.options.blue_coin_maximum.value = min(max_blue_coins_needed, self.options.blue_coin_maximum.range_end)
+
+            elif self.options.trade_shine_maximum.value > trade_shines_req:
+                logger.warning(f"SMS: Player's Yaml {self.player_name} had more trade shines required than blue coins "
+                    f"in the item pool. Adjusting theirs down to: {trade_shines_req}")
+                self.options.trade_shine_maximum.value = trade_shines_req
 
     def create_regions(self):
         create_regions(self)
 
     def create_items(self):
-        pool = [self.create_item(name) for name in REGULAR_PROGRESSION_ITEMS.keys()]
-
-        if self.options.level_access == 1:
-            pool += [self.create_item(name) for name in TICKET_ITEMS.keys()]
-
-        if self.options.blue_coin_sanity == "full_shuffle":
-            for _ in range(0, self.options.blue_coin_maximum):
-                pool.append((self.create_item("Blue Coin")))
-                self.blue_coins += 1
-
         # Adds the minimum amount required of shines for Corona Mountain access
-        for _ in range(0, self.options.corona_mountain_shines):
+        possible_shine_locations: int = len([reg_loc for reg_loc in self.multiworld.get_unfilled_locations(self.player)
+            if hasattr(reg_loc, "corona") and not reg_loc.corona])
+
+        start_inv: list[str] = [start_item.name for start_item in self.multiworld.precollected_items[self.player]]
+
+        # Removes any progression item not in the starting items
+        pool = [self.create_item(prog_name) for prog_name in REGULAR_PROGRESSION_ITEMS.keys() if not prog_name in start_inv]
+
+        if self.options.level_access.value == 1:
+            pool += [self.create_item(tick_name) for tick_name in TICKET_ITEMS.keys() if tick_name not in start_inv]
+
+        if self.options.blue_coin_sanity.value == 1:
+            for _ in range(0, self.options.blue_coin_maximum.value):
+                pool.append((self.create_item("Blue Coin")))
+
+        leftover_locations: int = possible_shine_locations - len(pool)
+        max_required_percentage: float = 0.9 if leftover_locations > 125 else 0.85 if leftover_locations > 110 else 0.8
+        max_location_count: int = int(math.ceil(leftover_locations * max_required_percentage))
+        if self.options.corona_mountain_shines.value > max_location_count:
+            logger.warning(f"SMS: Player's Yaml {self.player_name} had shine count higher than maximum locations "
+                f"available to them. Adjusting their shine count down to {max_location_count}...")
+            self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, max_location_count)
+
+        # Check if this world's item pool has a large amount of shine sprites, used for item rules later on.
+        if self.options.corona_mountain_shines.value > int(math.ceil(leftover_locations * MAX_PROGRESSION_FLAG)):
+            self.large_shine_count = True
+
+        # Set the world's corona mountain shines based on the updated/rolled value.
+        self.corona_mountain_shines = self.options.corona_mountain_shines.value
+        self.blue_coins_required = self.options.blue_coin_maximum.value if self.options.blue_coin_sanity.value > 0 else 0
+
+        for _ in range(0, self.options.corona_mountain_shines.value):
             pool.append(self.create_item("Shine Sprite"))
-            self.possible_shines += 1
 
-        extra_shines = math.floor(self.options.corona_mountain_shines * self.options.extra_shines * .01)
+        # Get the remaining locations that need to be filled, then calculate the max shine filler percentage that can be used
+        #   (on super restrictive settings, 90 of 14 would result in 12, causing high generation failures)
+        remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
+        if remaining_locs > MIN_SHINE_SPRITE_LOCATIONS:
+            logger.warning(f"SMS: Player's Yaml {self.player_name} had extra shinies enabled, however there was not "
+                "enough space to place them. Setting this to 0...")
+            self.options.extra_shines.value = 0
+            extra_shines: int = 0
+        else:
+            max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (5 * int(remaining_locs / 20)))
+            if self.options.extra_shines.value > max_shine_percentage:
+                logger.warning(f"SMS: Player's Yaml {self.player_name} had extra shinies enabled and was above the "
+                    f"amount possible based on locations available. Setting this to {max_shine_percentage}...")
+                self.options.extra_shines.value = max_shine_percentage
+            extra_shines: int = int(math.floor(remaining_locs * max_shine_percentage * .01))
 
-        # Adjusts Extra shines to be minimum amount of locations left if there would be too many
-        if extra_shines > len(self.multiworld.get_unfilled_locations(self.player)) - len(pool):
-            extra_shines = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
-            logger.info(f"Too many extra shines added, lowered amount to {extra_shines}")
-
-        # Adds extra shines to the pool if possible
-        if (len(self.multiworld.get_unfilled_locations(self.player))) > len(pool):
-            for i in range(0, len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)):
-                if i < extra_shines:
-                    pool.append(self.create_item("Shine Sprite"))
-                    self.possible_shines += 1
-                else:
-                    pool.append(self.create_item(self.random.choice(list(JUNK_ITEMS.keys()))))
+        for i in range(0, remaining_locs):
+            # Adds extra shines to the pool if possible
+            if i < extra_shines:
+                pool.append(self.create_item("Shine Sprite"))
+            else:
+                pool.append(self.create_item(self.random.choice(list(JUNK_ITEMS.keys()))))
 
         self.multiworld.itempool += pool
 
     def create_item(self, name: str):
+        if not name in ALL_ITEMS_TABLE:
+            raise Exception(f"Invalid SMS item name: {name}")
+
         if name in ALL_PROGRESSION_ITEMS:
-            classification = ItemClassification.progression
+            if name == "Shine Sprite" or name == "Blue Coin":
+                classification = ItemClassification.progression_deprioritized_skip_balancing
+            else:
+                classification = ItemClassification.progression
         else:
             classification = ItemClassification.filler
 
         return SmsItem(name, classification, ALL_ITEMS_TABLE[name], self.player)
 
     def set_rules(self):
+        create_sms_region_and_entrance_rules(self)
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
-        self.corona_goal = min(self.options.corona_mountain_shines.value, self.possible_shines)
+
+    @classmethod
+    def stage_fill_hook(cls, multiworld: MultiWorld, progitempool: list[Item], usefulitempool: list[Item],
+        filleritempool: list[Item], fill_locations: list[Location]) -> None:
+
+        # Credit to @Mysteryem for this hook and the sort_fuc.
+        game_players = multiworld.get_game_players(cls.game)
+        # Get all player IDs that require either corona mountain shines to complete their goal or have blue coins
+        sms_excessive_prog_items = {player for player in game_players if
+            multiworld.worlds[player].corona_mountain_shines > 0 or multiworld.worlds[player].blue_coins_required > 0}
+        # Get the player IDs of those that are using minimal accessibility.
+        sms_minimal_players = {player for player in game_players
+            if multiworld.worlds[player].options.accessibility == "minimal"}
+
+        def sort_func(item: Item):
+            # Credit once again for @Mysteryem for this function AND very nice description
+            if item.player in sms_excessive_prog_items and item.name in ["Shine Sprite", "Blue Coin"]:
+                if item.player in sms_minimal_players:
+                    # For minimal players, place goal macguffins first. This helps prevent fill from dumping logically
+                    # relevant items into unreachable locations and reducing the number of reachable locations to fewer
+                    # than the number of items remaining to be placed.
+                    #
+                    # Placing only the non-required goal macguffins first or slightly more than the number of
+                    # non-required goal macguffins first was also tried, but placing all goal macguffins first seems to
+                    # give fill the best chance of succeeding.
+                    #
+                    # All shine sprites and blue coins are given the *deprioritized* classification for minimal players,
+                    # which avoids them being placed on priority locations, which would otherwise occur due to them
+                    # being sorted to be placed first. They also skip progression balancing in larger multiworlds.
+                    return 1
+                else:
+                    # For non-minimal players, place goal macguffins last. The helps prevent fill from filling most/all
+                    # reachable locations with the goal macguffins that are only required for the goal.
+                    return -1
+            else:
+                # Python sorting is stable, so this will leave everything else in its original order.
+                return 0
+
+        progitempool.sort(key=sort_func)
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
@@ -182,7 +297,6 @@ class SmsWorld(World):
             f"{SMSPlayerContainer.patch_file_ending}")
         sms_container = SMSPlayerContainer(output_data, patch_path, self.multiworld.player_name[self.player], self.player)
         sms_container.write()
-
 
 # def launch_client():
 #     from .SMSClient import main

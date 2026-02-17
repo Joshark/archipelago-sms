@@ -1,89 +1,4 @@
-from enum import Flag, auto
-from typing import Optional, NamedTuple
-
-AIRSTRIP = "Delfino Airstrip"
-PLAZA = "Delfino Plaza"
-INIT = "Initial Plaza"
-STATUE = "Plaza With Statue"
-BIANCO = "Bianco Hills"
-RICCO = "Ricco Harbor"
-GELATO = "Gelato Beach"
-PINNA = "Pinna Park"
-SIRENA = "Sirena Beach"
-NOKI = "Noki Bay"
-PIANTA = "Pianta Village"
-CORONA = "Corona Mountain"
-
-class NozzleType(Flag):
-    none = auto()
-    spray = auto()
-    hover = auto()
-    rocket = auto()
-    nobox_rocket = auto()
-    turbo = auto()
-    nobox_turbo = auto()
-    yoshi = auto()
-    splasher = auto()  # Customizable generic, for things that are intended for spray but can be hit with others
-
-
-class Requirements(NamedTuple):
-    nozzles: list[NozzleType] = []  # conjunctive normal form
-    shines: Optional[int] = None  # number of shine sprites needed
-    corona: bool = False  # is corona access needed (configurable)
-    blues: int = 0
-    location: str = ""
-    skip_into: bool = False
-
-
-class Shine(NamedTuple):
-    name: str
-    id: int
-    requirements: Requirements = Requirements()
-    hard: Requirements = Requirements()
-    advanced: Requirements = Requirements()
-    tears: Requirements = Requirements()
-    hundred: bool = False
-    bandaid: bool = False
-
-
-class BlueCoin(NamedTuple):
-    name: str
-    id: int
-    requirements: Requirements = Requirements()
-    hard: Requirements = Requirements()
-    advanced: Requirements = Requirements()
-    tears: Requirements = Requirements()
-    available: [int] = []
-
-class OneUp(NamedTuple):
-    name: str
-    id: int
-    requirements: Requirements = Requirements()
-    available: [int] = []
-
-# Yes, I'm going to include Shadow Mario Plaza chases as NozzleBox Locations
-class NozzleBox(NamedTuple):
-    name: str
-    id: int
-    requirements: Requirements = Requirements()
-    available: [int] = []
-
-
-class SmsRegion(NamedTuple):
-    name: str
-    display: str
-    requirements: Requirements = Requirements()
-    shines: list[Shine] = []
-    blue_coins: list[BlueCoin] = []
-    nozzle_boxes: list[NozzleBox] = []
-    one_ups: list[OneUp] = []
-    ticketed: str = ""
-    trade: bool = False
-    parent_region: str = "Menu"
-    skipped: bool = False
-
-
-ALL_REGIONS: list[SmsRegion] = [
+"""ALL_REGIONS: list[SmsRegion] = [
     # Delfino Airstrip
     SmsRegion(AIRSTRIP, AIRSTRIP, Requirements(), [
         Shine("Delfino Airstrip Dilemma", 523086, Requirements([NozzleType.splasher]))
@@ -670,4 +585,4 @@ ALL_REGIONS: list[SmsRegion] = [
         Shine("Shine 23", 523114, Requirements(blues=230)),
         Shine("Shine 24", 523115, Requirements(blues=240))
         ], [], trade=True)
-]
+]"""
