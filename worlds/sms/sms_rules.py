@@ -121,3 +121,13 @@ def create_sms_region_and_entrance_rules(world: "SmsWorld"):
                     if world.large_shine_count:
                         add_item_rule(sms_loc, (lambda item: item.game != world.game or (item.game == world.game and
                             not item.name in REGULAR_PROGRESSION_ITEMS)))
+
+                # Force Rocket to never be in Pianta Village
+                if "Pianta" in sms_reg.name:
+                    add_item_rule(sms_loc, (lambda item: item.game != world.game or (
+                        item.game == world.game and item.name != "Rocket Nozzle")))
+
+                # Force Yoshi never to appear in Sirena 3+
+                if "Sirena" in sms_reg.name and not sms_reg.name in ["Sirena 1 and 6", "Sirena 2-8"]:
+                    add_item_rule(sms_loc, (lambda item: item.game != world.game or (
+                            item.game == world.game and item.name != "Yoshi")))
