@@ -429,7 +429,7 @@ def parse_bits(all_bits, ctx: SmsContext):
 
     for x in all_bits:
         if x != 119 and x <= 911:
-            temp = x + LOCATION_OFFSET
+            temp = x
             ctx.locations_checked.add(temp)
             if DEBUG:
                 logger.info("checks to send: %s", str(temp))

@@ -107,6 +107,7 @@ class Shine(NamedTuple):
     advanced: Optional[list[Requirements]] | None = None
     tears: Optional[list[Requirements]] | None = None
     hundred: bool = False # 100 coin Shines
+    in_game_bit: int = None
 
 
 class BlueCoin(NamedTuple):
@@ -115,6 +116,7 @@ class BlueCoin(NamedTuple):
     hard: Optional[list[Requirements]] | None = None
     advanced: Optional[list[Requirements]] | None = None
     tears: Optional[list[Requirements]] | None = None
+    in_game_bit: int = None
 
 
 class OneUp(NamedTuple):
@@ -129,6 +131,7 @@ class NozzleBox(NamedTuple):
     hard: Optional[list[Requirements]] | None = None
     advanced: Optional[list[Requirements]] | None = None
     tears: Optional[list[Requirements]] | None = None
+    in_game_bit: int = None
 
 
 class SmsRegion(NamedTuple):
