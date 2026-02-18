@@ -5,7 +5,7 @@ RICCO_HARBOR_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ENTRANCE,
     ticketed="Ricco Harbor Ticket", parent_region=SmsRegionName.PLAZA)
 
 RICCO_HARBOR_ONE: SmsRegion = SmsRegion(SmsRegionName.RICCO_ONE, 
-    shines=[Shine("Ricco 1 Only - Gooper Blooper Breaks Out", [Requirements([[NozzleType.spray]])], in_game_bit=10),
+    shines=[Shine("Ricco 1 Only - Gooper Blooper Breaks Out", [Requirements(SPRAY_OR_HOVER)], in_game_bit=10),
         Shine("100 Coins", [Requirements([[NozzleType.hover]])], hundred=True, in_game_bit=101)],
     blue_coins=[BlueCoin("Tower Wall", [Requirements([[NozzleType.spray]])], in_game_bit=221),
         BlueCoin("Outer Ship M", [Requirements(ANY_SPLASHER)], in_game_bit=222),
