@@ -15,6 +15,7 @@ from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProc
     server_loop
 from .options import SmsOptions
 from .bit_helper import change_endian, bit_flagger, extract_bits
+from .regions import ALL_REGIONS, get_location_name_to_id
 import dolphin_memory_engine as dme
 from . import addresses
 
@@ -261,7 +262,7 @@ async def location_watcher(ctx):
         cache_byte = dme.read_byte(targ_location)
         curShines[x] = cache_byte
         if storedShines[x] != curShines[x]:
-            memory_changed(ctx, x, curShines[x])
+            memory_changed(ctx, x, curShines[x], "Shine")
             storedShines[x] = curShines[x]
 
     # If possible, check if blue coin sanity is enabled or not
@@ -270,7 +271,7 @@ async def location_watcher(ctx):
         cache_byte = dme.read_byte(targ_location)
         curBlues[x] = cache_byte
         if storedBlues[x] != curBlues[x]:
-            memory_changed(ctx, x+15, curBlues[x]) # Add 15 to 'x' to align with blue coin IDs
+            memory_changed(ctx, x+15, curBlues[x], "Blue Coin") # Add 15 to 'x' to align with blue coin IDs
             storedBlues[x] = curBlues[x]
 
     for x in range(0, addresses.NOZZLE_BOXES_BYTE_COUNT):
@@ -278,14 +279,14 @@ async def location_watcher(ctx):
         cache_byte = dme.read_byte(targ_location)
         curNozzleBoxes[x] = cache_byte
         if storedNozzleBoxes[x] != curNozzleBoxes[x]:
-            memory_changed(ctx, x+108, curNozzleBoxes[x])
+            memory_changed(ctx, x+108, curNozzleBoxes[x], "Nozzle")
             storedNozzleBoxes[x] = curNozzleBoxes[x]
 
     # Check corresponds to Shadow Mario Yoshi Egg Chase
     delfino_yoshi_unlock = dme.read_byte(addresses.DELFINO_YOSHI_UNLOCK)
     if (delfino_yoshi_unlock & 0x80) and not ctx.checked_yoshi_egg:
         ctx.checked_yoshi_egg = True
-        memory_changed(ctx, 113, delfino_yoshi_unlock)
+        memory_changed(ctx, 113, delfino_yoshi_unlock, "Yoshi")
     return
 
 
@@ -374,7 +375,7 @@ async def arbitrary_ram_checks(ctx):
         await asyncio.sleep(DELAY_SECONDS)
 
 
-def memory_changed(ctx: SmsContext, bit_pos, cached_byte):
+def memory_changed(ctx: SmsContext, bit_pos, cached_byte, loc_type: str):
     if DEBUG: logger.info(f"memory_changed: {cached_byte}, bit_pos: {bit_pos}")
     bit_list = []
 
@@ -382,7 +383,7 @@ def memory_changed(ctx: SmsContext, bit_pos, cached_byte):
     bit_list.extend(bit_found)
 
     # if DEBUG: logger.info("bit_list: " + str(bit_list))
-    parse_bits(bit_list, ctx)
+    parse_bits(bit_list, ctx, loc_type)
 
 
 def send_victory(ctx: SmsContext):
@@ -421,7 +422,7 @@ def send_victory(ctx: SmsContext):
     return
 
 
-def parse_bits(all_bits, ctx: SmsContext):
+def parse_bits(all_bits, ctx: SmsContext, parse_type: str):
     if DEBUG:
         logger.info("parse_bits: %s", str(all_bits))
     if len(all_bits) == 0:
@@ -429,10 +430,27 @@ def parse_bits(all_bits, ctx: SmsContext):
 
     for x in all_bits:
         if x != 119 and x <= 911:
-            temp = x
-            ctx.locations_checked.add(temp)
-            if DEBUG:
-                logger.info("checks to send: %s", str(temp))
+            for sms_region in ALL_REGIONS.values():
+                possible_locs: list[str] = []
+                match parse_type:
+                    case "Shine":
+                        possible_locs: list[str] = [f"{sms_region.name} - {shine_loc.name}" for shine_loc in
+                            sms_region.shines if shine_loc.in_game_bit == x]
+                    case "Blue Coin":
+                        possible_locs: list[str] = [f"{sms_region.name} - {blue_loc.name}" for blue_loc in
+                            sms_region.blue_coins if blue_loc.in_game_bit == x]
+                    case "Nozzle":
+                        possible_locs: list[str] = [f"{sms_region.name} - {nozz_loc.name}" for nozz_loc in
+                            sms_region.nozzle_boxes if nozz_loc.in_game_bit == x]
+                    case _:
+                        continue
+
+                if not possible_locs:
+                    continue
+
+                ctx.locations_checked.add(get_location_name_to_id()[possible_locs[0]])
+                if DEBUG:
+                    logger.info("checks to send: %s", possible_locs[0])
         elif x == 119:
             send_victory(ctx)
 
