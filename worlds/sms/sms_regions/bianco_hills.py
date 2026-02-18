@@ -6,7 +6,7 @@ BIANCO_HILLS_ENTRANCE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ENTRANCE,
 
 BIANCO_HILLS_ONE: SmsRegion = SmsRegion(SmsRegionName.BIANCO_ONE,
     shines=[Shine("Road to the Big Windmill", [Requirements(ANY_SPLASHER)], in_game_bit=0),
-        Shine("Down with Petey Piranha!", [Requirements([[NozzleType.spray]])], in_game_bit=1),
+        Shine("Down with Petey Piranha!", [Requirements(SPRAY_AND_HOVER)], in_game_bit=1),
         Shine("100 Coins", [Requirements(ALL_SPLASHER)], hundred=True, in_game_bit=100)
     ],
     blue_coins=[BlueCoin("Windmill M", [Requirements([[NozzleType.hover]])], in_game_bit=170),
