@@ -177,15 +177,15 @@ class SmsWorld(World):
         # Get the remaining locations that need to be filled, then calculate the max shine filler percentage that can be used
         #   (on super restrictive settings, 90 of 14 would result in 12, causing high generation failures)
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
-        if remaining_locs > MIN_SHINE_SPRITE_LOCATIONS:
-            logger.warning(f"SMS: Player's Yaml {self.player_name} had extra shinies enabled, however there was not "
+        if remaining_locs < MIN_SHINE_SPRITE_LOCATIONS:
+            logger.warning(f"SMS: Player's Yaml {self.player_name} had extra Shines enabled, however there was not "
                 "enough space to place them. Setting this to 0...")
             self.options.extra_shines.value = 0
             extra_shines: int = 0
         else:
             max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (5 * int(remaining_locs / 20)))
             if self.options.extra_shines.value > max_shine_percentage:
-                logger.warning(f"SMS: Player's Yaml {self.player_name} had extra shinies enabled and was above the "
+                logger.warning(f"SMS: Player's Yaml {self.player_name} had extra Shines enabled and was above the "
                     f"amount possible based on locations available. Setting this to {max_shine_percentage}...")
                 self.options.extra_shines.value = max_shine_percentage
             extra_shines: int = int(math.floor(remaining_locs * max_shine_percentage * .01))
