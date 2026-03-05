@@ -45,8 +45,8 @@ world_flags = {}
 
 DEBUG = False
 GAME_VER = 0x3a
-AP_WORLD_VERSION_NAME = "0.6.5"
-CLIENT_VERSION = "0.5.1"
+AP_WORLD_VERSION_NAME = "0.6.6"
+CLIENT_VERSION = "0.5.2"
 
 
 @dataclass
