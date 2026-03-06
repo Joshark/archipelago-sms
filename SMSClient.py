@@ -20,6 +20,7 @@ from .bit_helper import change_endian, bit_flagger, extract_bits
 from .regions import ALL_REGIONS, get_location_name_to_id
 import dolphin_memory_engine as dme
 from . import addresses
+from settings import get_settings
 
 ModuleUpdate.update()
 
@@ -48,7 +49,9 @@ world_flags = {}
 DEBUG = False
 GAME_VER = 0x3a
 AP_WORLD_VERSION_NAME = "0.6.5"
-CLIENT_VERSION = "0.5.1"
+CLIENT_VERSION = "0.5.3"
+
+DME_DOLPHIN_PROCESS_NAME_ENV_VARIABLE = "DME_DOLPHIN_PROCESS_NAME"
 
 
 @dataclass
@@ -81,6 +84,13 @@ class SmsCommandProcessor(ClientCommandProcessor):
         self.ctx.hook_check = False
         self.ctx.hook_name = process_name
         logger.info(f"Changing Dolphin process name to: {process_name if process_name else ""}")
+        from . import SuperMarioSunshineSettings
+        settings: SuperMarioSunshineSettings = get_settings().sms_options
+        settings.dolphin_process_name = SuperMarioSunshineSettings.DolphinProcessName(process_name)
+        get_settings().save()
+        log_msg: str = f"Dolphin process name set to {process_name or "default"}. You must open a new client for this to take effect."
+        logger.info(log_msg)
+        Utils.messagebox("Close SMS Client to take effect", log_msg)
         Utils.async_start(unhook_dolphin(self.ctx))
 
 class SmsContext(SuperContext):
@@ -118,6 +128,13 @@ class SmsContext(SuperContext):
         self.dolphin_status: str = CONNECTION_INITIAL_STATUS
         self.awaiting_rom: bool = False
         self.has_send_death: bool = False
+
+        from . import SuperMarioSunshineSettings
+        settings: SuperMarioSunshineSettings = get_settings().sms_options
+        if settings.dolphin_process_name:
+            os.environ[DME_DOLPHIN_PROCESS_NAME_ENV_VARIABLE] = settings.dolphin_process_name
+        elif DME_DOLPHIN_PROCESS_NAME_ENV_VARIABLE in os.environ:
+            del os.environ[DME_DOLPHIN_PROCESS_NAME_ENV_VARIABLE]
 
     async def server_auth(self, password_requested: bool = False):
         if password_requested and not self.password:
@@ -336,11 +353,8 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                     logger.info("Connection to Dolphin lost, reconnecting...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
                 logger.info("Attempting to connect to Dolphin...")
-                temp_osenv = copy.deepcopy(os.getenv("DME_DOLPHIN_PROCESS_NAME"))
-                os.environ["DME_DOLPHIN_PROCESS_NAME"] = ctx.hook_name if ctx.hook_name else "Dolphin.exe"
                 print(os.getenv("DME_DOLPHIN_PROCESS_NAME"))
                 dme.hook()
-                os.environ["DME_DOLPHIN_PROCESS_NAME"] = temp_osenv if temp_osenv else "Dolphin.exe"
                 if dme.is_hooked():
                     if dme.read_bytes(0x80000000, 6) != b"GMSEAP":
                         logger.info(CONNECTION_REFUSED_GAME_STATUS)
@@ -355,7 +369,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                 else:
                     logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
-                    await ctx.disconnect()
+                    await unhook_dolphin(ctx)
                     await asyncio.sleep(5)
                     continue
         except Exception:
@@ -367,6 +381,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
             continue
 
 async def unhook_dolphin(ctx: SmsContext):
+    print(dme.get_status().name)
     dme.un_hook()
     if ctx.hook_check:
         await ctx.disconnect()

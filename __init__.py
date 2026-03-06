@@ -36,7 +36,11 @@ class SuperMarioSunshineSettings(settings.Group):
         description = "Super Mario Sunshine (USA) NTSC-U ISO File"
         copy_to = None
 
+    class DolphinProcessName(str):
+        """The name of the Dolphin process to connect to. Leave blank for system default."""
+
     iso_file: ISOFile = ISOFile(ISOFile.copy_to)
+    dolphin_process_name: DolphinProcessName = ""
 
 class SmsWebWorld(WebWorld):
     theme = "ocean"
