@@ -338,7 +338,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                 temp_osenv = copy.deepcopy(os.getenv("DME_DOLPHIN_PROCESS_NAME"))
                 os.environ["DME_DOLPHIN_PROCESS_NAME"] = ctx.hook_name if ctx.hook_name else "Dolphin.exe"
                 dme.hook()
-                os.environ["DME_DOLPHIN_PROCESS_NAME"] = temp_osenv
+                os.environ["DME_DOLPHIN_PROCESS_NAME"] = temp_osenv if temp_osenv else "Dolphin.exe"
                 if dme.is_hooked():
                     if dme.read_bytes(0x80000000, 6) != b"GMSEAP":
                         logger.info(CONNECTION_REFUSED_GAME_STATUS)
