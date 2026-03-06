@@ -95,8 +95,9 @@ class SmsWorld(World):
         elif self.options.starting_nozzle.value == 1:
             self.multiworld.push_precollected(self.create_item("Hover Nozzle"))
         elif self.options.starting_nozzle.value == 2:
+            start_inv: list[str] = [s_item.name for s_item in self.multiworld.precollected_items[self.player]]
             early_nozzles: bool = any([nozzle_item for nozzle_item in REGULAR_PROGRESSION_ITEMS.keys() if nozzle_item
-                in self.multiworld.early_items[self.player] or nozzle_item in self.multiworld.precollected_items[1]])
+                in (list(self.multiworld.early_items[self.player].keys()) + start_inv)])
             if not early_nozzles:
                 chosen_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
                 self.multiworld.early_items[self.player].update({chosen_nozzle: 1})
