@@ -95,8 +95,9 @@ class SmsWorld(World):
         elif self.options.starting_nozzle.value == 1:
             self.multiworld.push_precollected(self.create_item("Hover Nozzle"))
         elif self.options.starting_nozzle.value == 2:
+            start_inv: list[str] = [s_item.name for s_item in self.multiworld.precollected_items[self.player]]
             early_nozzles: bool = any([nozzle_item for nozzle_item in REGULAR_PROGRESSION_ITEMS.keys() if nozzle_item
-                in self.multiworld.early_items[self.player] or nozzle_item in self.multiworld.precollected_items[1]])
+                in (list(self.multiworld.early_items[self.player].keys()) + start_inv)])
             if not early_nozzles:
                 chosen_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
                 self.multiworld.early_items[self.player].update({chosen_nozzle: 1})
@@ -104,16 +105,6 @@ class SmsWorld(World):
         if self.options.level_access.value == 1:
             chosen_tick: str = str(self.random.choice(list(TICKET_ITEMS.keys())))
             self.multiworld.push_precollected(self.create_item(chosen_tick))
-
-            # If the starting nozzle is hover, although the generator succeeds in most conditions, if the starting area
-            # is either Gelato Beach or Pinna Park, we will need to give another nozzle early to avoid failures.
-            if chosen_tick in ["Gelato Beach Ticket", "Pinna Park Ticket"] and self.options.starting_nozzle.value == 1:
-                early_nozzles: bool = any([nozzle_item for nozzle_item in REGULAR_PROGRESSION_ITEMS.keys() if
-                    nozzle_item in self.multiworld.early_items[self.player] or
-                    nozzle_item in self.multiworld.precollected_items[1]])
-                if not early_nozzles:
-                    chosen_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
-                    self.multiworld.early_items[self.player].update({chosen_nozzle: 1})
 
         # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
         if self.options.blue_coin_sanity.value == 1:
@@ -183,10 +174,10 @@ class SmsWorld(World):
             self.options.extra_shines.value = 0
             extra_shines: int = 0
         else:
-            max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (5 * int(remaining_locs / 20)))
+            max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (20 * int(remaining_locs / 20)))
             if self.options.extra_shines.value > max_shine_percentage:
                 logger.warning(f"SMS: Player's Yaml {self.player_name} had extra Shines enabled and was above the "
-                    f"amount possible based on locations available. Setting this to {max_shine_percentage}...")
+                    f"amount possible based on locations available. Setting this to {max_shine_percentage}% of filler...")
                 self.options.extra_shines.value = max_shine_percentage
             extra_shines: int = int(math.floor(remaining_locs * max_shine_percentage * .01))
 
