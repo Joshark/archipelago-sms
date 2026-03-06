@@ -80,6 +80,7 @@ class SmsCommandProcessor(ClientCommandProcessor):
         """Specify the name of the Dolphin process to connect to. "" for system default."""
         self.ctx.hook_check = False
         self.ctx.hook_name = process_name
+        logger.info(f"Changing Dolphin process name to: {process_name if process_name else ""}")
         Utils.async_start(unhook_dolphin(self.ctx))
 
 class SmsContext(SuperContext):
