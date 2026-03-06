@@ -338,6 +338,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                 logger.info("Attempting to connect to Dolphin...")
                 temp_osenv = copy.deepcopy(os.getenv("DME_DOLPHIN_PROCESS_NAME"))
                 os.environ["DME_DOLPHIN_PROCESS_NAME"] = ctx.hook_name if ctx.hook_name else "Dolphin.exe"
+                print(os.getenv("DME_DOLPHIN_PROCESS_NAME"))
                 dme.hook()
                 os.environ["DME_DOLPHIN_PROCESS_NAME"] = temp_osenv if temp_osenv else "Dolphin.exe"
                 if dme.is_hooked():
@@ -370,7 +371,7 @@ async def unhook_dolphin(ctx: SmsContext):
     if ctx.hook_check:
         await ctx.disconnect()
     else:
-        ctx.hook_check = False
+        ctx.hook_check = True
 
 async def arbitrary_ram_checks(ctx):
     while not ctx.exit_event.is_set():
