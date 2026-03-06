@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+import os
 import sys
 import asyncio
 import collections
@@ -74,6 +76,12 @@ class SmsCommandProcessor(ClientCommandProcessor):
         self.ctx.syncing = True
         refresh_collection_counts(self.ctx)
 
+    def _cmd_change_dolphin_process_name(self, process_name: str):
+        """Specify the name of the Dolphin process to connect to. "" for system default."""
+        self.ctx.hook_check = False
+        self.ctx.hook_name = process_name
+        Utils.async_start(unhook_dolphin(self.ctx))
+
 class SmsContext(SuperContext):
     command_processor = SmsCommandProcessor
     game = "Super Mario Sunshine"
@@ -81,11 +89,8 @@ class SmsContext(SuperContext):
     items_handling = 0b111  # full remote
 
     options: SmsOptions
-
-    hook_check = False
-    hook_nagged = False
-
-    believe_hooked = False
+    hook_name: str = ""
+    hook_check = True
 
     lives_given = 0
     lives_switch = False
@@ -330,7 +335,10 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                     logger.info("Connection to Dolphin lost, reconnecting...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
                 logger.info("Attempting to connect to Dolphin...")
+                temp_osenv = copy.deepcopy(os.getenv("DME_DOLPHIN_PROCESS_NAME"))
+                os.environ["DME_DOLPHIN_PROCESS_NAME"] = ctx.hook_name if ctx.hook_name else "Dolphin.exe"
                 dme.hook()
+                os.environ["DME_DOLPHIN_PROCESS_NAME"] = temp_osenv
                 if dme.is_hooked():
                     if dme.read_bytes(0x80000000, 6) != b"GMSEAP":
                         logger.info(CONNECTION_REFUSED_GAME_STATUS)
@@ -344,20 +352,24 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                         await asyncio.sleep(5)
                 else:
                     logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
-                    dme_status = dme.get_status()
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
                     await ctx.disconnect()
                     await asyncio.sleep(5)
                     continue
         except Exception:
-            dme.un_hook()
             logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
             logger.error(traceback.format_exc())
             ctx.dolphin_status = CONNECTION_LOST_STATUS
-            await ctx.disconnect()
+            await unhook_dolphin(ctx)
             await asyncio.sleep(5)
             continue
 
+async def unhook_dolphin(ctx: SmsContext):
+    dme.un_hook()
+    if ctx.hook_check:
+        await ctx.disconnect()
+    else:
+        ctx.hook_check = False
 
 async def arbitrary_ram_checks(ctx):
     while not ctx.exit_event.is_set():
