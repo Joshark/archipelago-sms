@@ -54,7 +54,7 @@ PINNA_PARK_TWO: SmsRegion = SmsRegion(SmsRegionName.PINNA_TWO,
     ], parent_region=SmsRegionName.PINNA_ENTRANCE)
 
 PINNA_PARK_FIVE_EIGHT: SmsRegion = SmsRegion(SmsRegionName.PINNA_FIVE_EIGHT,
-    requirements=[Requirements(location=f"{SmsRegionName.PINNA_ONE} - Red Coins of the Pirate Ships")],
+    requirements=[Requirements(location=f"{SmsRegionName.PINNA_TWO} - Red Coins of the Pirate Ships")],
     shines=[Shine("The Runaway Ferris Wheel", [Requirements(SPRAY_AND_HOVER)], in_game_bit=34)],
     blue_coins=[BlueCoin("Beach Butterfly A", [Requirements([[NozzleType.yoshi]])], in_game_bit=343),
         BlueCoin("Beach Butterfly B", [Requirements([[NozzleType.yoshi]])], in_game_bit=344)
