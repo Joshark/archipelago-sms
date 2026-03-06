@@ -65,5 +65,5 @@ RICCO_HARBOR_EIGHT: SmsRegion = SmsRegion(SmsRegionName.RICCO_EIGHT,
         BlueCoin("High Platform M", [Requirements(ROCKET_AND_SPLASHER)], in_game_bit=242),
         BlueCoin("Fish Basket", [Requirements([[NozzleType.spray]])], in_game_bit=245)
     ],
-    nozzle_boxes=[NozzleBox("Turbo Box")],
+    nozzle_boxes=[NozzleBox("Turbo Box", in_game_bit=875)],
     parent_region=SmsRegionName.RICCO_ENTRANCE)
