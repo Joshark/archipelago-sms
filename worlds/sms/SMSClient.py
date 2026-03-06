@@ -353,7 +353,6 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                     logger.info("Connection to Dolphin lost, reconnecting...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
                 logger.info("Attempting to connect to Dolphin...")
-                print(os.getenv("DME_DOLPHIN_PROCESS_NAME"))
                 dme.hook()
                 if dme.is_hooked():
                     if dme.read_bytes(0x80000000, 6) != b"GMSEAP":
@@ -381,7 +380,6 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
             continue
 
 async def unhook_dolphin(ctx: SmsContext):
-    print(dme.get_status().name)
     dme.un_hook()
     if ctx.hook_check:
         await ctx.disconnect()
