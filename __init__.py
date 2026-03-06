@@ -174,7 +174,7 @@ class SmsWorld(World):
             self.options.extra_shines.value = 0
             extra_shines: int = 0
         else:
-            max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (5 * int(remaining_locs / 20)))
+            max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (20 * int(remaining_locs / 20)))
             if self.options.extra_shines.value > max_shine_percentage:
                 logger.warning(f"SMS: Player's Yaml {self.player_name} had extra Shines enabled and was above the "
                     f"amount possible based on locations available. Setting this to {max_shine_percentage}% of filler...")
