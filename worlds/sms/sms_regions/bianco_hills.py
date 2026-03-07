@@ -75,5 +75,5 @@ BIANCO_HILLS_EIGHT: SmsRegion = SmsRegion(SmsRegionName.BIANCO_EIGHT,
     requirements=[Requirements(location=f"{SmsRegionName.BIANCO_SEVEN} - Shadow Mario on the Loose")],
     shines=[Shine("The Red Coins of the Lake", [Requirements(ROCKET_OR_HOVER)], in_game_bit=7)],
     blue_coins=[BlueCoin("Beehive", [Requirements([[NozzleType.yoshi]])], in_game_bit=176),
-        BlueCoin("Butterfly", [Requirements([[NozzleType.yoshi]])], in_game_bit=177)
+        BlueCoin("Butterfly", [Requirements([[NozzleType.yoshi]])], in_game_bit=196)
     ], parent_region=SmsRegionName.BIANCO_ENTRANCE)
