@@ -100,7 +100,7 @@ ALL_REGIONS: dict[str, SmsRegion] = {
 
 
 def create_region(region: SmsRegion, world: "SmsWorld"):
-    curr_region = Region(region.name, world.player, world.multiworld)
+    curr_region = Region(str(region.name), world.player, world.multiworld)
     world.multiworld.regions.append(curr_region)
 
     if region.name == "Menu":
