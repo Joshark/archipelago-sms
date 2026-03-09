@@ -1,0 +1,217 @@
+name: Sunshine-Release-World # Can be named whatever you want.
+on:
+  push:
+    branches: # Specifying a trigger point to start this process. Can be pushing to a specific branch or group of branches that start/end with certain characters. Can be also be done via tags.
+      - main
+  workflow_dispatch: # This trigger point means on manually starting it by going to project > actions > click on the name of the action (see above name) and then start.
+
+jobs: # Define 1 or more "steps" to complete as part of this automatic release. If they don't "depend" on a prior step to complete, they will run in parallel.
+  windows-deps-311: # Name of this job can be whatever you want, I went ahead and named these based on what it is trying to do, like download windows libraries, Linux, etc.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Clear pip cache 3.11 # This clears the pip cache in case any libraries with the same name were already installed on the same machine.
+        run: pip cache purge
+      - name: Create Lib-Windows3-11
+        run: mkdir lib-windows3-11
+      - name: Install Windows-Deps 3.11
+        run: pip install -r ${{github.workspace}}/worlds/sms/requirements.txt --target ./lib-windows3-11 --verbose
+      - uses: actions/upload-artifact@v4 # uploads this zip as part of the GitHub action, NOT a release. Actions have what are called artifacts, which are basically one or more output files that may be required between different stages or just an output in general.
+        with:
+          name: lib-windows3-11
+          path: ./lib-windows3-11/**
+
+  windows-deps-312:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Clear pip cache 3.12
+        run: pip cache purge
+      - name: Create Lib-Windows3-12
+        run: mkdir lib-windows3-12
+      - name: Install Windows-Deps3-12
+        run: pip install -r ${{github.workspace}}/worlds/sms/requirements.txt --target ./lib-windows3-12 --verbose
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lib-windows3-12
+          path: ./lib-windows3-12/**
+
+  windows-deps-313:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Clear pip cache 3.13
+        run: pip cache purge
+      - name: Create Lib-Windows3-13
+        run: mkdir lib-windows3-13
+      - name: Install Windows-Deps3-13
+        run: pip install -r ${{github.workspace}}/worlds/sms/requirements.txt --target ./lib-windows3-13 --verbose
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lib-windows3-13
+          path: ./lib-windows3-13/**
+
+  linux-deps-311:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Clear pip cache 3.11
+        run: pip cache purge
+      - name: Create Lib-Linux3-11
+        run: mkdir lib-linux3-11
+      - name: Install Linux-Deps3-11
+        run: pip install -r ${{github.workspace}}/worlds/sms/requirements.txt --target ./lib-linux3-11 --verbose
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lib-linux3-11
+          path: ./lib-linux3-11/**
+
+  linux-deps-312:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Clear pip cache 3.12
+        run: pip cache purge
+      - name: Create Lib-Linux3-12
+        run: mkdir lib-linux3-12
+      - name: Install Linux-Deps3-12
+        run: pip install -r ${{github.workspace}}/worlds/sms/requirements.txt --target ./lib-linux3-12 --verbose
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lib-linux3-12
+          path: ./lib-linux3-12/**
+
+  linux-deps-313:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Clear pip cache 3.13
+        run: pip cache purge
+      - name: Create Lib-Linux3-13
+        run: mkdir lib-linux3-13
+      - name: Install Linux-Deps3-13
+        run: pip install -r ${{github.workspace}}/worlds/sms/requirements.txt --target ./lib-linux3-13 --verbose
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lib-linux3-13
+          path: ./lib-linux3-13/**
+
+  package: # Waits on all dependencies to complete, then creates an AP world.
+    needs: [windows-deps-311, windows-deps-312, windows-deps-313, linux-deps-311, linux-deps-312, linux-deps-313]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Clear pip cache Build-AP
+        run: pip cache purge
+      - name: Install Dependencies Build-AP
+        run: python ${{github.workspace}}/ModuleUpdate.py -y -f
+
+      - name: Build AP-World
+        run: python ${{github.workspace}}/Launcher.py "Build APWorlds" "Super Mario Sunshine"
+        shell: pwsh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apworld
+          path: ${{github.workspace}}/build/apworlds/sms.apworld
+
+  publish: # Once the world is created we are ready to publish a draft release. I purposely dont let it fully release and instead create drafts so I can write up notes, etc.
+    runs-on: ubuntu-latest
+    needs: [package]
+    permissions:
+      contents: write
+    steps:
+      - name: Create Local Artifact Folder
+        run: mkdir tmp-artifacts
+      - name: Create Local Windows Lib 3-11 Folder
+        run: mkdir tmp-lib-windows3-11
+      - name: Create Local Windows Lib 3-12 Folder
+        run: mkdir tmp-lib-windows3-12
+      - name: Create Local Windows Lib 3-13 Folder
+        run: mkdir tmp-lib-windows3-13
+
+      - name: Create Local Linux Lib 3-11 Folder
+        run: mkdir tmp-lib-linux3-11
+      - name: Create Local Linux Lib 3-12 Folder
+        run: mkdir tmp-lib-linux3-12
+      - name: Create Local Linux Lib 3-11 Folder
+        run: mkdir tmp-lib-linux3-13
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: lib-windows3-11
+          path: tmp-lib-windows3-11
+      - name: Zip Lib Windows folder 3.11
+        run: cd tmp-lib-windows3-11 && zip -r ../tmp-artifacts/lib-windows3-11.zip * && cd ../
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: lib-windows3-12
+          path: tmp-lib-windows3-12
+      - name: Zip Lib Windows folder 3.12
+        run: cd tmp-lib-windows3-12 && zip -r ../tmp-artifacts/lib-windows3-12.zip * && cd ../
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: lib-windows3-13
+          path: tmp-lib-windows3-13
+      - name: Zip Lib Windows folder 3.13
+        run: cd tmp-lib-windows3-13 && zip -r ../tmp-artifacts/lib-windows3-13.zip * && cd ../
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: lib-linux3-11
+          path: tmp-lib-linux3-11
+      - name: Zip Lib Linux folder 3.11
+        run: cd tmp-lib-linux3-11 && zip -r ../tmp-artifacts/lib-linux3-11.zip * && cd ../
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: lib-linux3-12
+          path: tmp-lib-linux3-12
+      - name: Zip Lib Linux folder 3.12
+        run: cd tmp-lib-linux3-12 && zip -r ../tmp-artifacts/lib-linux3-12.zip * && cd ../
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: lib-linux3-13
+          path: tmp-lib-linux3-13
+      - name: Zip Lib Linux folder 3.13
+        run: cd tmp-lib-linux3-13 && zip -r ../tmp-artifacts/lib-linux3-13.zip * && cd ../
+
+      - name: Create Manual Release
+        uses: softprops/action-gh-release@v2.3.2
+        with:
+          draft: true
+          prerelease: false
+          name: Mario Sunshine AP
+          files: |
+            tmp-artifacts/*
