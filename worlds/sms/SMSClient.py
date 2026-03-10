@@ -238,7 +238,7 @@ async def game_watcher(ctx: SmsContext):
         if "DeathLink" in ctx.tags:
             await check_death(ctx, previous_lives)
             try:
-                previous_lives = dme.read_byte(addresses.SMS_LIVES_COUNTER)
+                previous_lives = dme.read_word(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.LIVES_COUNT_OFFSET)
             except:
                 pass
 
@@ -266,9 +266,9 @@ async def check_death(ctx: SmsContext, previous_lives):
         return
 
     try:
-        current_lives = dme.read_byte(addresses.SMS_LIVES_COUNTER)
-        if current_lives < previous_lives:
-            if not ctx.has_send_death and time.time() >= ctx.last_death_link + 3:
+        current_lives = dme.read_word(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.LIVES_COUNT_OFFSET)
+        if (current_lives < previous_lives != 255) or (current_lives == 0 and previous_lives == 255):
+            if not ctx.has_send_death and time.time() >= ctx.last_death_link + 6: #prevent more double-deaths
                 ctx.has_send_death = True
                 player_name = ctx.player_names[ctx.slot] if ctx.slot in ctx.player_names else "Player"
                 await ctx.send_death(f"{player_name} died!")
@@ -281,7 +281,7 @@ async def check_death(ctx: SmsContext, previous_lives):
 
 async def location_watcher(ctx):
     for x in range(0, addresses.SMS_SHINE_BYTE_COUNT):
-        targ_location = addresses.SMS_SHINE_LOCATION_OFFSET + x
+        targ_location = dme.read_word(addresses.SMS_FLAGS_PTR) + x
         cache_byte = dme.read_byte(targ_location)
         curShines[x] = cache_byte
         if storedShines[x] != curShines[x]:
@@ -290,7 +290,7 @@ async def location_watcher(ctx):
 
     # If possible, check if blue coin sanity is enabled or not
     for x in range(0, addresses.SMS_BLUECOIN_BYTE_COUNT):
-        targ_location = addresses.SMS_BLUECOIN_LOCATION_OFFSET + x
+        targ_location = dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.BLUECOIN_LOC_OFFSET + x
         cache_byte = dme.read_byte(targ_location)
         curBlues[x] = cache_byte
         if storedBlues[x] != curBlues[x]:
@@ -298,7 +298,7 @@ async def location_watcher(ctx):
             storedBlues[x] = curBlues[x]
 
     for x in range(0, addresses.NOZZLE_BOXES_BYTE_COUNT):
-        targ_location = addresses.NOZZLE_BOXES_FLAGS_OFFSET + x
+        targ_location = dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.NOZZLE_BOXES_OFFSET + x
         cache_byte = dme.read_byte(targ_location)
         curNozzleBoxes[x] = cache_byte
         if storedNozzleBoxes[x] != curNozzleBoxes[x]:
@@ -306,7 +306,7 @@ async def location_watcher(ctx):
             storedNozzleBoxes[x] = curNozzleBoxes[x]
 
     # Check corresponds to Shadow Mario Yoshi Egg Chase
-    delfino_yoshi_unlock = dme.read_byte(addresses.DELFINO_YOSHI_UNLOCK)
+    delfino_yoshi_unlock = dme.read_byte(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.DELFINO_YOSHI_OFFSET)
     if (delfino_yoshi_unlock & 0x80) and not ctx.checked_yoshi_egg:
         ctx.checked_yoshi_egg = True
         memory_changed(ctx, 113, delfino_yoshi_unlock, "Yoshi")
@@ -483,7 +483,7 @@ def parse_bits(all_bits, ctx: SmsContext, parse_type: str):
 
 
 def get_shine_id(location, value):
-    temp = location + value - addresses.SMS_SHINE_LOCATION_OFFSET
+    temp = location + value - dme.read_word(addresses.SMS_FLAGS_PTR)
     shine_id = int(temp)
     return shine_id
 
@@ -494,7 +494,7 @@ def refresh_item_count(ctx, item_id, targ_address):
     #Gravi01 Begin      #Stacktrace where the original Exception was thrown. Keeping the changes in this place as well, you still land here without connection, due to it being an async task
     if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
         try:
-            dme.write_byte(targ_address, temp)
+            dme.write_word(targ_address, temp)
         except Exception:
             logger.info("Connection to Dolphin lost, reconnecting...")
             ctx.dolphin_status = CONNECTION_LOST_STATUS
@@ -516,9 +516,9 @@ def refresh_all_items(ctx: SmsContext):
 
 def refresh_collection_counts(ctx):
     #if DEBUG: logger.info("refresh_collection_counts")
-    refresh_item_count(ctx, 523004, addresses.SMS_SHINE_COUNTER)
+    refresh_item_count(ctx, 523004, dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.SHINE_COUNT_OFFSET)
     if ctx.blue_status == 1:
-        refresh_item_count(ctx, 523014, addresses.SMS_BLUECOIN_COUNTER)
+        refresh_item_count(ctx, 523014, dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.BLUECOIN_COUNT_OFFSET)
     refresh_all_items(ctx)
 
 
@@ -678,7 +678,7 @@ def main(*launch_args: str):
             server_address = sms_manifest["server"]
             rom_path = sms_patch.patch(args.apsms_file)
         except Exception as ex:
-            logger.error("Unable to patch your Super Mario Sunshine. Addiotional Details:\n" + str(ex))
+            logger.error("Unable to patch your Super Mario Sunshine. Additional Details:\n" + str(ex))
             Utils.messagebox("Cannot Patch Super Mario Sunshine", "Unable to patch your Super Mario Sunshine ROM as " +
                 "expected. Additional details:\n" + str(ex), True)
             raise ex
