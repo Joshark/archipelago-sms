@@ -18,6 +18,7 @@ from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProc
 from .options import SmsOptions
 from .bit_helper import change_endian, bit_flagger, extract_bits
 from .regions import ALL_REGIONS, get_location_name_to_id
+from .items import TICKET_ITEMS
 import dolphin_memory_engine as dme
 from . import addresses
 from settings import get_settings
@@ -119,6 +120,12 @@ class SmsContext(SuperContext):
 
     ap_nozzles_received = []
 
+    # Current Shine/Blue Coins and Recv Shine/Blue Coin
+    curr_shines: int = 0
+    req_shine: int = 0
+    curr_blue_coins: int = 0
+    req_blue_coins: int = 0
+
     def __init__(self, server_address, password):
         super(SmsContext, self).__init__(server_address, password)
         self.send_index: int = 0
@@ -149,11 +156,6 @@ class SmsContext(SuperContext):
         else:
             return []
 
-    def make_gui(self):
-        ui = super().make_gui()
-        ui.base_title = "Super Mario Sunshine Client"
-        return ui
-
     def on_package(self, cmd: str, args: dict):
         super().on_package(cmd, args)
 
@@ -170,8 +172,12 @@ class SmsContext(SuperContext):
             if temp:
                 self.ticket_mode = temp
 
+            self.req_shine = self.goal
+            self.req_blue_coins = slot_data.get("blue_coin_maximum", 0)
+
             if "death_link" in slot_data:
                 Utils.async_start(self.update_death_link(bool(slot_data["death_link"])))
+
 
     def on_deathlink(self, data: dict):
         super().on_deathlink(data)
@@ -187,6 +193,37 @@ class SmsContext(SuperContext):
             return self.goal
         else:
             return 50
+
+    def make_gui(self):
+        # Performing local import to prevent additional UIs to appear during the patching process.
+        # This appears to be occurring if a spawned process does not have a UI element when importing kvui/kivymd.
+        from .sms_tab import build_gui, GameManager, MDLabel
+
+        ui: type[GameManager] = super().make_gui()
+        class SMSGuiWrapper(ui):
+            shine_count: MDLabel
+            blue_coins: MDLabel
+            tickets: MDLabel
+            base_title = "Super Mario Sunshine Client"
+
+            def build(self):
+                container = super().build()
+
+                self.base_title += " |  Archipelago"
+                build_gui(self)
+
+                return container
+
+            def update_corona_shine_count(self, shine_count: int, shines_required: int):
+                self.shine_count.text = f"{shine_count} / {shines_required}"
+
+            def update_blue_coins(self, blue_coins: int, coins_req: int):
+                self.blue_coins.text = f"{blue_coins} / {coins_req}"
+
+            def update_ticket_list(self, ticket_list: set[str]):
+                self.tickets.text = "; ".join(ticket_list)
+
+        return SMSGuiWrapper
 
 
 storedShines = []
@@ -347,6 +384,21 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                 # else:
                 if ctx.awaiting_rom:
                     await ctx.server_auth()
+
+                # If the client's ui has loaded
+                if ctx.ui:
+                    ctx.curr_shines = len([recv_item for recv_item in ctx.items_received if
+                        ctx.item_names.lookup_in_game(recv_item.item) == "Shine Sprite"])
+                    ctx.curr_blue_coins = len([recv_item for recv_item in ctx.items_received if
+                         ctx.item_names.lookup_in_game(recv_item.item) == "Blue Coin"])
+                    ctx.ui.update_corona_shine_count(ctx.curr_shines, ctx.req_shine)
+                    ctx.ui.update_blue_coins(ctx.curr_blue_coins, ctx.req_blue_coins)
+
+                    if ctx.ticket_mode:
+                        ticket_list: set[str] = set([ctx.item_names.lookup_in_game(recv_item.item).replace(" Ticket", "")
+                            for recv_item in ctx.items_received if ctx.item_names.lookup_in_game(recv_item.item) in TICKET_ITEMS])
+                        ctx.ui.update_ticket_list(ticket_list)
+
                 await asyncio.sleep(0.1)
             else:
                 if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
@@ -581,7 +633,6 @@ def activate_ticket(id: int):
             handle_ticket(tickets)
             if not ticket_listing.__contains__(tickets.item_name):
                 ticket_listing.append(tickets.item_name)
-                logger.info("Current Tickets: " + str(ticket_listing))
 
 
 def handle_ticket(tick: Ticket):
