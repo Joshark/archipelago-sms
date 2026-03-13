@@ -90,6 +90,11 @@ class SmsWorld(World):
     large_shine_count: bool = False  # Used in rules to know if corona mountain should block tickets in their region
     # otherwise generation would fail significantly more in swap.
 
+    # Randomly picked ticket based on ticket mode being true
+    ticket_chosen: str
+
+    ut_can_gen_without_yaml = True  # class var that tells it to ignore the player yaml
+
     def __init__(self, multiworld: MultiWorld, player: int):
         super().__init__(multiworld, player)
 
@@ -106,9 +111,22 @@ class SmsWorld(World):
                 chosen_nozzle: str = str(self.random.choice(list(REGULAR_PROGRESSION_ITEMS.keys())))
                 self.multiworld.early_items[self.player].update({chosen_nozzle: 1})
 
+        if hasattr(self.multiworld, "re_gen_passthrough"):
+            # This means that UT is currently trying to generate the logic to understand what regions/locations are req.
+            slot_data: dict = self.multiworld.re_gen_passthrough[self.game]
+            self.options.starting_nozzle.value = slot_data["starting_nozzle"]
+            self.options.corona_mountain_shines.value = slot_data["corona_mountain_shines"]
+            self.options.blue_coin_sanity.value = slot_data["blue_coin_sanity"]
+            self.options.level_access.value = slot_data["ticket_mode"]
+            self.options.trade_shine_maximum.value = slot_data["boathouse_maximum"]
+            self.options.enable_coin_shines.value = slot_data["coin_shine_enabled"]
+            self.ticket_chosen = slot_data["chosen_ticket"]
+            self.options.blue_coin_maximum.value = slot_data["blue_coin_maximum"]
+            return
+
         if self.options.level_access.value == 1:
-            chosen_tick: str = str(self.random.choice(list(TICKET_ITEMS.keys())))
-            self.multiworld.push_precollected(self.create_item(chosen_tick))
+            self.ticket_chosen: str = str(self.random.choice(list(TICKET_ITEMS.keys())))
+            self.multiworld.push_precollected(self.create_item(self.ticket_chosen))
 
         # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
         if self.options.blue_coin_sanity.value == 1:
@@ -260,14 +278,16 @@ class SmsWorld(World):
             "boathouse_maximum": self.options.trade_shine_maximum.value,
             "coin_shine_enabled": self.options.enable_coin_shines.value,
             "death_link": self.options.death_link.value,
-            "seed": self.multiworld.seed
+            "chosen_ticket": self.ticket_chosen,
+            "blue_coin_maximum": self.options.blue_coin_maximum.value,
+            "seed": str(self.multiworld.seed_name)
         }
 
     def generate_output(self, output_directory: str):
         from .SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
 
         output_data = {
-            "Seed": self.multiworld.seed,
+            "Seed": str(self.multiworld.seed_name),
             "Slot": self.player,
             "Name": self.player_name,
             "Options": {},
@@ -281,25 +301,3 @@ class SmsWorld(World):
             f"{SMSPlayerContainer.patch_file_ending}")
         sms_container = SMSPlayerContainer(output_data, patch_path, self.multiworld.player_name[self.player], self.player)
         sms_container.write()
-
-# def launch_client():
-#     from .SMSClient import main
-#     launch_subprocess(main, name="SMS client")
-
-
-# def add_client_to_launcher() -> None:
-#     version = "0.2.0"
-#     found = False
-#     for c in components:
-#         if c.display_name == "Super Mario Sunshine Client":
-#             found = True
-#             if getattr(c, "version", 0) < version:
-#                 c.version = version
-#                 c.func = launch_client
-#                 return
-#     if not found:
-#         components.append(Component("Super Mario Sunshine Client", "SMSClient",
-#                                     func=launch_client))
-
-
-# add_client_to_launcher()
