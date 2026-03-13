@@ -260,14 +260,14 @@ class SmsWorld(World):
             "boathouse_maximum": self.options.trade_shine_maximum.value,
             "coin_shine_enabled": self.options.enable_coin_shines.value,
             "death_link": self.options.death_link.value,
-            "seed": self.multiworld.seed
+            "seed": str(self.multiworld.seed_name)
         }
 
     def generate_output(self, output_directory: str):
         from .SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
 
         output_data = {
-            "Seed": self.multiworld.seed,
+            "Seed": str(self.multiworld.seed_name),
             "Slot": self.player,
             "Name": self.player_name,
             "Options": {},
