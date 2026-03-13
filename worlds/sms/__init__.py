@@ -121,6 +121,7 @@ class SmsWorld(World):
             self.options.trade_shine_maximum.value = slot_data["boathouse_maximum"]
             self.options.enable_coin_shines.value = slot_data["coin_shine_enabled"]
             self.ticket_chosen = slot_data["chosen_ticket"]
+            self.options.blue_coin_maximum.value = slot_data["blue_coin_maximum"]
             return
 
         if self.options.level_access.value == 1:
@@ -278,6 +279,7 @@ class SmsWorld(World):
             "coin_shine_enabled": self.options.enable_coin_shines.value,
             "death_link": self.options.death_link.value,
             "chosen_ticket": self.ticket_chosen,
+            "blue_coin_maximum": self.options.blue_coin_maximum.value,
             "seed": str(self.multiworld.seed_name)
         }
 
