@@ -281,25 +281,3 @@ class SmsWorld(World):
             f"{SMSPlayerContainer.patch_file_ending}")
         sms_container = SMSPlayerContainer(output_data, patch_path, self.multiworld.player_name[self.player], self.player)
         sms_container.write()
-
-# def launch_client():
-#     from .SMSClient import main
-#     launch_subprocess(main, name="SMS client")
-
-
-# def add_client_to_launcher() -> None:
-#     version = "0.2.0"
-#     found = False
-#     for c in components:
-#         if c.display_name == "Super Mario Sunshine Client":
-#             found = True
-#             if getattr(c, "version", 0) < version:
-#                 c.version = version
-#                 c.func = launch_client
-#                 return
-#     if not found:
-#         components.append(Component("Super Mario Sunshine Client", "SMSClient",
-#                                     func=launch_client))
-
-
-# add_client_to_launcher()
