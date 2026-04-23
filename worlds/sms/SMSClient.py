@@ -235,6 +235,7 @@ curNozzleBoxes = []
 
 DELAY_SECONDS = .5
 LOCATION_OFFSET = 523000
+GAME_OVER_LIFE_COUNT = 4294967295
 
 def read_string(console_address: int, strlen: int) -> str:
     return dme.read_bytes(console_address, strlen).split(b"\0", 1)[0].decode()
@@ -275,7 +276,7 @@ async def game_watcher(ctx: SmsContext):
         if "DeathLink" in ctx.tags:
             await check_death(ctx, previous_lives)
             try:
-                previous_lives = dme.read_word(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.LIVES_COUNT_OFFSET)
+                previous_lives = get_lives()
             except:
                 pass
 
@@ -303,13 +304,15 @@ async def check_death(ctx: SmsContext, previous_lives):
         return
 
     try:
-        current_lives = dme.read_word(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.LIVES_COUNT_OFFSET)
-        if (current_lives < previous_lives != 255) or (current_lives == 0 and previous_lives == 255):
-            if not ctx.has_send_death and time.time() >= ctx.last_death_link + 6: #prevent more double-deaths
-                ctx.has_send_death = True
-                player_name = ctx.player_names[ctx.slot] if ctx.slot in ctx.player_names else "Player"
-                await ctx.send_death(f"{player_name} died!")
-                logger.info(f"Sent DeathLink: Mario died (lives {previous_lives} -> {current_lives})")
+        current_lives = get_lives()
+        if (current_lives < previous_lives != GAME_OVER_LIFE_COUNT) or (current_lives == GAME_OVER_LIFE_COUNT and previous_lives == 0):
+            if not death_link_buffer_enabled():
+                if not ctx.has_send_death and time.time() >= ctx.last_death_link + 6: #prevent more double-deaths
+                    ctx.has_send_death = True
+                    player_name = ctx.player_names[ctx.slot] if ctx.slot in ctx.player_names else "Player"
+                    await ctx.send_death(f"{player_name} died!")
+                    logger.info(f"Sent DeathLink: Mario died (lives {previous_lives} -> {current_lives})")
+            disable_death_link_buffer()
         else:
             ctx.has_send_death = False
     except Exception as e:
@@ -669,6 +672,21 @@ def activate_yoshi(ctx):
         ctx.ap_nozzles_received.append(4)
     return
 
+sms_death_link_buffer = False
+
+def enable_death_link_buffer():
+    global sms_death_link_buffer
+    sms_death_link_buffer = True
+
+def disable_death_link_buffer():
+    global sms_death_link_buffer
+    sms_death_link_buffer = False
+
+def death_link_buffer_enabled():
+    return sms_death_link_buffer
+
+def log_death_buffer_state():
+    logger.info(f"Death Buffer state: {sms_death_link_buffer}")
 
 def kill_mario(ctx: SmsContext):
     """Uses the same logic as Gecko code death trigger"""
@@ -680,10 +698,13 @@ def kill_mario(ctx: SmsContext):
 
             dme.write_bytes(actual_target, (0x4020).to_bytes(2, byteorder="big"))
             ctx.has_send_death = True
+            enable_death_link_buffer()
         except Exception as e:
             logger.error(f"Failed to kill Mario - connection may be lost: {e}")
     return
 
+def get_lives():
+    return dme.read_word(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.LIVES_COUNT_OFFSET)
 
 async def resolve_tickets(stage, ctx):
     for tick in TICKETS:
