@@ -204,29 +204,29 @@ def get_correct_requirements(
         case 1:
             return (
                 item.hard
-                if (item.hard != None and item.hard.count != 0)
+                if (item.hard is not None and len(item.hard) > 0)
                 else item.requirements
             )
         case 2:
             return (
                 item.advanced
-                if (item.advanced != None and item.advanced.count != 0)
+                if (item.advanced is not None and len(item.advanced) > 0)
                 else (
                     item.hard
-                    if (item.hard != None and item.hard.count != 0)
+                    if (item.hard is not None and len(item.hard) > 0)
                     else item.requirements
                 )
             )
         case 3:
             return (
                 item.tears
-                if (item.tears != None and item.tears.count != 0)
+                if (item.tears is not None and len(item.tears) > 0)
                 else (
                     item.advanced
-                    if (item.advanced != None and item.advanced.count != 0)
+                    if (item.advanced is not None and len(item.advanced) > 0)
                     else (
                         item.hard
-                        if (item.hard != None and item.hard.count != 0)
+                        if (item.hard is not None and len(item.hard) > 0)
                         else item.requirements
                     )
                 )
