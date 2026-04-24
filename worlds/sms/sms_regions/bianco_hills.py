@@ -2,7 +2,7 @@ from .sms_region_helper import *
 
 BIANCO_HILLS_ENTRANCE: SmsRegion = SmsRegion(
     SmsRegionName.BIANCO_ENTRANCE,
-    requirements=[Requirements(SPRAY_OR_HOVER)],
+    requirements=[Requirements(SPRAY_OR_HOVER), Requirements(skip_forward=True)],
     hard=[],
     advanced=[],
     tears=[],
