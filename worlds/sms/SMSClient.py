@@ -354,10 +354,8 @@ async def handle_stages(ctx):
     next_stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
     cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
     current_episode = dme.read_byte(addresses.SMS_CURRENT_EPISODE)
-    next_episode = dme.read_byte(addresses.SMS_CURRENT_EPISODE + 4)
+    next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
     if next_stage == 0x01: # Delfino Plaza
-        next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-
         # If starting Fluddless without ticket mode on, open Bianco Hills
         if not ctx.bianco_flag and ctx.fludd_start == 2 and ctx.ticket_mode == 0:
             ctx.bianco_flag |= dme.read_byte(TICKETS[0].address)
@@ -365,9 +363,11 @@ async def handle_stages(ctx):
             open_stage(TICKETS[0])
         # Sets plaza state to 8 if in ticket mode and goal hasn't been reached
         if ctx.ticket_mode == 1 and next_episode != 0x8 and not ctx.corona_message_given:
+            # Should change this to be flag based, set the flags necessary to load plaza 8 regardless
             dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
     if cur_stage != next_stage:
         await send_map_id(next_stage, ctx)
+        next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
 
         if (next_stage > 0x0D) and (next_episode != current_episode) and (next_episode != 0xFF):
             episode_id = dme.read_byte(addresses.SMS_CURRENT_EPISODE)

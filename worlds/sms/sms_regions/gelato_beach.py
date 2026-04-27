@@ -5,7 +5,7 @@ GELATO_BEACH_ENTRANCE: SmsRegion = SmsRegion(
     SmsRegionName.GELATO_ENTRANCE,
     requirements=[Requirements(SPRAY_OR_HOVER, shines=5)],
     hard=[],
-    advanced=[],
+    advanced=[Requirements(SPRAY_OR_HOVER_OR_TURBO, shines=5)],
     tears=[],
     ticketed="Gelato Beach Ticket",
     parent_region=SmsRegionName.PLAZA,

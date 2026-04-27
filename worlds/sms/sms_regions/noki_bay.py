@@ -42,18 +42,6 @@ NOKI_BAY_ONE: SmsRegion = SmsRegion(
             in_game_bit=470,
         ),
         BlueCoin(
-            "Bottom Secret Path",
-            requirements=[Requirements(SPRAY_AND_HOVER)],
-            hard=[Requirements([[NozzleType.spray]])],
-            in_game_bit=471,
-        ),
-        BlueCoin(
-            "Top Secret Path",
-            requirements=[Requirements(SPRAY_AND_HOVER)],
-            hard=[Requirements([[NozzleType.spray]])],
-            in_game_bit=472,
-        ),
-        BlueCoin(
             "Rocket",
             requirements=[Requirements([[NozzleType.rocket]])],
             tears=[Requirements(ROCKET_OR_TURBO)],
@@ -151,6 +139,18 @@ NOKI_BAY_TWO: SmsRegion = SmsRegion(
         ),
     ],
     blue_coins=[
+        BlueCoin(
+            "Bottom Secret Path",
+            requirements=[Requirements(SPRAY_AND_HOVER)],
+            hard=[Requirements([[NozzleType.spray]])],
+            in_game_bit=471,
+        ),
+        BlueCoin(
+            "Top Secret Path",
+            requirements=[Requirements(SPRAY_AND_HOVER)],
+            hard=[Requirements([[NozzleType.spray]])],
+            in_game_bit=472,
+        ),
         BlueCoin("Right Urn", [Requirements(SPRAY_OR_HOVER)], in_game_bit=488),
         BlueCoin("Left Urn", [Requirements(SPRAY_OR_HOVER)], in_game_bit=489),
     ],
