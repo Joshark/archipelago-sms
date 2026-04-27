@@ -30,6 +30,7 @@ NOKI_BAY_ONE: SmsRegion = SmsRegion(
             "100 Coins",
             requirements=[Requirements(SPRAY_AND_HOVER)],
             hard=[Requirements(SPRAY_OR_HOVER)],
+            advanced=[Requirements(manual_none=True, location=f"{SmsRegionName.NOKI_FIVE} - Il Piantissimo's Surf Swim")],
             hundred=True,
             in_game_bit=105,
         ),
@@ -44,7 +45,11 @@ NOKI_BAY_ONE: SmsRegion = SmsRegion(
         BlueCoin(
             "Rocket",
             requirements=[Requirements([[NozzleType.rocket]])],
-            tears=[Requirements(ROCKET_OR_TURBO)],
+            advanced=[Requirements([[NozzleType.rocket]]),
+                Requirements(SPRAY_AND_TURBO)],
+            tears=[Requirements([[NozzleType.rocket]]),
+                Requirements(SPRAY_AND_TURBO),
+                Requirements([[NozzleType.hover]])],
             in_game_bit=473,
         ),
         BlueCoin(
@@ -166,7 +171,7 @@ NOKI_BAY_THREE: SmsRegion = SmsRegion(
         Shine(
             "Red Coins in a Bottle",
             requirements=[Requirements([[NozzleType.hover]])],
-            tears=[Requirements(manual_none=True)],
+            tears=[Requirements(ANY_FLUDD)],
             in_game_bit=52,
         ),
     ],  # Underwater Nozzle
@@ -298,7 +303,7 @@ NOKI_BAY_EIGHT: SmsRegion = SmsRegion(
         Shine(
             "The Red Coin Fish",
             requirements=[Requirements([[NozzleType.hover]])],
-            tears=[Requirements(manual_none=True)],
+            tears=[Requirements(ANY_FLUDD)],
             in_game_bit=57,
         ),
     ],  # Underwater Nozzle
