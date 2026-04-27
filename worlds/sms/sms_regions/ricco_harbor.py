@@ -318,8 +318,12 @@ RICCO_HARBOR_FOUR: SmsRegion = SmsRegion(
             hard=[Requirements(manual_none=True)],
             in_game_bit=13,
         ),
-        Shine("Red Coins in Ricco Tower", in_game_bit=18),
-    ],  # TODO: Fix logic with difficulties
+        Shine("Red Coins in Ricco Tower",
+            requirements=[Requirements(ROCKET_OR_HOVER)],
+            hard=[Requirements()],
+            in_game_bit=18,
+        ),
+    ],
     blue_coins=[
         BlueCoin(
             "Caged Blooper",
