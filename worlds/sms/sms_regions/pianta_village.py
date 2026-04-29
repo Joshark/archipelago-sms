@@ -8,7 +8,8 @@ PIANTA_VILLAGE_ENTRANCE: SmsRegion = SmsRegion(
         Requirements([[NozzleType.yoshi]], skip_forward=True)],
     advanced=[Requirements([[NozzleType.rocket]]), Requirements([[NozzleType.yoshi]], shines=5),
         Requirements([[NozzleType.yoshi]], skip_forward=True), Requirements([[NozzleType.hover]])],
-    tears=[Requirements()],
+    tears=[Requirements([[NozzleType.rocket]]), Requirements([[NozzleType.yoshi]], shines=5),
+        Requirements([[NozzleType.yoshi]], skip_forward=True), Requirements([[NozzleType.hover]])],
     ticketed="Pianta Village Ticket",
     parent_region=SmsRegionName.PLAZA,
 )

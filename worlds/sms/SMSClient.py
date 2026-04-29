@@ -369,7 +369,7 @@ async def handle_stages(ctx):
         await send_map_id(next_stage, ctx)
         next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
 
-        if (next_stage > 0x0D) and (next_episode != current_episode) and (next_episode != 0xFF):
+        if (next_stage < 0x0E) and (next_episode != current_episode) and (next_episode != 0xFF):
             episode_id = dme.read_byte(addresses.SMS_CURRENT_EPISODE)
             await send_episode_id(episode_id, ctx)
 
@@ -419,7 +419,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                     if dme.read_bytes(0x80000000, 6) != b"GMSEAP":
                         logger.info(CONNECTION_REFUSED_GAME_STATUS)
                         ctx.dolphin_status = CONNECTION_REFUSED_GAME_STATUS
-                        dme.un_hook()
+                        await unhook_dolphin(ctx)
                         await asyncio.sleep(5)
                     else:
                         logger.info(CONNECTION_CONNECTED_STATUS)

@@ -4,9 +4,9 @@ from .sms_region_helper import SPRAY_OR_HOVER
 GELATO_BEACH_ENTRANCE: SmsRegion = SmsRegion(
     SmsRegionName.GELATO_ENTRANCE,
     requirements=[Requirements(SPRAY_OR_HOVER, shines=5)],
-    hard=[],
+    hard=[Requirements(SPRAY_OR_HOVER, shines=5)],
     advanced=[Requirements(SPRAY_OR_HOVER_OR_TURBO, shines=5)],
-    tears=[],
+    tears=[Requirements(SPRAY_OR_HOVER_OR_TURBO, shines=5)],
     ticketed="Gelato Beach Ticket",
     parent_region=SmsRegionName.PLAZA,
 )
