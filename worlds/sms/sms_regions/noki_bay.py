@@ -254,14 +254,14 @@ NOKI_BAY_SIX: SmsRegion = SmsRegion(
     blue_coins=[
         BlueCoin(
             "Spawn O",
-            [Requirements(SPRAY_AND_TURBO_OR_HOVER_AND_TURBO)],
-            [Requirements(SPRAY_OR_HOVER_OR_TURBO)],
+            requirements=[Requirements(SPRAY_AND_TURBO_OR_HOVER_AND_TURBO)],
+            hard=[Requirements(SPRAY_OR_HOVER_OR_TURBO)],
             in_game_bit=494,
         ),
         BlueCoin(
             "Boathouse O",
-            [Requirements(SPRAY_AND_TURBO_OR_HOVER_AND_TURBO)],
-            [Requirements(SPRAY_OR_HOVER_OR_TURBO)],
+            requirements=[Requirements(SPRAY_AND_TURBO_OR_HOVER_AND_TURBO)],
+            hard=[Requirements(SPRAY_OR_HOVER_OR_TURBO)],
             in_game_bit=498,
         ),
     ],
