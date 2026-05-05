@@ -365,16 +365,20 @@ async def handle_stages(ctx):
         if ctx.ticket_mode == 1 and next_episode != 0x8 and not ctx.corona_message_given:
             # Should change this to be flag based, set the flags necessary to load plaza 8 regardless
             dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
+    
     if cur_stage != next_stage:
         await send_map_id(next_stage, ctx)
-        next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-
-        if (next_stage < 0x0E) and (next_episode != current_episode) and (next_episode != 0xFF):
-            episode_id = dme.read_byte(addresses.SMS_CURRENT_EPISODE)
-            await send_episode_id(episode_id, ctx)
 
         if ctx.ticket_mode:
             await resolve_tickets(next_stage, ctx)
+
+    if (next_stage < 0x0D and next_stage != 0x07) and (next_episode != current_episode) and (next_episode != 0xFF):
+        next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+
+        if next_stage == 0x01 or next_stage >= 0x0D:
+            await send_episode_id(-1, ctx)
+        else:
+            await send_episode_id(next_episode, ctx)
 
 
 async def dolphin_sync_task(ctx: SmsContext) -> None:
