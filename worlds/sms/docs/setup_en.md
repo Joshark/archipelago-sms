@@ -76,7 +76,7 @@ To use Dolphin with Archipelago on macOS, the Dolphin Emulator executable must b
 >
 > Choose a name, set Identity Type to Self Signed Root, set Certificate Type to Code Signing and select the Let me override defaults checkbox. Click several times on Continue until you get to the Specify a Location For The Certificate screen, then set Keychain to System.
 
-Then, run the interactive `MacSetup.sh` script inside the `worlds/sms` directory to re-sign Dolphin Emulator:
+Then, run the interactive `MacSetup.sh` script inside the `worlds/sms/assets` directory to re-sign Dolphin Emulator:
 
     sh ./MacSetup.sh
 
