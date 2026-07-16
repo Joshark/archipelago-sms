@@ -8,7 +8,6 @@ from gclib.rarc import RARC
 import Utils
 from CommonClient import logger
 from .SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
-from .Helper_Functions import StringByteFunction as sbf
 from .patch import update_dol_offsets
 
 RANDOMIZER_NAME = "Super Mario Sunshine"
