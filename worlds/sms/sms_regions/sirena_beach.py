@@ -4,10 +4,11 @@ from .sms_region_helper import *
 SIRENA_BEACH_ENTRANCE: SmsRegion = SmsRegion(
     SmsRegionName.SIRENA_ENTRANCE,
     requirements=[Requirements([[NozzleType.yoshi]], shines=5), Requirements([[NozzleType.yoshi]], skip_forward=True)],
-    hard=[],
+    hard=[Requirements([[NozzleType.yoshi]], shines=5), Requirements([[NozzleType.yoshi]], skip_forward=True)],
     advanced=[Requirements([[NozzleType.yoshi]], shines=5), Requirements([[NozzleType.yoshi]], skip_forward=True),
         Requirements([[NozzleType.hover]])],
-    tears=[],
+    tears=[Requirements([[NozzleType.yoshi]], shines=5), Requirements([[NozzleType.yoshi]], skip_forward=True),
+        Requirements([[NozzleType.hover]])],
     ticketed="Sirena Beach Ticket",
     parent_region=SmsRegionName.PLAZA,
 )

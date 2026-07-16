@@ -357,9 +357,9 @@ async def handle_stages(ctx):
     #Gravi01  change to connection status
     next_stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
     cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
+    current_episode = dme.read_byte(addresses.SMS_CURRENT_EPISODE)
+    next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
     if next_stage == 0x01: # Delfino Plaza
-        next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-
         # If starting Fluddless without ticket mode on, open Bianco Hills
         if not ctx.bianco_flag and ctx.fludd_start == 2 and ctx.ticket_mode == 0:
             ctx.bianco_flag |= dme.read_byte(TICKETS[0].address)
@@ -367,11 +367,22 @@ async def handle_stages(ctx):
             open_stage(TICKETS[0])
         # Sets plaza state to 8 if in ticket mode and goal hasn't been reached
         if ctx.ticket_mode == 1 and next_episode != 0x8 and not ctx.corona_message_given:
+            # Should change this to be flag based, set the flags necessary to load plaza 8 regardless
             dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
+
     if cur_stage != next_stage:
         await send_map_id(next_stage, ctx)
+
         if ctx.ticket_mode:
             await resolve_tickets(next_stage, ctx)
+
+    if (next_stage < 0x0D and next_stage != 0x07) and (next_episode != current_episode) and (next_episode != 0xFF):
+        next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+
+        if next_stage == 0x01 or next_stage >= 0x0D:
+            await send_episode_id(-1, ctx)
+        else:
+            await send_episode_id(next_episode, ctx)
 
 
 async def dolphin_sync_task(ctx: SmsContext) -> None:
@@ -416,7 +427,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                     if dme.read_bytes(0x80000000, 6) != b"GMSEAP":
                         logger.info(CONNECTION_REFUSED_GAME_STATUS)
                         ctx.dolphin_status = CONNECTION_REFUSED_GAME_STATUS
-                        dme.un_hook()
+                        await unhook_dolphin(ctx)
                         await asyncio.sleep(5)
                     else:
                         logger.info(CONNECTION_CONNECTED_STATUS)
@@ -726,6 +737,15 @@ async def send_map_id(map_id, ctx):
         "default": 0,
         "want_reply": False,
         "operations": [{"operation": "replace", "value": map_id}]
+    }])
+
+async def send_episode_id(episode_id, ctx):
+    await ctx.send_msgs([{
+        "cmd": "Set",
+        "key": f"sms_episode_{ctx.team}_{ctx.slot}",
+        "default": 0,
+        "want_reply": False,
+        "operations": [{"operation": "replace", "value": episode_id}]
     }])
 
 
