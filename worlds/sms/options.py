@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
+from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle, StartInventoryPool
 
 
 class LevelAccess(Choice):
@@ -120,3 +120,4 @@ class SmsOptions(PerGameCommonOptions):
     starting_nozzle: StartingNozzle
     death_link: DeathLink
     difficulty: Difficulty
+    start_inventory_from_pool: StartInventoryPool
