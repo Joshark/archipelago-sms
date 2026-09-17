@@ -54,6 +54,7 @@ CLIENT_VERSION = "0.6.2"
 
 DME_DOLPHIN_PROCESS_NAME_ENV_VARIABLE = "DME_DOLPHIN_PROCESS_NAME"
 
+INITIATED_1_UPS = False
 
 @dataclass
 class NozzleItem:
@@ -135,6 +136,8 @@ class SmsContext(SuperContext):
         self.dolphin_status: str = CONNECTION_INITIAL_STATUS
         self.awaiting_rom: bool = False
         self.has_send_death: bool = False
+        self.has_receive_death: bool = False
+        self.num_1_ups_current: int = 0
 
         from . import SuperMarioSunshineSettings
         settings: SuperMarioSunshineSettings = get_settings().sms_options
@@ -186,6 +189,7 @@ class SmsContext(SuperContext):
         logger.info(f"DeathLink received! Source: {source}")
         logger.info(f"DeathLink message: {cause}")
         logger.info("Killing Mario now...")
+        self.has_receive_death = True
         kill_mario(self)
 
     def get_corona_goal(self):
@@ -234,8 +238,6 @@ storedNozzleBoxes = []
 curNozzleBoxes = []
 
 DELAY_SECONDS = .5
-LOCATION_OFFSET = 523000
-GAME_OVER_LIFE_COUNT = 4294967295
 
 def read_string(console_address: int, strlen: int) -> str:
     return dme.read_bytes(console_address, strlen).split(b"\0", 1)[0].decode()
@@ -259,8 +261,6 @@ def in_file_select():
 
 
 async def game_watcher(ctx: SmsContext):
-    previous_lives = None
-
     while not ctx.exit_event.is_set():
         if not dme.is_hooked() or ctx.slot is None:
             await asyncio.sleep(5)
@@ -274,11 +274,7 @@ async def game_watcher(ctx: SmsContext):
         await location_watcher(ctx)
 
         if "DeathLink" in ctx.tags:
-            await check_death(ctx, previous_lives)
-            try:
-                previous_lives = get_lives()
-            except:
-                pass
+            await check_death(ctx)
 
         sync_msg = [{'cmd': 'Sync'}]
         if ctx.locations_checked:
@@ -298,22 +294,30 @@ async def game_watcher(ctx: SmsContext):
         ctx.lives_switch = False
 
 
-async def check_death(ctx: SmsContext, previous_lives):
-    """Check if Mario died by comparing current lives with previous lives, then send DeathLink."""
-    if ctx.slot is None or previous_lives is None:
+async def check_death(ctx: SmsContext):
+    """Check if Mario died by checking if in the 'Mario is dying' game mode, then send DeathLink."""
+    if ctx.slot is None:
         return
 
     try:
-        current_lives = get_lives()
-        if (current_lives < previous_lives != GAME_OVER_LIFE_COUNT) or (current_lives == GAME_OVER_LIFE_COUNT and previous_lives == 0):
-            if not death_link_buffer_enabled():
-                if not ctx.has_send_death and time.time() >= ctx.last_death_link + 6: #prevent more double-deaths
-                    ctx.has_send_death = True
-                    player_name = ctx.player_names[ctx.slot] if ctx.slot in ctx.player_names else "Player"
-                    await ctx.send_death(f"{player_name} died!")
-                    logger.info(f"Sent DeathLink: Mario died (lives {previous_lives} -> {current_lives})")
-            disable_death_link_buffer()
-        else:
+        game_state = dme.read_byte(addresses.GAME_STATE)
+
+        # Check to see if Mario is dying
+        if game_state == 7:
+
+            # Only sends a death link if they are the person dying and have not been sent a death link
+            if not ctx.has_send_death and not ctx.has_receive_death:
+                player_name = ctx.player_names[ctx.slot] if ctx.slot in ctx.player_names else "Player"
+                await ctx.send_death(f"{player_name} died!")
+                logger.info(f"Sent DeathLink: Mario died")
+
+            # Set variables to combat niche cases where a death link is sent during an abnormal time
+            # i.e. game paused, cutscene, shine get, etc.
+            ctx.has_send_death = True
+            ctx.has_receive_death = False
+
+        # Allows for death links to be sent once respawned
+        elif game_state == 4:
             ctx.has_send_death = False
     except Exception as e:
         logger.error(f"Error checking death: {e}")
@@ -357,9 +361,9 @@ async def handle_stages(ctx):
     #Gravi01  change to connection status
     next_stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
     cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
+    current_episode = dme.read_byte(addresses.SMS_CURRENT_EPISODE)
+    next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
     if next_stage == 0x01: # Delfino Plaza
-        next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
-
         # If starting Fluddless without ticket mode on, open Bianco Hills
         if not ctx.bianco_flag and ctx.fludd_start == 2 and ctx.ticket_mode == 0:
             ctx.bianco_flag |= dme.read_byte(TICKETS[0].address)
@@ -367,11 +371,22 @@ async def handle_stages(ctx):
             open_stage(TICKETS[0])
         # Sets plaza state to 8 if in ticket mode and goal hasn't been reached
         if ctx.ticket_mode == 1 and next_episode != 0x8 and not ctx.corona_message_given:
+            # Should change this to be flag based, set the flags necessary to load plaza 8 regardless
             dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
+    
     if cur_stage != next_stage:
         await send_map_id(next_stage, ctx)
+
         if ctx.ticket_mode:
             await resolve_tickets(next_stage, ctx)
+
+    if (next_stage < 0x0D and next_stage != 0x07) and (next_episode != current_episode) and (next_episode != 0xFF):
+        next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+
+        if next_stage == 0x01 or next_stage >= 0x0D:
+            await send_episode_id(-1, ctx)
+        else:
+            await send_episode_id(next_episode, ctx)
 
 
 async def dolphin_sync_task(ctx: SmsContext) -> None:
@@ -416,7 +431,7 @@ async def dolphin_sync_task(ctx: SmsContext) -> None:
                     if dme.read_bytes(0x80000000, 6) != b"GMSEAP":
                         logger.info(CONNECTION_REFUSED_GAME_STATUS)
                         ctx.dolphin_status = CONNECTION_REFUSED_GAME_STATUS
-                        dme.un_hook()
+                        await unhook_dolphin(ctx)
                         await asyncio.sleep(5)
                     else:
                         logger.info(CONNECTION_CONNECTED_STATUS)
@@ -602,6 +617,8 @@ def unpack_item(item, ctx):
         activate_yoshi(ctx)
     elif 523004 < item < 523012:
         activate_ticket(item)
+    elif item == 523140:
+        increase_lives(ctx)
 
 @dataclass
 class Ticket:
@@ -672,21 +689,19 @@ def activate_yoshi(ctx):
         ctx.ap_nozzles_received.append(4)
     return
 
-sms_death_link_buffer = False
+# Makes filler 1-UP items actually give lives
+# As of now, your life count is increased by 1 if you close the client and reconnect if you already have more than one 1-UP sent
+def increase_lives(ctx):
+    num_1_ups = sum(1 for item in ctx.items_received if ctx.item_names.lookup_in_game(item.item) == "1-UP")
+    current_lives = dme.read_word(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.LIVES_COUNT_OFFSET)
 
-def enable_death_link_buffer():
-    global sms_death_link_buffer
-    sms_death_link_buffer = True
+    # Only increase lives a single time when a 1-UP is received
+    if ctx.num_1_ups_current != num_1_ups:
+        ctx.num_1_ups_current = num_1_ups
 
-def disable_death_link_buffer():
-    global sms_death_link_buffer
-    sms_death_link_buffer = False
-
-def death_link_buffer_enabled():
-    return sms_death_link_buffer
-
-def log_death_buffer_state():
-    logger.info(f"Death Buffer state: {sms_death_link_buffer}")
+        if current_lives < 99 and num_1_ups > 0:
+            dme.write_word(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.LIVES_COUNT_OFFSET, current_lives + 1)
+    return
 
 def kill_mario(ctx: SmsContext):
     """Uses the same logic as Gecko code death trigger"""
@@ -697,14 +712,10 @@ def kill_mario(ctx: SmsContext):
             actual_target = pointer_value + 0x4C
 
             dme.write_bytes(actual_target, (0x4020).to_bytes(2, byteorder="big"))
-            ctx.has_send_death = True
-            enable_death_link_buffer()
         except Exception as e:
             logger.error(f"Failed to kill Mario - connection may be lost: {e}")
     return
 
-def get_lives():
-    return dme.read_word(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.LIVES_COUNT_OFFSET)
 
 async def resolve_tickets(stage, ctx):
     for tick in TICKETS:
@@ -726,6 +737,15 @@ async def send_map_id(map_id, ctx):
         "default": 0,
         "want_reply": False,
         "operations": [{"operation": "replace", "value": map_id}]
+    }])
+
+async def send_episode_id(episode_id, ctx):
+    await ctx.send_msgs([{
+        "cmd": "Set",
+        "key": f"sms_episode_{ctx.team}_{ctx.slot}",
+        "default": 0,
+        "want_reply": False,
+        "operations": [{"operation": "replace", "value": episode_id}]
     }])
 
 
