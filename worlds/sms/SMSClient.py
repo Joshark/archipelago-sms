@@ -136,6 +136,7 @@ class SmsContext(SuperContext):
         self.dolphin_status: str = CONNECTION_INITIAL_STATUS
         self.awaiting_rom: bool = False
         self.has_send_death: bool = False
+        self.has_receive_death: bool = False
         self.num_1_ups_current: int = 0
 
         from . import SuperMarioSunshineSettings
@@ -188,6 +189,7 @@ class SmsContext(SuperContext):
         logger.info(f"DeathLink received! Source: {source}")
         logger.info(f"DeathLink message: {cause}")
         logger.info("Killing Mario now...")
+        self.has_receive_death = True
         kill_mario(self)
 
     def get_corona_goal(self):
@@ -259,8 +261,6 @@ def in_file_select():
 
 
 async def game_watcher(ctx: SmsContext):
-    previous_lives = None
-
     while not ctx.exit_event.is_set():
         if not dme.is_hooked() or ctx.slot is None:
             await asyncio.sleep(5)
@@ -295,7 +295,7 @@ async def game_watcher(ctx: SmsContext):
 
 
 async def check_death(ctx: SmsContext):
-    """Check if Mario died by comparing current lives with previous lives, then send DeathLink."""
+    """Check if Mario died by checking if in the 'Mario is dying' game mode, then send DeathLink."""
     if ctx.slot is None:
         return
 
@@ -305,12 +305,16 @@ async def check_death(ctx: SmsContext):
         # Check to see if Mario is dying
         if game_state == 7:
 
-            # Only sends a death link if they are the person dying
-            if not ctx.has_send_death:
-                ctx.has_send_death = True
+            # Only sends a death link if they are the person dying and have not been sent a death link
+            if not ctx.has_send_death and not ctx.has_receive_death:
                 player_name = ctx.player_names[ctx.slot] if ctx.slot in ctx.player_names else "Player"
                 await ctx.send_death(f"{player_name} died!")
                 logger.info(f"Sent DeathLink: Mario died")
+
+            # Set variables to combat niche cases where a death link is sent during an abnormal time
+            # i.e. game paused, cutscene, shine get, etc.
+            ctx.has_send_death = True
+            ctx.has_receive_death = False
 
         # Allows for death links to be sent once respawned
         elif game_state == 4:
@@ -708,7 +712,6 @@ def kill_mario(ctx: SmsContext):
             actual_target = pointer_value + 0x4C
 
             dme.write_bytes(actual_target, (0x4020).to_bytes(2, byteorder="big"))
-            ctx.has_send_death = True # Makes sure that receiving a death link does not accidentally sending one
         except Exception as e:
             logger.error(f"Failed to kill Mario - connection may be lost: {e}")
     return
