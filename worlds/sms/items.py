@@ -1,9 +1,8 @@
 from BaseClasses import Item
-
+from .constants import WORLD_NAME
 
 class SmsItem(Item):
-    game: str = "Super Mario Sunshine"
-
+    game: str = WORLD_NAME
 
 REGULAR_PROGRESSION_ITEMS: dict[str, int] = {
     "Spray Nozzle": 523000,
@@ -13,6 +12,7 @@ REGULAR_PROGRESSION_ITEMS: dict[str, int] = {
     "Yoshi": 523013,
 }
 
+# TODO add stage_id / course_id here.
 TICKET_ITEMS: dict[str, int] = {
     "Bianco Hills Ticket": 523005,
     "Ricco Harbor Ticket": 523006,
@@ -33,7 +33,6 @@ ALL_PROGRESSION_ITEMS: dict[str, int] = {
 JUNK_ITEMS: dict[str, int] = {
     "1-UP": 523140,
 }
-
 
 ALL_ITEMS_TABLE: dict[str, int] = {
     **ALL_PROGRESSION_ITEMS,

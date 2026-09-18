@@ -9,12 +9,12 @@ from settings import get_settings, Settings
 from NetUtils import convert_to_base_types
 import Utils
 
+from ..constants import WORLD_NAME, SMS_USA_MD5, WORLD_VERSION
+from .SMSPatcher import SuperMarioSunshineRandomizer
+
 
 logger = logging.getLogger()
 MAIN_PKG_NAME = "worlds.supermariosunshine.SMSPatcher"
-
-RANDOMIZER_NAME = "Super Mario Sunshine"
-SMS_USA_MD5 = 0x0c6d2edae9fdf40dfc410ff1623e4119
 
 class InvalidCleanISOError(Exception):
     """
@@ -32,7 +32,7 @@ class InvalidCleanISOError(Exception):
         return f"InvalidCleanISOError: {self.message}"
     
 class SMSPlayerContainer(APPlayerContainer):
-    game = RANDOMIZER_NAME
+    game = WORLD_NAME
     compression_method = zipfile.ZIP_DEFLATED
     patch_file_ending = ".apsms"
 
@@ -45,7 +45,7 @@ class SMSPlayerContainer(APPlayerContainer):
         super().write_contents(opened_zipfile)
 
 class SMSPatch(APPatch, metaclass=AutoPatchRegister):
-    game = RANDOMIZER_NAME
+    game = WORLD_NAME
     hash = SMS_USA_MD5
     patch_file_ending = ".apsms"
     result_file_ending = ".iso"
@@ -71,12 +71,11 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
         return lib_path
 
     def __get_temp_folder_name(self) -> str:
-        CLIENT_VERSION = "0.5.0"
         # from ..SMSClient import CLIENT_VERSION
-        temp_path = os.path.join(tempfile.gettempdir(), "super_mario_sunhine", CLIENT_VERSION, "libs")
+        temp_path = os.path.join(tempfile.gettempdir(), "super_mario_sunhine", WORLD_VERSION, "libs")
         return temp_path
 
-    def patch(self, apsms_patch: str) -> str:
+    def patch(self, apsms_patch: str):
         # Get the AP Path for the base ROM
         sms_clean_iso = self.get_base_rom_path()
         logger.info("Provided Super Mario Sunshine ISO Path was: " + sms_clean_iso)
@@ -89,13 +88,12 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
             self.verify_base_rom(sms_clean_iso, throw_on_missing_speedups=True)
 
             # Use our randomize function to patch the file into an ISO.
-            from ..SMSPatcher import SuperMarioSunshineRandomizer
             with zipfile.ZipFile(apsms_patch, "r") as zf:
                 apsms_bytes = zf.read("patch.apsms")
             SuperMarioSunshineRandomizer(sms_clean_iso, output_file, apsms_bytes)
         except ImportError:
             self.__get_remote_dependencies_and_create_iso(apsms_patch, output_file, sms_clean_iso)
-        return output_file
+        return
 
     def read_contents(self, apsms_patch: str) -> dict[str, Any]:
         with zipfile.ZipFile(apsms_patch, "r") as zf:
@@ -149,31 +147,30 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
         # Verify that the file has the right hash first, as the wrong file could have been loaded.
         md5_conv = int(base_md5.hexdigest(), 16)
         if md5_conv != SMS_USA_MD5:
-            raise InvalidCleanISOError(f"Invalid vanilla {RANDOMIZER_NAME} ISO.\nYour ISO may be corrupted or your " +
+            raise InvalidCleanISOError(f"Invalid vanilla {WORLD_NAME} ISO.\nYour ISO may be corrupted or your " +
                 f"MD5 hashes do not match.\nCorrect ISO MD5 hash: {SMS_USA_MD5:x}\nYour ISO's MD5 hash: {md5_conv}")
 
         # Verify if the provided ISO file is a valid file extension and contains a valid Game ID.
         # Based on some similar code from (MIT License): https://github.com/LagoLunatic/wwrando
         if magic == "CISO":
-            raise InvalidCleanISOError(f"The provided ISO is in CISO format. The {RANDOMIZER_NAME} randomizer " +
+            raise InvalidCleanISOError(f"The provided ISO is in CISO format. The {WORLD_VERSION} randomizer " +
                                        "only supports ISOs in ISO format.")
         if game_id != "GMSE01":
             if game_id and game_id.startswith("GMS"):
-                raise InvalidCleanISOError(f"Invalid version of {RANDOMIZER_NAME}. " +
+                raise InvalidCleanISOError(f"Invalid version of {WORLD_NAME}. " +
                                            "Currently, only the North American version is supported by this randomizer.")
             else:
                 raise InvalidCleanISOError("Invalid game given as the vanilla ISO. You must specify a " +
-                                           f"{RANDOMIZER_NAME}'s ISO (North American version).")
+                                           f"{WORLD_NAME}'s ISO (North American version).")
         return
 
 
     def download_lib_zip(self, tmp_dir_path: str) -> None:
         logger.info("Getting missing dependencies for Super Mario Sunshine from remote source.")
 
-        from ..SMSClient import CLIENT_VERSION
         from sys import version_info
         lib_path = self.__get_archive_name()
-        lib_path_base = f"https://github.com/Joshark/archipelago-sms/releases/download/{CLIENT_VERSION}"
+        lib_path_base = f"https://github.com/Joshark/archipelago-sms/releases/download/{WORLD_VERSION}"
         download_path = f"{lib_path_base}/{lib_path}{version_info.major}-{version_info.minor}.zip"
 
         temp_zip_path = os.path.join(tmp_dir_path, "temp.zip")
@@ -204,12 +201,13 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
         self.verify_base_rom(vanilla_iso_path)
 
         # Use our randomize function to patch the file into an ISO.
-        from ..SMSPatcher import SuperMarioSunshineRandomizer
+        from worlds.sms.iso_helper.SMSPatcher import SuperMarioSunshineRandomizer
         with zipfile.ZipFile(patch_file_path, "r") as zf:
             apsms_bytes = zf.read("patch.apsms")
         SuperMarioSunshineRandomizer(vanilla_iso_path, output_iso_path, apsms_bytes)
 
     def __get_remote_dependencies_and_create_iso(self, apsms_patch: str, output_file: str, sms_clean_iso: str):
+        local_dir_path: str = "N/A"
         try:
             local_dir_path = self.__get_temp_folder_name()
             # If temp directory exists, and we failed to patch the ISO, we want to remove the directory

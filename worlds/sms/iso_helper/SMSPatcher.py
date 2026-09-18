@@ -7,8 +7,8 @@ from gclib.rarc import RARC
 
 import Utils
 from CommonClient import logger
-from .SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
-from .Helper_Functions import StringByteFunction as sbf
+
+from ..constants import WORLD_VERSION
 from .patch import update_dol_offsets
 
 RANDOMIZER_NAME = "Super Mario Sunshine"
@@ -42,13 +42,10 @@ class SuperMarioSunshineRandomizer:
 
         :param output_data: The manifest's output data which we attempt to acquire the generated version
         """
-        ap_world_version = "<0.5.0"
-
-        if AP_WORLD_VERSION_NAME in output_data:
-            ap_world_version = output_data[AP_WORLD_VERSION_NAME]
-        if ap_world_version != CLIENT_VERSION:
+        ap_world_version = output_data["Version"]
+        if ap_world_version != WORLD_VERSION:
             raise Utils.VersionException("Error! Server was generated with a different Super Mario Sunshine " +
-                    f"APWorld version.\nThe client version is {CLIENT_VERSION}!\nPlease verify you are using the " +
+                    f"APWorld version.\nThe client version is {WORLD_VERSION}!\nPlease verify you are using the " +
                     f"same APWorld as the generator, which is '{ap_world_version}'")
 
     def get_arc(self, arc_path):

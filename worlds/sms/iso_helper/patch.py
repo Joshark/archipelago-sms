@@ -4,10 +4,9 @@ from importlib.resources import read_binary
 from gclib.gcm import GCM
 from gclib.dol import DOL, DOLSection
 
-from .Helper_Functions import StringByteFunction as sbf
-
-CUSTOM_CODE_OFFSET_START = 0x3F00A0
-SMS_PLAYER_NAME_BYTE_LENGTH = 64
+from ..Helper_Functions import StringByteFunction as sbf
+from ..addresses import SLOT_NAME_OFF
+from ..constants import SMS_PLAYER_NAME_BYTE_LENGTH, CUSTOM_CODE_OFFSET_START
 
 # class SMSTest:
 
@@ -35,9 +34,9 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_n
     # Changing Game ID and Game Name from boot.bin
     bin_data = gcm.read_file_data("sys/boot.bin")
     bin_data.seek(0x04)
-    bin_data.write(bytes.fromhex("4150"))
+    bin_data.write("AP".encode("utf-8"))
     bin_data.seek(0x34)
-    bin_data.write(bytes.fromhex("20417263686970656C61676F"))
+    bin_data.write(" Archipelago".encode("utf-8"))
     gcm.changed_files["sys/boot.bin"] = bin_data
 
     # ChangeNozzle offset to check if we own the nozzles
@@ -117,7 +116,7 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_n
     dol.data.write(bytes.fromhex("4825bb39"))
 
     # Player Slot Name Writing
-    slot_name_offset = dol.convert_address_to_offset(0x80418000)
+    slot_name_offset = dol.convert_address_to_offset(SLOT_NAME_OFF)
 
     dol.data.seek(slot_name_offset)
     dol.data.write(sbf.string_to_bytes(slot_name, SMS_PLAYER_NAME_BYTE_LENGTH))
@@ -144,7 +143,7 @@ def update_dol_offsets(gcm: GCM, dol: DOL, seed: str, slot_name: str, starting_n
         dol.data.write(bytes.fromhex(all_episodes_unlocked_value))
 
     # If Ticketed mode, set Noki requirement to 0 so it opens whenever ticket is acquired
-    if level_access is True:
+    if level_access:
         noki_entrance_requirement = dol.convert_address_to_offset(0x802b79e3)
 
         dol.data.seek(noki_entrance_requirement)

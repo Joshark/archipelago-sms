@@ -19,6 +19,7 @@ from .regions import create_regions, ALL_REGIONS
 from .iso_helper.sms_rom import SMSPlayerContainer
 from .regions import get_location_name_to_id
 from .sms_rules import create_sms_region_and_entrance_rules
+from .constants import WORLD_VERSION, WORLD_NAME
 
 logger = logging.getLogger()
 
@@ -292,19 +293,16 @@ class SmsWorld(World):
             slot_data[child_option] = getattr(self.options, child_option).value
 
         slot_data["death_link"] = self.options.death_link.value
-        slot_data["ticket_chosen"] = self.ticket_chosen
         slot_data["seed"] = str(self.multiworld.seed_name)
         return slot_data
 
     def generate_output(self, output_directory: str):
-        from .SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
-
         output_data = {
             "Seed": str(self.multiworld.seed_name),
             "Slot": self.player,
             "Name": self.player_name,
             "Options": {},
-            AP_WORLD_VERSION_NAME: CLIENT_VERSION
+            "Version": WORLD_VERSION
         }
 
         for field in fields(self.options):

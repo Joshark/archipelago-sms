@@ -20,14 +20,10 @@ def get_bitflag(input_byte):
 
 def bit_flagger(input_byte, flag_position, bool_setting):
     if bool_setting:
-        bool_char = "1"
+        bool_char = 1
     else:
-        bool_char = "0"
-    byte_string = get_bitflag(input_byte)
-    reverse_pos = len(byte_string) - flag_position
-    byte_string = byte_string[:reverse_pos-1] + bool_char + byte_string[reverse_pos:]
-    val = int(byte_string, 2)
-    return val
+        bool_char = 0
+    return input_byte | (bool_char << flag_position)
 
 
 def change_endian(byte):

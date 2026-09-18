@@ -108,6 +108,7 @@ class AllShinesSelectable(Toggle):
 
 @dataclass
 class SmsOptions(PerGameCommonOptions):
+    start_inventory: StartInventoryPool
     level_access: LevelAccess
     enable_coin_shines: EnableCoinShines
     corona_mountain_shines: CoronaMountainShines
