@@ -2,7 +2,7 @@ from .sms_region_helper import *
 
 BIANCO_HILLS_ENTRANCE: SmsRegion = SmsRegion(
     SmsRegionName.BIANCO_ENTRANCE,
-    requirements=[Requirements(ANY_SPLASHER)],
+    requirements=[Requirements(ANY_SPLASHER), Requirements(skip_forward=True)],
     hard=[Requirements(ANY_SPLASHER)],
     advanced=[Requirements(ANY_SPLASHER_OR_TURBO)],
     tears=[Requirements(ANY_SPLASHER_OR_TURBO)],
@@ -30,6 +30,10 @@ BIANCO_HILLS_ONE: SmsRegion = SmsRegion(
             ],
             hard=[
                 Requirements([[NozzleType.hover]]),
+                Requirements(
+                    SPRAY_OR_HOVER,
+                    location=f"{SmsRegionName.BIANCO_ONE} - Road to the Big Windmill",
+                ),
                 Requirements(
                     SPRAY_OR_HOVER,
                     location=f"{SmsRegionName.BIANCO_ONE} - Road to the Big Windmill",
@@ -233,7 +237,7 @@ BIANCO_HILLS_ONE: SmsRegion = SmsRegion(
         BlueCoin(
             "Sail Platform",
             requirements=[
-                Requirements(ROCKET_OR_HOVER),
+                Requirements([[NozzleType.hover]]),
                 Requirements(
                     [[NozzleType.yoshi]],
                     location=f"{SmsRegionName.BIANCO_EIGHT} - The Red Coins of the Lake",
@@ -297,7 +301,7 @@ BIANCO_HILLS_THREE: SmsRegion = SmsRegion(
         BlueCoin(
             "Treetop",
             requirements=[
-                Requirements(SPRAY_OR_HOVER_OR_ROCKET),
+                Requirements(SPRAY_OR_HOVER),
                 Requirements(
                     [[NozzleType.yoshi]],
                     location=f"{SmsRegionName.BIANCO_EIGHT} - The Red Coins of the Lake",
@@ -321,7 +325,7 @@ BIANCO_HILLS_THREE: SmsRegion = SmsRegion(
                     location=f"{SmsRegionName.BIANCO_EIGHT} - The Red Coins of the Lake",
                 ),
             ],
-            hard=[
+            advanced=[
                 Requirements(SPRAY_OR_HOVER_OR_TURBO),
                 Requirements(
                     [[NozzleType.yoshi]],
@@ -388,7 +392,7 @@ BIANCO_HILLS_FOUR: SmsRegion = SmsRegion(
     blue_coins=[
         BlueCoin(
             "Hillside Pokey",
-            requirements=[Requirements(ROCKET_OR_HOVER)],
+            requirements=[Requirements([[NozzleType.hover]])],
             hard=[Requirements(manual_none=True)],
             in_game_bit=178,
         ),
@@ -442,7 +446,7 @@ BIANCO_HILLS_FIVE: SmsRegion = SmsRegion(
                 ),
             ],
             hard=[
-                Requirements(SPRAY_OR_HOVER_OR_ROCKET), # Spray? Have to double check this one
+                Requirements(SPRAY_OR_HOVER_OR_ROCKET),
                 Requirements(
                     [[NozzleType.yoshi]],
                     location=f"{SmsRegionName.BIANCO_EIGHT} - The Red Coins of the Lake",
@@ -505,16 +509,8 @@ BIANCO_HILLS_SIX: SmsRegion = SmsRegion(
         BlueCoin("Underwater Left", in_game_bit=181),
         BlueCoin(
             "Blue Bird",
-            requirements=[Requirements([[NozzleType.spray]]),
-                Requirements(
-                    [[NozzleType.yoshi]],
-                    location=f"{SmsRegionName.BIANCO_EIGHT} - The Red Coins of the Lake",
-                )],
-            tears=[Requirements(SPRAY_OR_HOVER),
-                Requirements(
-                    [[NozzleType.yoshi]],
-                    location=f"{SmsRegionName.BIANCO_EIGHT} - The Red Coins of the Lake",
-                )],
+            requirements=[Requirements([[NozzleType.spray]])],
+            tears=[Requirements(SPRAY_OR_HOVER)],
             in_game_bit=182,
         ),
         BlueCoin("Chuckster Momma", in_game_bit=193),
@@ -523,7 +519,7 @@ BIANCO_HILLS_SIX: SmsRegion = SmsRegion(
         NozzleBox(
             "Turbo Box",
             requirements=[Requirements(SPRAY_OR_HOVER)],
-            hard=[Requirements()],
+            hard=[Requirements(ANY_FLUDD)],
             in_game_bit=873,
         )
     ],
@@ -550,13 +546,6 @@ BIANCO_HILLS_SEVEN: SmsRegion = SmsRegion(
             "Towers House O",
             [
                 Requirements(SPRAY_OR_HOVER),
-                Requirements(
-                    [[NozzleType.yoshi]],
-                    location=f"{SmsRegionName.BIANCO_EIGHT} - The Red Coins of the Lake",
-                ),
-            ],
-            advanced=[
-                Requirements(SPRAY_OR_HOVER_OR_TURBO),
                 Requirements(
                     [[NozzleType.yoshi]],
                     location=f"{SmsRegionName.BIANCO_EIGHT} - The Red Coins of the Lake",

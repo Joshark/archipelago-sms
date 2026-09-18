@@ -13,11 +13,23 @@ def interpret_requirements(
     spot: Entrance | SmsLocation,
     requirement_set: list[Requirements],
     world: "SmsWorld",
+    ticketed_entrance: bool = False,
 ) -> None:
     """Correctly applies and interprets custom requirements namedtuple for a given entrance/location."""
     # If a region/location does not have any items required, make the section(s) return no logic.
     if requirement_set is None or len(requirement_set) < 1:
         return
+
+    # A ticket opens the stage door, so on a ticketed level's entrance only the physical-access
+    # requirements (skip_forward) remain relevant — and not the ones whose blocker the ticket
+    # itself removes (fluddless_only). With none left the ticket alone gates the level.
+    if ticketed_entrance and world.options.level_access.value == 1:
+        requirement_set = [
+            phys_req for phys_req in requirement_set
+            if phys_req.skip_forward and not phys_req.fluddless_only
+        ]
+        if len(requirement_set) < 1:
+            return
 
     # If all shines are selectable, remove all the entrance requirements related to location access.
     # If a location has no reqs after that is removed, then it is considered empty and should be removed from the list.
@@ -151,7 +163,18 @@ def create_sms_region_and_entrance_rules(world: "SmsWorld"):
             for sms_entrance in sms_reg.entrances:
                 if hasattr(sms_entrance, "requirements"):
                     interpret_requirements(
-                        sms_entrance, sms_entrance.requirements, world
+                        sms_entrance, sms_entrance.requirements, world,
+                        ticketed_entrance=bool(getattr(sms_reg, "ticket_str", "")),
+                    )
+
+                # In ticket mode the ticket is required ON TOP of the physical access requirements
+                # interpreted above (a Pianta Village Ticket does not lift Mario up the cliff).
+                if world.options.level_access.value == 1 and getattr(sms_reg, "ticket_str", ""):
+                    add_rule(
+                        sms_entrance,
+                        (lambda state, ticket_str=sms_reg.ticket_str: state.has(
+                            ticket_str, world.player)),
+                        combine="and",
                     )
 
                 # If a parent region has any ticket str, get that ticket as well
