@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
+from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle, StartInventoryPool
 
 
 class LevelAccess(Choice):
