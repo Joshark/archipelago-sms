@@ -127,6 +127,8 @@ class Requirements(NamedTuple):
     manual_none: bool = (
         False  # Only matters for higher difficulties. Prevents fallback requirements.
     )
+    fluddless_only: bool = False  # skip_forward req that only applies in fluddless mode,
+    # for physical blockers the ticket itself removes in ticket mode (Sirena's pineapple).
 
     def is_empty(self):
         return (

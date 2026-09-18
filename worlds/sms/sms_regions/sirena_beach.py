@@ -3,9 +3,9 @@ from .sms_region_helper import *
 # Non-ticket requires yoshi to clear out the pineapple blocking the pipe. Ticket removes pineapple.
 SIRENA_BEACH_ENTRANCE: SmsRegion = SmsRegion(
     SmsRegionName.SIRENA_ENTRANCE,
-    requirements=[Requirements([[NozzleType.yoshi]], shines=5), Requirements([[NozzleType.yoshi]], skip_forward=True)],
+    requirements=[Requirements([[NozzleType.yoshi]], shines=5), Requirements([[NozzleType.yoshi]], skip_forward=True, fluddless_only=True)],
     hard=[],
-    advanced=[Requirements([[NozzleType.yoshi]], shines=5), Requirements([[NozzleType.yoshi]], skip_forward=True),
+    advanced=[Requirements([[NozzleType.yoshi]], shines=5), Requirements([[NozzleType.yoshi]], skip_forward=True, fluddless_only=True),
         Requirements([[NozzleType.hover]])],
     tears=[],
     ticketed="Sirena Beach Ticket",
