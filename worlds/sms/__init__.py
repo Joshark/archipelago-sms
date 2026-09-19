@@ -201,23 +201,26 @@ class SmsWorld(World):
         for i in range(0, remaining_locs):
             # Adds extra shines to the pool if possible
             if i < extra_shines:
-                pool.append(self.create_item("Shine Sprite"))
+                pool.append(self.create_item("Shine Sprite", ItemClassification.useful))
             else:
                 pool.append(self.create_item(self.random.choice(list(JUNK_ITEMS.keys()))))
 
         self.multiworld.itempool += pool
 
-    def create_item(self, name: str):
+    def create_item(self, name: str, item_class_override: ItemClassification | None = None):
         if not name in ALL_ITEMS_TABLE:
             raise Exception(f"Invalid SMS item name: {name}")
 
-        if name in ALL_PROGRESSION_ITEMS:
-            if name == "Shine Sprite" or name == "Blue Coin":
-                classification = ItemClassification.progression_deprioritized_skip_balancing
+        if item_class_override is None:
+            if name in ALL_PROGRESSION_ITEMS:
+                if name == "Shine Sprite" or name == "Blue Coin":
+                    classification = ItemClassification.progression_deprioritized_skip_balancing
+                else:
+                    classification = ItemClassification.progression
             else:
-                classification = ItemClassification.progression
+                classification = ItemClassification.filler
         else:
-            classification = ItemClassification.filler
+            classification = item_class_override
 
         return SmsItem(name, classification, ALL_ITEMS_TABLE[name], self.player)
 
