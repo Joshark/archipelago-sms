@@ -164,7 +164,7 @@ class SmsContext(SuperContext):
 
         if cmd == "Connected":
             slot_data = args.get("slot_data")
-            self.goal = slot_data.get("corona_mountain_shines")
+            self.goal = slot_data.get("required_shines")
             temp = slot_data.get("blue_coin_sanity")
             if temp:
                 self.blue_status = temp
