@@ -29,11 +29,10 @@ class CoronaMountainShines(Range):
     default = 50
 
 class ExtraShines(Range):
-    """How many extra shine sprites you want added to the pool. This is a percentage so it ranges from 0 to 90
-    If more shines would be added than locations possible it will add as many as it can"""
+    """The percentage of filler items to replace with extra shines"""
     display_name = "Extra Shines"
     range_start = 0
-    range_end = 90
+    range_end = 100
     default = 15
 
 

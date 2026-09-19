@@ -193,42 +193,34 @@ class SmsWorld(World):
         for _ in range(0, self.options.corona_mountain_shines.value):
             pool.append(self.create_item("Shine Sprite"))
 
-        # Get the remaining locations that need to be filled, then calculate the max shine filler percentage that can be used
-        #   (on super restrictive settings, 90 of 14 would result in 12, causing high generation failures)
+        # Get the remaining locations that need to be filled.
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
-        if remaining_locs < MIN_SHINE_SPRITE_LOCATIONS:
-            logger.warning(f"SMS: Player's Yaml {self.player_name} had extra Shines enabled, however there was not "
-                "enough space to place them. Setting this to 0...")
-            self.options.extra_shines.value = 0
-            extra_shines: int = 0
-        else:
-            max_shine_percentage: int = min(self.options.extra_shines.value, 15 + (20 * int(remaining_locs / 20)))
-            if self.options.extra_shines.value > max_shine_percentage:
-                logger.warning(f"SMS: Player's Yaml {self.player_name} had extra Shines enabled and was above the "
-                    f"amount possible based on locations available. Setting this to {max_shine_percentage}% of filler...")
-                self.options.extra_shines.value = max_shine_percentage
-            extra_shines: int = int(math.floor(remaining_locs * max_shine_percentage * .01))
+
+        extra_shines: int = int(math.floor(remaining_locs * self.options.extra_shines.value * .01))
 
         for i in range(0, remaining_locs):
             # Adds extra shines to the pool if possible
             if i < extra_shines:
-                pool.append(self.create_item("Shine Sprite"))
+                pool.append(self.create_item("Shine Sprite", ItemClassification.useful))
             else:
                 pool.append(self.create_item(self.random.choice(list(JUNK_ITEMS.keys()))))
 
         self.multiworld.itempool += pool
 
-    def create_item(self, name: str):
+    def create_item(self, name: str, item_class_override: ItemClassification | None = None):
         if not name in ALL_ITEMS_TABLE:
             raise Exception(f"Invalid SMS item name: {name}")
 
-        if name in ALL_PROGRESSION_ITEMS:
-            if name == "Shine Sprite" or name == "Blue Coin":
-                classification = ItemClassification.progression_deprioritized_skip_balancing
+        if item_class_override is None:
+            if name in ALL_PROGRESSION_ITEMS:
+                if name == "Shine Sprite" or name == "Blue Coin":
+                    classification = ItemClassification.progression_deprioritized_skip_balancing
+                else:
+                    classification = ItemClassification.progression
             else:
-                classification = ItemClassification.progression
+                classification = ItemClassification.filler
         else:
-            classification = ItemClassification.filler
+            classification = item_class_override
 
         return SmsItem(name, classification, ALL_ITEMS_TABLE[name], self.player)
 
