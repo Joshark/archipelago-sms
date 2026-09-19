@@ -53,7 +53,6 @@ class SmsWebWorld(WebWorld):
             options.StartingNozzle,
             options.EnableCoinShines,
             options.NozzleBoxes,
-            options.CoronaMountainShines,
             options.BlueCoinSanity,
             options.BlueCoinMaximum,
             options.TradeShineMaximum,
@@ -87,7 +86,7 @@ class SmsWorld(World):
     location_name_to_id = get_location_name_to_id()
 
     settings: ClassVar[SuperMarioSunshineSettings]
-    corona_mountain_shines: int = 0
+    required_shines: int = 0
     blue_coins_required: int = 0
     large_shine_count: bool = False  # Used in rules to know if corona mountain should block tickets in their region
     # otherwise generation would fail significantly more in swap.
@@ -174,36 +173,50 @@ class SmsWorld(World):
             for _ in range(0, self.options.blue_coin_maximum.value):
                 pool.append((self.create_item("Blue Coin")))
 
-        leftover_locations: int = possible_shine_locations - len(pool)
-        max_required_percentage: float = 0.9 if leftover_locations > 125 else 0.85 if leftover_locations > 110 else 0.8
-        max_location_count: int = int(math.ceil(leftover_locations * max_required_percentage))
-        if self.options.corona_mountain_shines.value > max_location_count:
-            logger.warning(f"SMS: Player's Yaml {self.player_name} had shine count higher than maximum locations "
-                f"available to them. Adjusting their shine count down to {max_location_count}...")
-            self.options.corona_mountain_shines.value = min(self.options.corona_mountain_shines.value, max_location_count)
-
-        # Check if this world's item pool has a large amount of shine sprites, used for item rules later on.
-        if self.options.corona_mountain_shines.value > int(math.ceil(leftover_locations * MAX_PROGRESSION_FLAG)):
-            self.large_shine_count = True
-
-        # Set the world's corona mountain shines based on the updated/rolled value.
-        self.corona_mountain_shines = self.options.corona_mountain_shines.value
         self.blue_coins_required = self.options.blue_coin_maximum.value if self.options.blue_coin_sanity.value > 0 else 0
 
-        for _ in range(0, self.options.corona_mountain_shines.value):
-            pool.append(self.create_item("Shine Sprite"))
+        # Add Shine Sprites
+        remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
+        if self.options.total_shines.value > remaining_locs:
+            logger.warning(f"SMS: Player's Yaml {self.player_name} had total shine count higher than locations "
+                           f"available to them ({self.options.total_shines.value}). "
+                           f"Adjusting their total shine count down to {remaining_locs}."
+                           )
+            self.options.total_shines.value = remaining_locs
 
-        # Get the remaining locations that need to be filled.
+        # Count how many non corona locations are available for shines sprites to be used in progression
+        valid_shine_locations: int = possible_shine_locations - len(pool)
+        self.required_shines = int(self.options.total_shines.value * self.options.required_shines_percentage * 0.01)
+
+        max_required_percentage: float = 90 if valid_shine_locations > 125 else 85 if valid_shine_locations > 110 else 80
+        max_location_count: int = int(valid_shine_locations * max_required_percentage * 0.01)
+
+        # Lower the amount of shines required if our required shine count is too high
+        # Lower the total shine count again to maintain the required shines percentage set by the player
+        if self.required_shines > max_location_count:
+            new_total_shines = int(math.ceil(max_location_count * 100 / self.options.required_shines_percentage))
+            logger.warning(f"SMS: Player's Yaml {self.player_name} had required shine count higher than the safe limit "
+                           f"of item pool percentage ({self.required_shines} shines - Limit: {max_location_count}). "
+                           f"Adjusting their required shine count down to {max_location_count} and total shine count down to {new_total_shines}..."
+                           )
+            self.options.total_shines.value = new_total_shines
+            self.required_shines = max_location_count
+
+        # Check if this world's item pool has a large amount of shine sprites, used for item rules later on.
+        if self.required_shines > int(math.ceil(valid_shine_locations * MAX_PROGRESSION_FLAG)):
+            self.large_shine_count = True
+
+        for i in range(0, self.options.total_shines.value):
+            if i < self.required_shines:
+                pool.append(self.create_item("Shine Sprite"))
+            else:
+                pool.append(self.create_item("Shine Sprite", ItemClassification.filler))
+
+        # Fill remaining locations with filler.
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
 
-        extra_shines: int = int(math.floor(remaining_locs * self.options.extra_shines.value * .01))
-
         for i in range(0, remaining_locs):
-            # Adds extra shines to the pool if possible
-            if i < extra_shines:
-                pool.append(self.create_item("Shine Sprite", ItemClassification.useful))
-            else:
-                pool.append(self.create_item(self.random.choice(list(JUNK_ITEMS.keys()))))
+            pool.append(self.create_item(self.random.choice(list(JUNK_ITEMS.keys()))))
 
         self.multiworld.itempool += pool
 
@@ -236,7 +249,7 @@ class SmsWorld(World):
         game_players = multiworld.get_game_players(cls.game)
         # Get all player IDs that require either corona mountain shines to complete their goal or have blue coins
         sms_excessive_prog_items = {player for player in game_players if
-            multiworld.worlds[player].corona_mountain_shines > 0 or multiworld.worlds[player].blue_coins_required > 0}
+            multiworld.worlds[player].required_shines > 0 or multiworld.worlds[player].blue_coins_required > 0}
         # Get the player IDs of those that are using minimal accessibility.
         sms_minimal_players = {player for player in game_players
             if multiworld.worlds[player].options.accessibility == "minimal"}
@@ -283,6 +296,7 @@ class SmsWorld(World):
         for child_option in only_in_child:
             slot_data[child_option] = getattr(self.options, child_option).value
 
+        slot_data["required_shines"] = self.required_shines
         slot_data["death_link"] = self.options.death_link.value
         slot_data["ticket_chosen"] = self.ticket_chosen
         slot_data["seed"] = str(self.multiworld.seed_name)
