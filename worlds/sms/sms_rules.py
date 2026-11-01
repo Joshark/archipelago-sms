@@ -90,13 +90,13 @@ def interpret_requirements(
                     )
             req_rules.append(lambda state, captured_rule=nozz_rule: captured_rule(state))
 
-        if single_req.shines and world.corona_mountain_shines > 0:
+        if single_req.shines and world.required_shines > 0:
             # Requires X amount of shine sprites to access
             required_shines: int = single_req.shines
 
             # If the required shines is more than the amount required for corona mountain.
-            if required_shines > world.corona_mountain_shines:
-                required_shines = world.corona_mountain_shines
+            if required_shines > world.required_shines:
+                required_shines = world.required_shines
 
             # This is an entrance that has shines and level access is tickets, no shine requirements
             if isinstance(spot, Entrance) and world.options.level_access == 1:
@@ -132,14 +132,14 @@ def interpret_requirements(
                     world.multiworld.register_indirect_condition(ref_region, entrance)
 
         if (
-            world.corona_mountain_shines > 0 and (
+            world.required_shines > 0 and (
                 single_req.corona or
                 (hasattr(spot, "corona") and spot.corona)
             )
         ):
             # Player requires all shine sprites that are required to reach corona mountain as well.
             req_rules.append(
-                lambda state, shine_count=world.options.corona_mountain_shines.value: state.has(
+                lambda state, shine_count=world.required_shines: state.has(
                     "Shine Sprite", world.player, shine_count
                 )
             )
