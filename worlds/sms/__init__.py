@@ -210,7 +210,7 @@ class SmsWorld(World):
             if i < self.required_shines:
                 pool.append(self.create_item("Shine Sprite"))
             else:
-                pool.append(self.create_item("Shine Sprite", ItemClassification.filler))
+                pool.append(self.create_item("Shine Sprite", ItemClassification.useful))
 
         # Fill remaining locations with filler.
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
