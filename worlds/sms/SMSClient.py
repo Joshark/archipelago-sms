@@ -163,8 +163,15 @@ class SmsContext(SuperContext):
                     await wait_for_next_loop(WAIT_TIMER_LONG_TIMEOUT)
                     return
 
-                if not self.auth:
-                    self.auth = dme.read_bytes(addresses.SLOT_NAME_OFF, SMS_PLAYER_NAME_BYTE_LENGTH).decode("utf-8")
+                rom_slot_name: str = dme.read_bytes(addresses.SLOT_NAME_OFF, SMS_PLAYER_NAME_BYTE_LENGTH).decode("utf-8")
+                if self.auth and rom_slot_name != self.auth:
+                    # A ROM for another slot was loaded while connected; its checks and items
+                    # belong to that slot, so log out and let the player connect again.
+                    logger.info("A ROM for a different slot was loaded. Connect to the server again to play it.")
+                    await self.disconnect()
+                    self.auth = rom_slot_name
+                    return
+                self.auth = rom_slot_name
 
                 # Inform the player we are ready and waiting for them to connect.
                 if not self.rom_loaded:
@@ -195,6 +202,15 @@ class SmsContext(SuperContext):
             # if ctx.victory and not ctx.finished_game:
             #     await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
             #     ctx.finished_game = True
+
+        except RuntimeError as dmeEx:
+            # dolphin_memory_engine raises RuntimeError when Dolphin or the game can't be read.
+            # Only drop the Dolphin hook; the next loop re-hooks. Disconnecting from the AP
+            # server here counts as intentional, so the client never reconnected on its own.
+            logger.error("Unable to connect to Super Mario Sunshine. Details: " + str(dmeEx))
+            dme.un_hook()
+            self.set_dolphin_status(CONNECTION_LOST_STATUS)
+            await wait_for_next_loop(WAIT_TIMER_LONG_TIMEOUT)
 
         except Exception as dmeEx:
             logger.error("Unable to connect to Super Mario Sunshine. Details: " + str(dmeEx))
@@ -241,15 +257,21 @@ class SmsContext(SuperContext):
         logger.info(f"DeathLink received! Source: {source}")
         logger.info(f"DeathLink message: {cause}")
         logger.info("Killing Mario now...")
-        self.has_receive_death = True
-        self.kill_mario()
+        # Only expect the incoming death if Mario was actually killed; otherwise the flag stays set
+        # and the player's next real death is treated as this one and never sent. Never clear a
+        # flag an earlier, still-delayed kill is waiting on, or that death is sent back out.
+        self.has_receive_death = self.kill_mario() or self.has_receive_death
 
-    def kill_mario(self):
-        """Uses the same logic as Gecko code death trigger"""
+    def kill_mario(self) -> bool:
+        """Uses the same logic as Gecko code death trigger. Returns whether the kill was written."""
         if self.slot is not None and dme.is_hooked() and self.dolphin_status == CONNECTION_CONNECTED_STATUS:
-            dme.write_bytes(dme.follow_pointers(0x8040E178, [0x4C]),
-                (0x4020).to_bytes(2, byteorder="big"))
-        return
+            try:
+                dme.write_bytes(dme.follow_pointers(0x8040E178, [0x4C]),
+                    (0x4020).to_bytes(2, byteorder="big"))
+                return True
+            except RuntimeError as dmeEx:
+                logger.error("Could not kill Mario. Details: " + str(dmeEx))
+        return False
 
     def make_gui(self):
         # Performing local import to prevent additional UIs to appear during the patching process.
