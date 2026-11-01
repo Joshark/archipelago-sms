@@ -274,5 +274,7 @@ def create_regions(world: "SmsWorld"):
 
     corona_region: Region = world.get_region(SmsRegionName.CORONA)
     corona_region.add_event(
-        f"{SmsRegionName.CORONA} - Father and Son Shine!", "Victory"
+        f"{SmsRegionName.CORONA} - Father and Son Shine!", "Victory",
+        lambda state: state.has_all(
+        ("Rocket Nozzle", "Spray Nozzle", "Hover Nozzle"), world.player),
     )

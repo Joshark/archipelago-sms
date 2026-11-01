@@ -318,7 +318,9 @@ RICCO_HARBOR_FOUR: SmsRegion = SmsRegion(
             hard=[Requirements(manual_none=True)],
             in_game_bit=13,
         ),
-        Shine("Red Coins in Ricco Tower", in_game_bit=18),
+        Shine("Red Coins in Ricco Tower",
+        requirements=[Requirements(ROCKET_OR_HOVER)], 
+        in_game_bit=18),
     ],  # TODO: Fix logic with difficulties
     blue_coins=[
         BlueCoin(
