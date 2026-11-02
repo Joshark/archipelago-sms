@@ -151,8 +151,8 @@ class SmsContext(SuperContext):
 
             if not self.dolphin_status == CONNECTION_CONNECTED_STATUS:
                 # checks the id of the game as a string
-                romgameid: str = dme.read_bytes(0x80000000, 6)
-                if not int(romgameid) or romgameid.decode() != GAME_ID:
+                romgameid: bytes = dme.read_bytes(0x80000000, 6)
+                if not int.from_bytes(romgameid) or romgameid.decode() != GAME_ID:
                     dme.un_hook()
                     self.set_dolphin_status(DOLPHIN_DIDNT_LOAD_ROM_CORRECTLY)
                     await wait_for_next_loop(WAIT_TIMER_LONG_TIMEOUT)
