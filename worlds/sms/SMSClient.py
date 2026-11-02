@@ -37,7 +37,16 @@ class Ticket:
     active: bool = False
 
 def read_string(console_address: int, strlen: int) -> str:
-    return dme.read_bytes(console_address, strlen).split(b"\0", 1)[0].decode()
+    str_val: str = ""
+    try:
+        str_bytes: bytes = dme.read_bytes(console_address, strlen)
+        int_val: int = int.from_bytes(str_bytes)
+        if int_val == 0:
+            return str_val
+        str_val = str_bytes.split(b"\0", 1)[0].decode()
+    except Exception as ex:
+        logger.error(f"Read string error found: {ex}")
+    return str_val
 
 
 class SmsCommandProcessor(ClientCommandProcessor):
@@ -151,15 +160,21 @@ class SmsContext(SuperContext):
 
             if not self.dolphin_status == CONNECTION_CONNECTED_STATUS:
                 # checks the id of the game as a string
-                romgameid: bytes = dme.read_bytes(0x80000000, 6)
-                if not int.from_bytes(romgameid) or romgameid.decode() != GAME_ID:
+                romgameid: str = read_string(0x80000000, 6)
+                if romgameid != GAME_ID:
                     dme.un_hook()
                     self.set_dolphin_status(DOLPHIN_DIDNT_LOAD_ROM_CORRECTLY)
                     await wait_for_next_loop(WAIT_TIMER_LONG_TIMEOUT)
                     return
 
                 if not self.auth:
-                    self.auth = dme.read_bytes(SLOT_NAME_OFF, SMS_PLAYER_NAME_BYTE_LENGTH).decode("utf-8")
+                    slot_name: str = read_string(SLOT_NAME_OFF, SMS_PLAYER_NAME_BYTE_LENGTH)
+                    if slot_name == "":
+                        dme.un_hook()
+                        self.set_dolphin_status(DOLPHIN_DIDNT_LOAD_ROM_CORRECTLY)
+                        await wait_for_next_loop(WAIT_TIMER_LONG_TIMEOUT)
+                        return
+                    self.auth = slot_name
 
                 # Inform the player we are ready and waiting for them to connect.
                 if not self.rom_loaded:
@@ -173,6 +188,13 @@ class SmsContext(SuperContext):
 
                 self.set_dolphin_status(CONNECTION_CONNECTED_STATUS)
                 self.check_active_tickets()
+
+            # If on stage select, don't do anything else, ignore and continue.
+            # However, when you beat the game it considers current stage AS FILE SELECT
+            # Therefore, we should check that as well.
+            if dme.read_byte(SMS_CURRENT_STAGE) == 15:
+                await self.send_victory()
+                return
 
             await self.handle_stages()
             await self.location_watcher()
