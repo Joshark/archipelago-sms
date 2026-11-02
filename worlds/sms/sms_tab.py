@@ -22,16 +22,9 @@ def _make_progressive_layout(ui: GameManager, debug: bool = False):
     ui.sms_layout.add_widget(second_layout)
 
     third_layout = MDBoxLayout(line_color=debug_color)
-    ui.tickets = MDLabel(text="N/A", halign="center", font_style="Display", role="small")
+    ui.tickets = MDLabel(text="Ticket Mode Disabled", halign="center", font_style="Display", role="small")
     third_layout.add_widget(_make_text_layout("Current Tickets:", ui.tickets))
     ui.sms_layout.add_widget(third_layout)
-
-    # second_layout = MDBoxLayout(padding=[5, 5, 5, 5], line_color=debug_color)
-    # ui.king_boo_label = MDLabel(text="0", font_style="Display", halign="center")
-    # ui.balcony_boo_label = MDLabel(text="0", font_style="Display", halign="center")
-    # second_layout.add_widget(_make_text_layout("King Boo", ui.king_boo_label))
-    # second_layout.add_widget(_make_text_layout("Balcony Boo", ui.balcony_boo_label))
-    #ui.sms_layout.add_widget(second_layout)
 
 def _make_image_layout(image_path: str, debug: bool = False):
     debug_color = [0,0,0,0]
