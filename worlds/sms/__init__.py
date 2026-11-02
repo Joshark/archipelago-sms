@@ -316,6 +316,8 @@ class SmsWorld(World):
                 continue
             output_data["Options"][field.name] = getattr(self.options, field.name).value
 
+        output_data["required_shines"] = self.required_shines
+
         patch_path = os.path.join(output_directory, f"{self.multiworld.get_out_file_name_base(self.player)}"
             f"{SMSPlayerContainer.patch_file_ending}")
         sms_container = SMSPlayerContainer(output_data, patch_path, self.multiworld.player_name[self.player], self.player)

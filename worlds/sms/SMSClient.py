@@ -144,7 +144,7 @@ class SmsContext(SuperContext):
 
             case "Connected":
                 slot_data = args["slot_data"]
-                self.req_shine = slot_data["corona_mountain_shines"]
+                self.req_shine = slot_data["required_shines"]
                 self.blue_coin_sanity = slot_data["blue_coin_sanity"]
                 self.ticket_mode = slot_data["level_access"]
                 self.starting_nozzle = slot_data["starting_nozzle"]
