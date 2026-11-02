@@ -339,10 +339,13 @@ class SmsContext(SuperContext):
             addresses.SMS_FLAGS_PTR, [0x0]), addresses.SMS_SHINE_BYTE_COUNT))
 
         bc_byte_list: int = int.from_bytes(dme.read_bytes(dme.follow_pointers(
-            addresses.SMS_FLAGS_PTR, [addresses.BLUECOIN_LOC_OFFSET]), addresses.SMS_BLUECOIN_BYTE_COUNT))
+            addresses.SMS_FLAGS_PTR, [addresses.BLUECOIN_LOC_OFFSET]),
+            addresses.SMS_SHINE_BYTE_COUNT + addresses.SMS_BLUECOIN_BYTE_COUNT)) # Ignores the first addresses anyways
 
         nb_byte_list: int = int.from_bytes(dme.read_bytes(dme.follow_pointers(
-            addresses.SMS_FLAGS_PTR, [addresses.NOZZLE_BOXES_OFFSET]), addresses.NOZZLE_BOXES_BYTE_COUNT))
+            addresses.SMS_FLAGS_PTR, [addresses.NOZZLE_BOXES_OFFSET]),
+            addresses.SMS_SHINE_BYTE_COUNT + addresses.SMS_BLUECOIN_BYTE_COUNT + addresses.NOZZLE_BOXES_BYTE_COUNT))
+            # Ignores the first addresses anyways
 
         local_missing_locs = copy.deepcopy(self.missing_locations)
         for mis_loc_id in local_missing_locs:
