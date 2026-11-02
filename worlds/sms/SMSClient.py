@@ -16,7 +16,7 @@ from settings import get_settings
 from NetUtils import ClientStatus
 
 from .constants import *
-import addresses
+from .addresses import *
 from .bit_helper import bit_flagger
 from .regions import ALL_REGIONS
 from .items import REGULAR_PROGRESSION_ITEMS
@@ -159,7 +159,7 @@ class SmsContext(SuperContext):
                     return
 
                 if not self.auth:
-                    self.auth = dme.read_bytes(addresses.SLOT_NAME_OFF, SMS_PLAYER_NAME_BYTE_LENGTH).decode("utf-8")
+                    self.auth = dme.read_bytes(SLOT_NAME_OFF, SMS_PLAYER_NAME_BYTE_LENGTH).decode("utf-8")
 
                 # Inform the player we are ready and waiting for them to connect.
                 if not self.rom_loaded:
@@ -241,7 +241,7 @@ class SmsContext(SuperContext):
     def kill_mario(self):
         """Uses the same logic as Gecko code death trigger"""
         if self.slot is not None and dme.is_hooked() and self.dolphin_status == CONNECTION_CONNECTED_STATUS:
-            dme.write_bytes(dme.follow_pointers(addresses.KILL_MARIO, [0x4C]),
+            dme.write_bytes(dme.follow_pointers(KILL_MARIO, [0x4C]),
                             (0x4020).to_bytes(2, byteorder="big"))
         return
 
@@ -278,10 +278,10 @@ class SmsContext(SuperContext):
 
     async def handle_stages(self):
         # Gravi01  change to connection status
-        next_stage = dme.read_byte(addresses.SMS_NEXT_STAGE)
-        cur_stage = dme.read_byte(addresses.SMS_CURRENT_STAGE)
-        current_episode = dme.read_byte(addresses.SMS_CURRENT_EPISODE)
-        next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+        next_stage = dme.read_byte(SMS_NEXT_STAGE)
+        cur_stage = dme.read_byte(SMS_CURRENT_STAGE)
+        current_episode = dme.read_byte(SMS_CURRENT_EPISODE)
+        next_episode = dme.read_byte(SMS_NEXT_EPISODE)
         if next_stage == 0x01:  # Delfino Plaza
             # If starting Fluddless without ticket mode on, open Bianco Hills
             if self.starting_nozzle == 2 and self.ticket_mode == 0:
@@ -290,7 +290,7 @@ class SmsContext(SuperContext):
             # Sets plaza state to 8 if in ticket mode and goal hasn't been reached
             if self.ticket_mode == 1 and next_episode != 0x8 and not self.corona_message_given:
                 # Should change this to be flag based, set the flags necessary to load plaza 8 regardless
-                dme.write_byte(addresses.SMS_NEXT_EPISODE, 8)
+                dme.write_byte(SMS_NEXT_EPISODE, 8)
 
         if cur_stage != next_stage:
             await self.send_map_id(next_stage)
@@ -298,12 +298,12 @@ class SmsContext(SuperContext):
                 if not self.tickets[next_stage].active:
                     logger.info("Entering a stage without a ticket! Initiating bootout...")
                     # Byte 1 should correspond to Delfino Plaza
-                    dme.write_byte(addresses.SMS_NEXT_STAGE, 1)
-                    dme.write_byte(addresses.SMS_CURRENT_STAGE, 1)
+                    dme.write_byte(SMS_NEXT_STAGE, 1)
+                    dme.write_byte(SMS_CURRENT_STAGE, 1)
                     await self.send_map_id(1)
 
         if (next_stage < 0x0D and next_stage != 0x07) and (next_episode != current_episode) and (next_episode != 0xFF):
-            next_episode = dme.read_byte(addresses.SMS_NEXT_EPISODE)
+            next_episode = dme.read_byte(SMS_NEXT_EPISODE)
             if next_stage == 0x01:
                 await self.send_episode_id(-1)
             else:
@@ -336,15 +336,15 @@ class SmsContext(SuperContext):
 
     async def location_watcher(self):
         shine_byte_list: int = int.from_bytes(dme.read_bytes(dme.follow_pointers(
-            addresses.SMS_FLAGS_PTR, [0x0]), addresses.SMS_SHINE_BYTE_COUNT))
+            SMS_FLAGS_PTR, [0x0]), SMS_SHINE_BYTE_COUNT))
 
         bc_byte_list: int = int.from_bytes(dme.read_bytes(dme.follow_pointers(
-            addresses.SMS_FLAGS_PTR, [addresses.BLUECOIN_LOC_OFFSET]),
-            addresses.SMS_SHINE_BYTE_COUNT + addresses.SMS_BLUECOIN_BYTE_COUNT)) # Ignores the first addresses anyways
+            SMS_FLAGS_PTR, [BLUECOIN_LOC_OFFSET]),
+            SMS_SHINE_BYTE_COUNT + SMS_BLUECOIN_BYTE_COUNT)) # Ignores the first addresses anyways
 
         nb_byte_list: int = int.from_bytes(dme.read_bytes(dme.follow_pointers(
-            addresses.SMS_FLAGS_PTR, [addresses.NOZZLE_BOXES_OFFSET]),
-            addresses.SMS_SHINE_BYTE_COUNT + addresses.SMS_BLUECOIN_BYTE_COUNT + addresses.NOZZLE_BOXES_BYTE_COUNT))
+            SMS_FLAGS_PTR, [NOZZLE_BOXES_OFFSET]),
+            SMS_SHINE_BYTE_COUNT + SMS_BLUECOIN_BYTE_COUNT + NOZZLE_BOXES_BYTE_COUNT))
             # Ignores the first addresses anyways
 
         local_missing_locs = copy.deepcopy(self.missing_locations)
@@ -373,7 +373,7 @@ class SmsContext(SuperContext):
                     self.locations_checked.add(mis_loc_id)
 
         # Check corresponds to Shadow Mario Yoshi Egg Chase
-        # delfino_yoshi_unlock = dme.read_byte(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.DELFINO_YOSHI_OFFSET)
+        # delfino_yoshi_unlock = dme.read_byte(dme.read_word(SMS_FLAGS_PTR) + DELFINO_YOSHI_OFFSET)
         # if (delfino_yoshi_unlock & 0x80) and not ctx.checked_yoshi_egg:
         #     ctx.checked_yoshi_egg = True
         #     memory_changed(ctx, 113, delfino_yoshi_unlock, "Yoshi") # Swapped to self.locations_checked.add()
@@ -383,7 +383,7 @@ class SmsContext(SuperContext):
 
     async def check_death(self):
         """Check if Mario died by checking if in the 'Mario is dying' game mode, then send DeathLink."""
-        game_state = dme.read_byte(addresses.GAME_STATE)
+        game_state = dme.read_byte(GAME_STATE)
 
         # Check to see if Mario is dying
         if game_state == 7:
@@ -422,13 +422,13 @@ class SmsContext(SuperContext):
         return
 
     def activate_nozzle(self, noz_id: int):
-        activated_bits = dme.read_byte(addresses.ARB_NOZZLES_ENABLER)
+        activated_bits = dme.read_byte(ARB_NOZZLES_ENABLER)
         activated_bits = bit_flagger(activated_bits, noz_id, True)
-        dme.write_byte(addresses.ARB_FLUDD_ENABLER, 0x1)
-        dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
+        dme.write_byte(ARB_FLUDD_ENABLER, 0x1)
+        dme.write_byte(ARB_NOZZLES_ENABLER, activated_bits)
 
     def activate_yoshi(self):
-        dme.write_byte(addresses.YOSHI_ADDRESS, 0x01)
+        dme.write_byte(YOSHI_ADDRESS, 0x01)
         return
 
     def activate_ticket(self, ticket_id: int):
@@ -440,21 +440,21 @@ class SmsContext(SuperContext):
 
     def receive_shine_sprite(self):
         shine_count: int = len([recv_item for recv_item in self.items_received if recv_item.item == 523004])
-        dme.write_word(dme.read_bytes(dme.follow_pointers(addresses.SMS_FLAGS_PTR, [0x0]),
-            addresses.SMS_SHINE_BYTE_COUNT), shine_count)
+        dme.write_word(dme.read_bytes(dme.follow_pointers(SMS_FLAGS_PTR, [0x0]),
+            SMS_SHINE_BYTE_COUNT), shine_count)
         return
 
     def receive_blue_coin(self):
         blue_count: int = len([recv_item for recv_item in self.items_received if recv_item.item == 523014])
-        dme.write_word(dme.read_bytes(dme.follow_pointers(addresses.SMS_FLAGS_PTR, [0x0]),
-            addresses.BLUECOIN_COUNT_OFFSET), blue_count)
+        dme.write_word(dme.read_bytes(dme.follow_pointers(SMS_FLAGS_PTR, [0x0]),
+            BLUECOIN_COUNT_OFFSET), blue_count)
         return
 
     def increase_lives(self):
-        current_lives = min(dme.read_word(dme.read_bytes(dme.follow_pointers(addresses.SMS_FLAGS_PTR, [0x0]),
-            addresses.LIVES_COUNT_OFFSET)), 99)
-        dme.write_word(dme.read_bytes(dme.follow_pointers(addresses.SMS_FLAGS_PTR, [0x0]),
-            addresses.LIVES_COUNT_OFFSET), current_lives + 1)
+        current_lives = min(dme.read_word(dme.read_bytes(dme.follow_pointers(SMS_FLAGS_PTR, [0x0]),
+            LIVES_COUNT_OFFSET)), 99)
+        dme.write_word(dme.read_bytes(dme.follow_pointers(SMS_FLAGS_PTR, [0x0]),
+            LIVES_COUNT_OFFSET), current_lives + 1)
         return
 
     async def send_victory(self):
@@ -462,7 +462,7 @@ class SmsContext(SuperContext):
             return
 
         corona_byte: int = int.from_bytes(dme.read_byte(dme.follow_pointers(
-            addresses.SMS_FLAGS_PTR, [0x0]) + addresses.SMS_SHINE_BYTE_COUNT))
+            SMS_FLAGS_PTR, [0x0]) + SMS_SHINE_BYTE_COUNT))
         beat_corona: bool = (corona_byte & (1 << 7)) > 0
 
         if not beat_corona:
