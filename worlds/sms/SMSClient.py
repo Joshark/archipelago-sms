@@ -2,24 +2,24 @@ import copy
 import os
 import sys
 import asyncio
-import time
 from dataclasses import dataclass
 from typing import Optional
 
 import ModuleUpdate
 ModuleUpdate.update() # Handles updated packages on source, does nothing on frozen.
 
-import Utils
-from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, \
-    server_loop
 import dolphin_memory_engine as dme
+
+import Utils
+from CommonClient import gui_enabled, logger, get_base_parser, ClientCommandProcessor, server_loop
 from settings import get_settings
+from NetUtils import ClientStatus
 
 from .constants import *
 import addresses
 from .bit_helper import bit_flagger
 from .regions import ALL_REGIONS
-from .items import REGULAR_PROGRESSION_ITEMS, TICKET_ITEMS
+from .items import REGULAR_PROGRESSION_ITEMS
 
 TRACKER_LOADED = False
 try:
@@ -33,7 +33,7 @@ except ModuleNotFoundError:
 class Ticket:
     item_name: str
     bit_position: int
-    address: int = 0x805789f8
+    address: int
     active: bool = False
 
 def read_string(console_address: int, strlen: int) -> str:
@@ -45,12 +45,6 @@ class SmsCommandProcessor(ClientCommandProcessor):
         """Prints the current Dolphin status to the client."""
         if isinstance(self.ctx, SmsContext):
             logger.info(f"Dolphin Status: {self.ctx.dolphin_status}")
-
-    # def _cmd_resync(self):
-    #     """Manually trigger a resync."""
-    #     self.output("Syncing items.")
-    #     self.ctx.syncing = True
-    #     refresh_collection_counts(self.ctx)
 
     def _cmd_change_dolphin_process_name(self, process_name: str):
         """Specify the name of the Dolphin process to connect to. "" for system default."""
@@ -74,6 +68,7 @@ class SmsContext(SuperContext):
     has_send_death: bool = False
     rom_loaded: bool = False
     password_required: bool = False
+    victory: bool = False
 
     send_index: int = 0 # TODO find a place in save ram data to store/read this
     tickets: dict[int, Ticket] = [
@@ -177,25 +172,24 @@ class SmsContext(SuperContext):
                     return
 
                 self.set_dolphin_status(CONNECTION_CONNECTED_STATUS)
+                self.check_active_tickets()
 
             await self.handle_stages()
             await self.location_watcher()
-            await self.sms_give_items()
+            self.sms_give_items()
 
             if "DeathLink" in self.tags:
                 await self.check_death()
 
             shine_count: int = len([recv_item for recv_item in self.items_received if recv_item.item == 523004])
             if shine_count >= self.req_shine:
-                activate_ticket(999999)
+                self.activate_ticket(34)
                 if not self.corona_message_given:
                     logger.info("Corona Mountain requirements reached! Reload Delfino Plaza to unlock.")
                     self.corona_message_given = True
-            # TODO always update progression loop, check victory, send finished game
-            # if ctx.victory and not ctx.finished_game:
-            #     await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
-            #     ctx.finished_game = True
 
+            await self.send_victory()
+            self.re_send_progression()
         except Exception as dmeEx:
             logger.error("Unable to connect to Super Mario Sunshine. Details: " + str(dmeEx))
             await self.disconnect()
@@ -247,8 +241,8 @@ class SmsContext(SuperContext):
     def kill_mario(self):
         """Uses the same logic as Gecko code death trigger"""
         if self.slot is not None and dme.is_hooked() and self.dolphin_status == CONNECTION_CONNECTED_STATUS:
-            dme.write_bytes(dme.follow_pointers(0x8040E178, [0x4C]),
-                (0x4020).to_bytes(2, byteorder="big"))
+            dme.write_bytes(dme.follow_pointers(addresses.KILL_MARIO, [0x4C]),
+                            (0x4020).to_bytes(2, byteorder="big"))
         return
 
     def make_gui(self):
@@ -382,6 +376,7 @@ class SmsContext(SuperContext):
         #     memory_changed(ctx, 113, delfino_yoshi_unlock, "Yoshi") # Swapped to self.locations_checked.add()
 
         await self.check_locations(self.locations_checked)
+        return
 
     async def check_death(self):
         """Check if Mario died by checking if in the 'Mario is dying' game mode, then send DeathLink."""
@@ -405,111 +400,143 @@ class SmsContext(SuperContext):
         elif game_state == 4:
             self.has_send_death = False
 
+    def check_active_tickets(self):
+        for ticket_id, tdata in self.tickets.items():
+            if any([received_ticket.item for received_ticket in self.items_received if received_ticket == ticket_id]):
+                tdata.active = True
+        return
+
     def sms_give_items(self):
         #TODO Read the last received index from save ram somewhere around here
         for item_id in self.items_received[self.send_index:]:
             item_name = self.item_names.lookup_in_game(item_id)
 
-            if item_name in REGULAR_PROGRESSION_ITEMS.keys():
-                if item_name == "Yoshi":
-                    activate_yoshi(ctx)
-                else:
-                    activate_nozzle(item, ctx)
-            elif item_name in TICKET_ITEMS:
-                activate_ticket(item)
-            elif item_name == "Shine Sprite":
-                ...
-            elif item_name == "Blue Coin":
-                ...
-            elif item_name == "1 Up":
-                increase_lives(ctx)
-
-    def activate_nozzle(self, id):
-        if id == 523000:
-            if not ctx.ap_nozzles_received.__contains__(0):
-                ctx.ap_nozzles_received.append(0)
-        elif id == 523001:
-            if not ctx.ap_nozzles_received.__contains__(1):
-                ctx.ap_nozzles_received.append(1)
-        elif id == 523002:
-            if not ctx.ap_nozzles_received.__contains__(2):
-                ctx.ap_nozzles_received.append(2)
-            # rocket nozzle
-        elif id == 523003:
-            if not ctx.ap_nozzles_received.__contains__(3):
-                ctx.ap_nozzles_received.append(3)
-            # turbo nozzle
+            match item_name:
+                case "1-UP":
+                    self.increase_lives()
+                case _:
+                    continue
         return
+
+    def activate_nozzle(self, noz_id: int):
+        activated_bits = dme.read_byte(addresses.ARB_NOZZLES_ENABLER)
+        activated_bits = bit_flagger(activated_bits, noz_id, True)
+        dme.write_byte(addresses.ARB_FLUDD_ENABLER, 0x1)
+        dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
 
     def activate_yoshi(self):
-        dme.write_byte(0x80417A03, 0x01)
-        if not ctx.ap_nozzles_received.__contains__(4):
-            ctx.ap_nozzles_received.append(4)
+        dme.write_byte(addresses.YOSHI_ADDRESS, 0x01)
         return
 
-    # Makes filler 1-UP items actually give lives
-    # As of now, your life count is increased by 1 if you close the client and reconnect if you already have more than one 1-UP sent
+    def activate_ticket(self, ticket_id: int):
+        self.tickets[ticket_id].active = True
+        addr: int = self.tickets[ticket_id].address
+        val: int = bit_flagger(dme.read_byte(addr), self.tickets[ticket_id].bit_position, True)
+        dme.write_byte(addr, val)
+        return
+
+    def receive_shine_sprite(self):
+        shine_count: int = len([recv_item for recv_item in self.items_received if recv_item.item == 523004])
+        dme.write_word(dme.read_bytes(dme.follow_pointers(addresses.SMS_FLAGS_PTR, [0x0]),
+            addresses.SMS_SHINE_BYTE_COUNT), shine_count)
+        return
+
+    def receive_blue_coin(self):
+        blue_count: int = len([recv_item for recv_item in self.items_received if recv_item.item == 523014])
+        dme.write_word(dme.read_bytes(dme.follow_pointers(addresses.SMS_FLAGS_PTR, [0x0]),
+            addresses.BLUECOIN_COUNT_OFFSET), blue_count)
+        return
+
     def increase_lives(self):
-        num_1_ups = sum(1 for item in ctx.items_received if ctx.item_names.lookup_in_game(item.item) == "1-UP")
-        current_lives = dme.read_word(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.LIVES_COUNT_OFFSET)
-
-        # Only increase lives a single time when a 1-UP is received
-        if ctx.num_1_ups_current != num_1_ups:
-            ctx.num_1_ups_current = num_1_ups
-
-            if current_lives < 99 and num_1_ups > 0:
-                dme.write_word(dme.read_word(addresses.SMS_FLAGS_PTR) + addresses.LIVES_COUNT_OFFSET, current_lives + 1)
+        current_lives = min(dme.read_word(dme.read_bytes(dme.follow_pointers(addresses.SMS_FLAGS_PTR, [0x0]),
+            addresses.LIVES_COUNT_OFFSET)), 99)
+        dme.write_word(dme.read_bytes(dme.follow_pointers(addresses.SMS_FLAGS_PTR, [0x0]),
+            addresses.LIVES_COUNT_OFFSET), current_lives + 1)
         return
 
-    def send_victory(self):
-        if ctx.victory:
+    async def send_victory(self):
+        if self.victory:
             return
 
-        ctx.victory = True
-        ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
+        corona_byte: int = int.from_bytes(dme.read_byte(dme.follow_pointers(
+            addresses.SMS_FLAGS_PTR, [0x0]) + addresses.SMS_SHINE_BYTE_COUNT))
+        beat_corona: bool = (corona_byte & (1 << 7)) > 0
+
+        if not beat_corona:
+            return
+
+        self.victory = True
+        await self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
         logger.info("Congratulations on completing your seed!")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("ARCHIPELAGO SUPER MARIO SUNSHINE CREDITS:")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("MrsMarinaRose - Client, Modding and Patching")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("Hatkirby - APworld")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("ScorelessPine - Original Manual")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("Fedora - Logic and testing")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("J2Slow - Logic and testing")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("Quizzeh - Extra testing")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         # logger.info("DoubleDubbel - The Incredible Name For The Randomizer ISO")
         # time.sleep(.05)
         logger.info("Spicynun - Additional research")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("JoshuaMKW - Sunshine Toolset")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("All Archipelago core devs")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("Nintendo EAD")
-        time.sleep(.05)
+        await asyncio.sleep(.05)
         logger.info("...and you. Thanks for playing!")
         return
 
-    async def arbitrary_ram_checks(self):
-        while not ctx.exit_event.is_set():
-            if not dme.is_hooked() or ctx.slot is None:
-                await asyncio.sleep(5)
+    def re_send_progression(self):
+        for nozzle_name, nozzle_id in REGULAR_PROGRESSION_ITEMS.items():
+            if not any([x.item for x in self.items_received if nozzle_id == x.item]):
                 continue
 
-            activated_bits = dme.read_byte(addresses.ARB_NOZZLES_ENABLER)
+            match nozzle_name:
+                case "Spray Nozzle":
+                    self.activate_nozzle(0)
+                case "Hover Nozzle":
+                    self.activate_nozzle(1)
+                case "Rocket Nozzle":
+                    self.activate_nozzle(2)
+                case "Turbo Nozzle":
+                    self.activate_nozzle(3)
+                case "Yoshi":
+                    self.activate_yoshi()
 
-            for noz in ctx.ap_nozzles_received:
-                if noz < 4:
-                    activated_bits = bit_flagger(activated_bits, noz, True)
-                    dme.write_byte(addresses.ARB_FLUDD_ENABLER, 0x1)
-                    dme.write_byte(addresses.ARB_NOZZLES_ENABLER, activated_bits)
-            await asyncio.sleep(DELAY_SECONDS)
+        for ticket_name in self.tickets.keys():
+            ticket_id: int = -1
+            match ticket_name:
+                case "Bianco Hills Ticket":
+                    ticket_id = 2
+                case "Ricco Harbor Ticket":
+                    ticket_id = 3
+                case "Gelato Beach Ticket":
+                    ticket_id = 4
+                case "Pinna Park Ticket":
+                    ticket_id = 5
+                case "Noki Bay Ticket":
+                    ticket_id = 9
+                case "Sirena Beach Ticket":
+                    ticket_id = 6
+                case "Pianta Village Ticket":
+                    ticket_id = 8
+                case _:
+                    raise ValueError(f"Unhandled ticket {ticket_name}")
+            self.activate_ticket(ticket_id)
+
+        self.receive_blue_coin()
+        self.receive_shine_sprite()
+        return
 
 
 async def wait_for_next_loop(time_to_wait: float) -> None:
@@ -549,9 +576,6 @@ def main(*launch_args: str):
 
         ctx.dolphin_sync_task = asyncio.create_task(ctx.dolphin_loop(), name="SmsDolphinSync")
 
-        #TODO this can probably just be done in the dme_loop.
-        arbitrary = asyncio.create_task(arbitrary_ram_checks(ctx), name="SmsArbitraryWatcher")
-
         await ctx.exit_event.wait()
         ctx.server_address = None
 
@@ -559,9 +583,6 @@ def main(*launch_args: str):
 
         if ctx.dolphin_sync_task:
             await ctx.dolphin_sync_task
-
-        if arbitrary:
-            await arbitrary
 
     colorama.just_fix_windows_console()
     asyncio.run(_main(args.connect, args.password))
