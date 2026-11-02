@@ -17,7 +17,7 @@ def _make_progressive_layout(ui: GameManager, debug: bool = False):
     ui.sms_layout.add_widget(root_layout)
 
     second_layout = MDBoxLayout(padding=[5, 5, 5, 5], line_color=debug_color)
-    ui.blue_coins = MDLabel(text="0 / 0", halign="center", font_style="Display", role="small")
+    ui.blue_coins = MDLabel(text="BlueCoin Sanity Disabled", halign="center", font_style="Display", role="small")
     second_layout.add_widget(_make_text_layout("Required Blue Coins:", ui.blue_coins))
     ui.sms_layout.add_widget(second_layout)
 
