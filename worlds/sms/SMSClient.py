@@ -2,7 +2,6 @@ import copy
 import os
 import sys
 import asyncio
-from dataclasses import dataclass
 from typing import Optional
 
 import ModuleUpdate
