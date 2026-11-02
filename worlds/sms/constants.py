@@ -8,7 +8,7 @@ CONNECTION_CONNECTED_STATUS: str = "Dolphin is connected, AP is connected, Ready
 AP_REFUSED_STATUS: str = "AP Refused to connect for one or more reasons, see above for more details."
 
 WORLD_NAME = "Super Mario Sunshine"
-WORLD_VERSION = "0.6.7"
+WORLD_VERSION = "0.6.3"
 GAME_ID: str = "GMSEAP"
 SMS_USA_MD5 = 0x0c6d2edae9fdf40dfc410ff1623e4119
 
