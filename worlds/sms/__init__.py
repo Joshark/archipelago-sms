@@ -16,7 +16,6 @@ from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_I
 from .options import *
 from .world_logic_constants import *
 from .regions import create_regions, ALL_REGIONS
-from .iso_helper.sms_rom import SMSPlayerContainer
 from .regions import get_location_name_to_id
 from .sms_rules import create_sms_region_and_entrance_rules
 from .constants import WORLD_VERSION, WORLD_NAME
@@ -303,6 +302,7 @@ class SmsWorld(World):
         return slot_data
 
     def generate_output(self, output_directory: str):
+        from .iso_helper.sms_rom import SMSPlayerContainer # circular import nonsense
         output_data = {
             "Seed": str(self.multiworld.seed_name),
             "Slot": self.player,
