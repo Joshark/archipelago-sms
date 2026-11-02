@@ -232,7 +232,7 @@ class SmsContext(SuperContext):
                 self.ui.update_blue_coins(blue_count, self.req_blue_coins)
             if self.ticket_mode:
                 ticket_list: set[str] = set([ticket.item_name for ticket in self.tickets.values() if ticket.active])
-                self.ui.update_ticket_list(ticket_list if ticket_list else "No tickets yet...")
+                self.ui.update_ticket_list(ticket_list if ticket_list else ["No tickets yet..."])
 
         except Exception as dmeEx:
             logger.error("Unable to connect to Super Mario Sunshine. Details: " + str(dmeEx))
