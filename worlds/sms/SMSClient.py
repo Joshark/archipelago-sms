@@ -108,6 +108,7 @@ class SmsContext(SuperContext):
         super(SmsContext, self).__init__(server_address, password)
         self.dolphin_sync_task: Optional[asyncio.Task[None]] = None
         self.dolphin_status: str = CONNECTION_INITIAL_STATUS
+        self.tags = {"AP"} # UT reasons, not doing this makes it a tracker.
 
         from . import SuperMarioSunshineSettings
         settings: SuperMarioSunshineSettings = get_settings().sms_options
@@ -191,6 +192,10 @@ class SmsContext(SuperContext):
 
                 self.set_dolphin_status(CONNECTION_CONNECTED_STATUS)
 
+            # 0 is an indication main menu or file select isnt hit yet.
+            if dme.read_byte(SMS_CURRENT_STAGE) == 0:
+                return
+
             self.check_active_tickets()
             await self.send_victory()
 
@@ -207,7 +212,7 @@ class SmsContext(SuperContext):
             if "DeathLink" in self.tags:
                 await self.check_death()
 
-            shine_count: int = len([recv_item for recv_item in self.items_received if recv_item.item == 523004])
+            shine_count: int = self.get_item_count(523004)
             if shine_count >= self.req_shine:
                 self.activate_ticket(34)
                 if not self.corona_message_given:
@@ -215,6 +220,15 @@ class SmsContext(SuperContext):
                     self.corona_message_given = True
 
             self.re_send_progression()
+
+            # Update Client Labels with Data
+            self.ui.update_corona_shine_count(shine_count, self.req_shine)
+            if self.blue_coin_sanity == 1:
+                blue_count: int = self.get_item_count(523014)
+                self.ui.update_blue_coins(blue_count, self.req_blue_coins)
+            if self.ticket_mode:
+                ticket_list: set[str] = set([ticket.item_name for ticket in self.tickets.values() if ticket.active])
+                self.ui.update_ticket_list(ticket_list if ticket_list else "No tickets yet...")
 
         except Exception as dmeEx:
             logger.error("Unable to connect to Super Mario Sunshine. Details: " + str(dmeEx))
@@ -361,17 +375,13 @@ class SmsContext(SuperContext):
         }])
 
     async def location_watcher(self):
-        shine_byte_list: int = int.from_bytes(dme.read_bytes(dme.follow_pointers(
-            SMS_FLAGS_PTR, [0x0]), SMS_SHINE_BYTE_COUNT))
+        shine_byte_list: int = int.from_bytes(dme.read_bytes(dme.read_word(SMS_FLAGS_PTR), SMS_SHINE_BYTE_COUNT))
 
-        bc_byte_list: int = int.from_bytes(dme.read_bytes(dme.follow_pointers(
-            SMS_FLAGS_PTR, [BLUECOIN_LOC_OFFSET]),
-            SMS_SHINE_BYTE_COUNT + SMS_BLUECOIN_BYTE_COUNT)) # Ignores the first addresses anyways
+        bc_byte_list: int = int.from_bytes(dme.read_bytes(dme.read_word(SMS_FLAGS_PTR) + BLUECOIN_LOC_OFFSET,
+            SMS_BLUECOIN_BYTE_COUNT))
 
-        nb_byte_list: int = int.from_bytes(dme.read_bytes(dme.follow_pointers(
-            SMS_FLAGS_PTR, [NOZZLE_BOXES_OFFSET]),
-            SMS_SHINE_BYTE_COUNT + SMS_BLUECOIN_BYTE_COUNT + NOZZLE_BOXES_BYTE_COUNT))
-            # Ignores the first addresses anyways
+        nb_byte_list: int = int.from_bytes(dme.read_bytes(dme.read_word(SMS_FLAGS_PTR) + NOZZLE_BOXES_OFFSET,
+            NOZZLE_BOXES_BYTE_COUNT))
 
         local_missing_locs = copy.deepcopy(self.missing_locations)
         for mis_loc_id in local_missing_locs:
@@ -438,6 +448,7 @@ class SmsContext(SuperContext):
     def sms_give_items(self):
         #TODO Read the last received index from save ram somewhere around here
         for item_id in self.items_received[self.send_index:]:
+            self.send_index += 1
             item_name = self.item_names.lookup_in_game(item_id)
 
             match item_name:
@@ -445,6 +456,7 @@ class SmsContext(SuperContext):
                     self.increase_lives()
                 case _:
                     continue
+
         return
 
     def activate_nozzle(self, noz_id: int):
@@ -459,36 +471,32 @@ class SmsContext(SuperContext):
 
     def activate_ticket(self, ticket_id: int):
         self.tickets[ticket_id].active = True
-        addr: int = self.tickets[ticket_id].address
-        val: int = bit_flagger(dme.read_byte(addr), self.tickets[ticket_id].bit_position, True)
-        dme.write_byte(addr, val)
+        self.open_stage(self.tickets[ticket_id])
         return
 
+    def get_item_count(self, item_id: int):
+        return len([recv_item for recv_item in self.items_received if recv_item.item == item_id])
+
     def receive_shine_sprite(self):
-        shine_count: int = len([recv_item for recv_item in self.items_received if recv_item.item == 523004])
-        dme.write_word(dme.read_bytes(dme.follow_pointers(SMS_FLAGS_PTR, [0x0]),
-            SMS_SHINE_BYTE_COUNT), shine_count)
+        shine_count: int = self.get_item_count(523004)
+        dme.write_word(dme.read_word(SMS_FLAGS_PTR) + SHINE_COUNT_OFFSET, shine_count)
         return
 
     def receive_blue_coin(self):
-        blue_count: int = len([recv_item for recv_item in self.items_received if recv_item.item == 523014])
-        dme.write_word(dme.read_bytes(dme.follow_pointers(SMS_FLAGS_PTR, [0x0]),
-            BLUECOIN_COUNT_OFFSET), blue_count)
+        blue_count: int = self.get_item_count(523014)
+        dme.write_word(dme.read_word(SMS_FLAGS_PTR) + BLUECOIN_COUNT_OFFSET, blue_count)
         return
 
     def increase_lives(self):
-        current_lives = min(dme.read_word(dme.read_bytes(dme.follow_pointers(SMS_FLAGS_PTR, [0x0]),
-            LIVES_COUNT_OFFSET)), 99)
-        dme.write_word(dme.read_bytes(dme.follow_pointers(SMS_FLAGS_PTR, [0x0]),
-            LIVES_COUNT_OFFSET), current_lives + 1)
+        current_lives = min(dme.read_word(dme.read_word(SMS_FLAGS_PTR) + LIVES_COUNT_OFFSET), 98)
+        dme.write_word(dme.read_word(SMS_FLAGS_PTR) + LIVES_COUNT_OFFSET, current_lives + 1)
         return
 
     async def send_victory(self):
         if self.victory:
             return
 
-        corona_byte: int = dme.read_byte(dme.follow_pointers(
-            SMS_FLAGS_PTR, [0x0]) + SMS_SHINE_BYTE_COUNT)
+        corona_byte: int = dme.read_byte(dme.read_word(SMS_FLAGS_PTR) + SMS_SHINE_BYTE_COUNT)
         beat_corona: bool = (corona_byte & (1 << 7)) > 0
 
         if not beat_corona:
