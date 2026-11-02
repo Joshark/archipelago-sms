@@ -281,7 +281,7 @@ class SmsContext(SuperContext):
             shine_count: MDLabel
             blue_coins: MDLabel
             tickets: MDLabel
-            base_title = "Super Mario Sunshine Client"
+            base_title = f"Super Mario Sunshine Client v{WORLD_VERSION}"
 
             def build(self):
                 container = super().build()
