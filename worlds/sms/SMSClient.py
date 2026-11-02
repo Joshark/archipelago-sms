@@ -104,6 +104,10 @@ class SmsContext(SuperContext):
     starting_nozzle: int
     ticket_mode: bool
 
+    # Tracker related variables
+    map_id: int = 0
+    episode_id: int = 0
+
     def __init__(self, server_address, password):
         super(SmsContext, self).__init__(server_address, password)
         self.dolphin_sync_task: Optional[asyncio.Task[None]] = None
@@ -357,6 +361,10 @@ class SmsContext(SuperContext):
 
     # Checks to see if player changed stages to update map_id for Poptracker
     async def send_map_id(self, map_id):
+        if self.map_id == map_id:
+            return
+
+        self.map_id = map_id
         await self.send_msgs([{
             "cmd": "Set",
             "key": f"sms_map_{self.team}_{self.slot}",
@@ -366,6 +374,10 @@ class SmsContext(SuperContext):
         }])
 
     async def send_episode_id(self, episode_id):
+        if self.episode_id == episode_id:
+            return
+
+        self.episode_id = episode_id
         await self.send_msgs([{
             "cmd": "Set",
             "key": f"sms_episode_{self.team}_{self.slot}",
