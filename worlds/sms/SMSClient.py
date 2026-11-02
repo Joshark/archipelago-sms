@@ -29,12 +29,16 @@ except ModuleNotFoundError:
     from CommonClient import CommonContext as SuperContext
 
 
-@dataclass
 class Ticket:
     item_name: str
     bit_position: int
     address: int
     active: bool = False
+
+    def __init__(self, itm_name: str, bit_pos: int, addr: int):
+        self.item_name = itm_name
+        self.bit_position = bit_pos
+        self.address = addr
 
 def read_string(console_address: int, strlen: int) -> str:
     str_val: str = ""
@@ -80,16 +84,16 @@ class SmsContext(SuperContext):
     victory: bool = False
 
     send_index: int = 0 # TODO find a place in save ram data to store/read this
-    tickets: dict[int, Ticket] = [
-        2, Ticket("Bianco Hills Ticket", 5, 0x805789f8),
-        3, Ticket("Ricco Harbor Ticket", 6, 0x805789f8),
-        4, Ticket("Gelato Beach Ticket", 7, 0x805789f8),
-        5, Ticket("Pinna Park Ticket", 1, 0x805789f9),
-        9, Ticket("Noki Bay Ticket", 3, 0x805789fd),
-        6, Ticket("Sirena Beach Ticket", 3, 0x805789f9),
-        8, Ticket("Pianta Village Ticket", 4, 0x805789f9),
-        34, Ticket("Corona Mountain Ticket", 6, 0x805789fd)
-    ]
+    tickets: dict[int, Ticket] = {
+        2: Ticket("Bianco Hills Ticket", 5, 0x805789f8),
+        3: Ticket("Ricco Harbor Ticket", 6, 0x805789f8),
+        4: Ticket("Gelato Beach Ticket", 7, 0x805789f8),
+        5: Ticket("Pinna Park Ticket", 1, 0x805789f9),
+        9: Ticket("Noki Bay Ticket", 3, 0x805789fd),
+        6: Ticket("Sirena Beach Ticket", 3, 0x805789f9),
+        8: Ticket("Pianta Village Ticket", 4, 0x805789f9),
+        34: Ticket("Corona Mountain Ticket", 6, 0x805789fd),
+    }
 
     # Current Shine/Blue Coins and Recv Shine/Blue Coin
     curr_shines: int = 0
@@ -187,13 +191,14 @@ class SmsContext(SuperContext):
                     return
 
                 self.set_dolphin_status(CONNECTION_CONNECTED_STATUS)
-                self.check_active_tickets()
+
+            self.check_active_tickets()
+            await self.send_victory()
 
             # If on stage select, don't do anything else, ignore and continue.
             # However, when you beat the game it considers current stage AS FILE SELECT
             # Therefore, we should check that as well.
             if dme.read_byte(SMS_CURRENT_STAGE) == 15:
-                await self.send_victory()
                 return
 
             await self.handle_stages()
@@ -210,8 +215,8 @@ class SmsContext(SuperContext):
                     logger.info("Corona Mountain requirements reached! Reload Delfino Plaza to unlock.")
                     self.corona_message_given = True
 
-            await self.send_victory()
             self.re_send_progression()
+
         except Exception as dmeEx:
             logger.error("Unable to connect to Super Mario Sunshine. Details: " + str(dmeEx))
             await self.disconnect()
@@ -483,8 +488,8 @@ class SmsContext(SuperContext):
         if self.victory:
             return
 
-        corona_byte: int = int.from_bytes(dme.read_byte(dme.follow_pointers(
-            SMS_FLAGS_PTR, [0x0]) + SMS_SHINE_BYTE_COUNT))
+        corona_byte: int = dme.read_byte(dme.follow_pointers(
+            SMS_FLAGS_PTR, [0x0]) + SMS_SHINE_BYTE_COUNT)
         beat_corona: bool = (corona_byte & (1 << 7)) > 0
 
         if not beat_corona:
@@ -538,25 +543,9 @@ class SmsContext(SuperContext):
                 case "Yoshi":
                     self.activate_yoshi()
 
-        for ticket_name in self.tickets.keys():
-            ticket_id: int = -1
-            match ticket_name:
-                case "Bianco Hills Ticket":
-                    ticket_id = 2
-                case "Ricco Harbor Ticket":
-                    ticket_id = 3
-                case "Gelato Beach Ticket":
-                    ticket_id = 4
-                case "Pinna Park Ticket":
-                    ticket_id = 5
-                case "Noki Bay Ticket":
-                    ticket_id = 9
-                case "Sirena Beach Ticket":
-                    ticket_id = 6
-                case "Pianta Village Ticket":
-                    ticket_id = 8
-                case _:
-                    raise ValueError(f"Unhandled ticket {ticket_name}")
+        for ticket_id, ticket_data in self.tickets.items():
+            if not ticket_data.active:
+                continue
             self.activate_ticket(ticket_id)
 
         self.receive_blue_coin()
