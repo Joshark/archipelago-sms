@@ -461,7 +461,7 @@ class SmsContext(SuperContext):
         #TODO Read the last received index from save ram somewhere around here
         for item_id in self.items_received[self.send_index:]:
             self.send_index += 1
-            item_name = self.item_names.lookup_in_game(item_id)
+            item_name = self.item_names.lookup_in_game(item_id.item)
 
             match item_name:
                 case "1-UP":
@@ -500,7 +500,10 @@ class SmsContext(SuperContext):
         return
 
     def increase_lives(self):
-        current_lives = min(dme.read_word(dme.read_word(SMS_FLAGS_PTR) + LIVES_COUNT_OFFSET), 98)
+        current_lives: int = dme.read_word(dme.read_word(SMS_FLAGS_PTR) + LIVES_COUNT_OFFSET)
+        if current_lives >= 99:
+            return
+
         dme.write_word(dme.read_word(SMS_FLAGS_PTR) + LIVES_COUNT_OFFSET, current_lives + 1)
         return
 
