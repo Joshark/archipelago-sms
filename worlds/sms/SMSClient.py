@@ -387,13 +387,7 @@ class SmsContext(SuperContext):
         }])
 
     async def location_watcher(self):
-        shine_byte_list: int = int.from_bytes(dme.read_bytes(dme.read_word(SMS_FLAGS_PTR), SMS_SHINE_BYTE_COUNT))
-
-        bc_byte_list: int = int.from_bytes(dme.read_bytes(dme.read_word(SMS_FLAGS_PTR) + BLUECOIN_LOC_OFFSET,
-            SMS_BLUECOIN_BYTE_COUNT))
-
-        nb_byte_list: int = int.from_bytes(dme.read_bytes(dme.read_word(SMS_FLAGS_PTR) + NOZZLE_BOXES_OFFSET,
-            NOZZLE_BOXES_BYTE_COUNT))
+        local_bit_list: bytes = dme.read_bytes(dme.read_word(SMS_FLAGS_PTR), TOTAL_FLAG_BYTE_COUNT)
 
         local_missing_locs = copy.deepcopy(self.missing_locations)
         for mis_loc_id in local_missing_locs:
@@ -405,19 +399,19 @@ class SmsContext(SuperContext):
             # If the location is a shine
             if sms_reg.shines and any([shine for shine in sms_reg.shines if loc_name in shine.name]):
                 in_game_bit: int = [shine.in_game_bit for shine in sms_reg.shines if loc_name in shine.name][0]
-                if (shine_byte_list & (1 << in_game_bit)) > 0:
+                if (local_bit_list[in_game_bit // 8] & (1 << in_game_bit % 8)) > 0:
                     self.locations_checked.add(mis_loc_id)
 
             # If the location is a blue coin
             elif sms_reg.blue_coins and any([bc for bc in sms_reg.blue_coins if loc_name in bc.name]):
                 in_game_bit: int = [bc.in_game_bit for bc in sms_reg.blue_coins if loc_name in bc.name][0]
-                if (bc_byte_list & (1 << in_game_bit)) > 0:
+                if (local_bit_list[in_game_bit // 8] & (1 << in_game_bit % 8)) > 0:
                     self.locations_checked.add(mis_loc_id)
 
             # If the location is a nozzle box
             elif sms_reg.nozzle_boxes and any([nb for nb in sms_reg.nozzle_boxes if loc_name in nb.name]):
                 in_game_bit: int = [nb.in_game_bit for nb in sms_reg.nozzle_boxes if loc_name in nb.name][0]
-                if (nb_byte_list & (1 << in_game_bit)) > 0:
+                if (local_bit_list[in_game_bit // 8] & (1 << in_game_bit % 8)) > 0:
                     self.locations_checked.add(mis_loc_id)
 
         # Check corresponds to Shadow Mario Yoshi Egg Chase
