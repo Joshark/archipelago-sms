@@ -445,17 +445,19 @@ class SmsContext(SuperContext):
             self.has_send_death = False
 
     def sms_give_items(self):
-        #TODO Read the last received index from save ram somewhere around here
+        last_recv_idx: int = dme.read_word(dme.read_word(SMS_FLAGS_PTR) + RECEIVED_ITEM_OFFSET)
+        if self.send_index == last_recv_idx:
+            return
+
         for item_id in self.items_received[self.send_index:]:
-            self.send_index += 1
             item_name = self.item_names.lookup_in_game(item_id.item)
 
-            match item_name:
-                case "1-UP":
-                    self.increase_lives()
-                case _:
-                    continue
+            if item_name == "1-UP":
+                self.increase_lives()
 
+            last_recv_idx += 1
+
+        dme.write_word(dme.read_word(SMS_FLAGS_PTR) + RECEIVED_ITEM_OFFSET, last_recv_idx)
         return
 
     def activate_nozzle(self, noz_id: int):

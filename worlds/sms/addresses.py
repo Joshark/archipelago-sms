@@ -6,6 +6,7 @@ SHINE_LOC_OFFSET =      0x00
 BLUECOIN_LOC_OFFSET =   0x0F
 NOZZLE_BOXES_OFFSET =   0x6C
 DELFINO_YOSHI_OFFSET =  0x71
+RECEIVED_ITEM_OFFSET = 0x48 # Uses some useless blue coin addresses for now. May need to change in future.
 
 SMS_SHINE_BYTE_COUNT = 15
 SMS_BLUECOIN_BYTE_COUNT = 55 # Should be 30 bytes, but the RAM takes up space for useless Blue Coins in memory
