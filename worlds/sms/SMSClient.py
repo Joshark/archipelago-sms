@@ -32,7 +32,6 @@ class Ticket:
     item_name: str
     bit_position: int
     address: int
-    active: bool = False
 
     def __init__(self, itm_name: str, bit_pos: int, addr: int):
         self.item_name = itm_name
@@ -211,7 +210,6 @@ class SmsContext(SuperContext):
             if dme.read_byte(SMS_CURRENT_STAGE) == 0:
                 return
 
-            self.check_active_tickets()
             await self.send_victory()
 
             # If on stage select, don't do anything else, ignore and continue.
@@ -228,7 +226,7 @@ class SmsContext(SuperContext):
                 await self.check_death()
 
             if shine_count >= self.req_shine:
-                self.activate_ticket(34)
+                self.open_stage(self.tickets[34]) # Open Corona Mountain
                 if not self.corona_message_given:
                     logger.info("Corona Mountain requirements reached! Reload Delfino Plaza to unlock.")
                     self.corona_message_given = True
@@ -340,7 +338,7 @@ class SmsContext(SuperContext):
         if cur_stage != next_stage:
             await self.send_map_id(next_stage)
             if self.ticket_mode:
-                if not self.tickets[next_stage].active:
+                if not self.has_item(self.tickets[next_stage].item_name):
                     logger.info("Entering a stage without a ticket! Initiating bootout...")
                     # Byte 1 should correspond to Delfino Plaza
                     dme.write_byte(SMS_NEXT_STAGE, 1)
@@ -446,12 +444,6 @@ class SmsContext(SuperContext):
         elif game_state == 4:
             self.has_send_death = False
 
-    def check_active_tickets(self):
-        for ticket_id, tdata in self.tickets.items():
-            if any([received_ticket.item for received_ticket in self.items_received if received_ticket == ticket_id]):
-                tdata.active = True
-        return
-
     def sms_give_items(self):
         #TODO Read the last received index from save ram somewhere around here
         for item_id in self.items_received[self.send_index:]:
@@ -474,11 +466,6 @@ class SmsContext(SuperContext):
 
     def activate_yoshi(self):
         dme.write_byte(YOSHI_ADDRESS, 0x01)
-        return
-
-    def activate_ticket(self, ticket_id: int):
-        self.tickets[ticket_id].active = True
-        self.open_stage(self.tickets[ticket_id])
         return
 
     def get_item_count(self, item_id: int):
@@ -560,14 +547,17 @@ class SmsContext(SuperContext):
                 case "Yoshi":
                     self.activate_yoshi()
 
-        for ticket_id, ticket_data in self.tickets.items():
-            if not ticket_data.active:
-                continue
-            self.activate_ticket(ticket_id)
+            for ticket_id, sms_ticket in self.tickets.items():
+                if self.has_item(sms_ticket.item_name):
+                    self.open_stage(self.tickets[ticket_id])
 
         self.receive_blue_coin()
         self.receive_shine_sprite()
         return
+
+    def has_item(self, item_name: str):
+        return any([recv_item for recv_item in self.items_received if
+            self.item_names.lookup_in_game(recv_item.item) == item_name])
 
 
 async def wait_for_next_loop(time_to_wait: float) -> None:
