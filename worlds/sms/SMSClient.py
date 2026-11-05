@@ -102,7 +102,7 @@ class SmsContext(SuperContext):
     blue_coin_sanity: bool = False
     has_receive_death: bool = False # TODO Do not handle deathlinks while stage is transition / fade to black or during shine get.
     starting_nozzle: int
-    ticket_mode: bool
+    ticket_mode: int
 
     # Tracker related variables
     map_id: int = 0
@@ -154,7 +154,8 @@ class SmsContext(SuperContext):
                 slot_data = args["slot_data"]
                 self.req_shine = slot_data["required_shines"]
                 self.blue_coin_sanity = slot_data["blue_coin_sanity"]
-                self.ticket_mode = slot_data["level_access"]
+                self.ticket_mode = int(slot_data["level_access"])
+                print(self.ticket_mode)
                 self.starting_nozzle = slot_data["starting_nozzle"]
                 self.req_blue_coins = slot_data["blue_coin_maximum"]
                 Utils.async_start(self.update_death_link(bool(slot_data["death_link"])))
@@ -196,6 +197,17 @@ class SmsContext(SuperContext):
 
                 self.set_dolphin_status(CONNECTION_CONNECTED_STATUS)
 
+            # Update Client Labels with Data
+            shine_count: int = self.get_item_count(523004)
+            self.ui.update_corona_shine_count(shine_count, self.req_shine)
+            if self.blue_coin_sanity == 1:
+                blue_count: int = self.get_item_count(523014)
+                self.ui.update_blue_coins(blue_count, self.req_blue_coins)
+            if self.ticket_mode == 1:
+                ticket_list: set[str] = set([ticket.item_name for ticket in self.tickets.values() if ticket.active])
+                print(ticket_list)
+                self.ui.update_ticket_list(ticket_list if ticket_list else ["No tickets yet..."])
+
             # 0 is an indication main menu or file select isnt hit yet.
             if dme.read_byte(SMS_CURRENT_STAGE) == 0:
                 return
@@ -216,7 +228,6 @@ class SmsContext(SuperContext):
             if "DeathLink" in self.tags:
                 await self.check_death()
 
-            shine_count: int = self.get_item_count(523004)
             if shine_count >= self.req_shine:
                 self.activate_ticket(34)
                 if not self.corona_message_given:
@@ -224,15 +235,6 @@ class SmsContext(SuperContext):
                     self.corona_message_given = True
 
             self.re_send_progression()
-
-            # Update Client Labels with Data
-            self.ui.update_corona_shine_count(shine_count, self.req_shine)
-            if self.blue_coin_sanity == 1:
-                blue_count: int = self.get_item_count(523014)
-                self.ui.update_blue_coins(blue_count, self.req_blue_coins)
-            if self.ticket_mode:
-                ticket_list: set[str] = set([ticket.item_name for ticket in self.tickets.values() if ticket.active])
-                self.ui.update_ticket_list(ticket_list if ticket_list else ["No tickets yet..."])
 
         except Exception as dmeEx:
             logger.error("Unable to connect to Super Mario Sunshine. Details: " + str(dmeEx))
