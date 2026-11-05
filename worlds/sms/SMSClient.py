@@ -16,7 +16,7 @@ from NetUtils import ClientStatus
 
 from .constants import *
 from .addresses import *
-from .bit_helper import bit_flagger
+from .bit_helper import bit_flagger, get_flag_val
 from .regions import ALL_REGIONS
 from .items import REGULAR_PROGRESSION_ITEMS, TICKET_ITEMS
 
@@ -398,19 +398,19 @@ class SmsContext(SuperContext):
             # If the location is a shine
             if sms_reg.shines and any([shine for shine in sms_reg.shines if loc_name in shine.name]):
                 in_game_bit: int = [shine.in_game_bit for shine in sms_reg.shines if loc_name in shine.name][0]
-                if (local_bit_list[in_game_bit // 8] & (1 << in_game_bit % 8)) > 0:
+                if get_flag_val(local_bit_list, in_game_bit):
                     self.locations_checked.add(mis_loc_id)
 
             # If the location is a blue coin
             elif sms_reg.blue_coins and any([bc for bc in sms_reg.blue_coins if loc_name in bc.name]):
                 in_game_bit: int = [bc.in_game_bit for bc in sms_reg.blue_coins if loc_name in bc.name][0]
-                if (local_bit_list[in_game_bit // 8] & (1 << in_game_bit % 8)) > 0:
+                if get_flag_val(local_bit_list, in_game_bit):
                     self.locations_checked.add(mis_loc_id)
 
             # If the location is a nozzle box
             elif sms_reg.nozzle_boxes and any([nb for nb in sms_reg.nozzle_boxes if loc_name in nb.name]):
                 in_game_bit: int = [nb.in_game_bit for nb in sms_reg.nozzle_boxes if loc_name in nb.name][0]
-                if (local_bit_list[in_game_bit // 8] & (1 << in_game_bit % 8)) > 0:
+                if get_flag_val(local_bit_list, in_game_bit):
                     self.locations_checked.add(mis_loc_id)
 
         # Check corresponds to Shadow Mario Yoshi Egg Chase
@@ -550,6 +550,9 @@ class SmsContext(SuperContext):
             for ticket_id, sms_ticket in self.tickets.items():
                 if self.has_item(sms_ticket.item_name):
                     self.open_stage(self.tickets[ticket_id])
+
+                    # if sms_ticket.item_name == "Noki Bay Ticket":
+                    #     dme.write_byte(SMS_NOKI_REQ, SMS_NOKI_LO)
 
         self.receive_blue_coin()
         self.receive_shine_sprite()
