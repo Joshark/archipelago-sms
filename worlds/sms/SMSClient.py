@@ -18,7 +18,7 @@ from .constants import *
 from .addresses import *
 from .bit_helper import bit_flagger
 from .regions import ALL_REGIONS
-from .items import REGULAR_PROGRESSION_ITEMS
+from .items import REGULAR_PROGRESSION_ITEMS, TICKET_ITEMS
 
 TRACKER_LOADED = False
 try:
@@ -155,7 +155,6 @@ class SmsContext(SuperContext):
                 self.req_shine = slot_data["required_shines"]
                 self.blue_coin_sanity = slot_data["blue_coin_sanity"]
                 self.ticket_mode = int(slot_data["level_access"])
-                print(self.ticket_mode)
                 self.starting_nozzle = slot_data["starting_nozzle"]
                 self.req_blue_coins = slot_data["blue_coin_maximum"]
                 Utils.async_start(self.update_death_link(bool(slot_data["death_link"])))
@@ -204,8 +203,8 @@ class SmsContext(SuperContext):
                 blue_count: int = self.get_item_count(523014)
                 self.ui.update_blue_coins(blue_count, self.req_blue_coins)
             if self.ticket_mode == 1:
-                ticket_list: set[str] = set([ticket.item_name for ticket in self.tickets.values() if ticket.active])
-                print(ticket_list)
+                ticket_list: set[str] = set([self.item_names.lookup_in_game(recv_item.item).replace(" Ticket", "") for
+                    recv_item in self.items_received if self.item_names.lookup_in_game(recv_item.item) in TICKET_ITEMS])
                 self.ui.update_ticket_list(ticket_list if ticket_list else ["No tickets yet..."])
 
             # 0 is an indication main menu or file select isnt hit yet.
