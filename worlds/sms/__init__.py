@@ -135,23 +135,11 @@ class SmsWorld(World):
 
         # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
         if self.options.blue_coin_sanity.value == 1:
-            trade_blue_coins_req: int = int(self.options.trade_shine_maximum.value * 10)
-            max_blue_coins_needed: int = int(trade_blue_coins_req * MAXIMUM_BLUE_COIN_PERCENTAGE)
-            trade_shines_req: int = int(self.options.blue_coin_maximum.value / 10)
-
-            # Since the player can set a blue coin amount well over the max coins needed, this can cause a lot of
-            # extra progression items that are not required. Since every progression item will need to be checked
-            # against accessibility, we remove the extra amounts to be more reasonable (20% extra currently).
-            if self.options.blue_coin_maximum.value > max_blue_coins_needed:
-                percentage_used: int = int((MAXIMUM_BLUE_COIN_PERCENTAGE - 1) * 100)
-                logger.warning(f"SMS: Player's Yaml {self.player_name} had more blue coins required than trade shines "
-                    f"max  + {percentage_used}%. Adjusting their count down to: {max_blue_coins_needed}")
-                self.options.blue_coin_maximum.value = min(max_blue_coins_needed, self.options.blue_coin_maximum.range_end)
-
-            elif self.options.trade_shine_maximum.value > trade_shines_req:
+            max_trade_shines: int = int(self.options.blue_coin_maximum.value / 10)
+            if self.options.trade_shine_maximum.value > max_trade_shines:
                 logger.warning(f"SMS: Player's Yaml {self.player_name} had more trade shines required than blue coins "
-                    f"in the item pool. Adjusting theirs down to: {trade_shines_req}")
-                self.options.trade_shine_maximum.value = trade_shines_req
+                    f"in the item pool. Adjusting theirs down to: {max_trade_shines}")
+                self.options.trade_shine_maximum.value = max_trade_shines
 
     def create_regions(self):
         create_regions(self)
@@ -170,8 +158,13 @@ class SmsWorld(World):
             pool += [self.create_item(tick_name) for tick_name in TICKET_ITEMS.keys() if tick_name not in start_inv]
 
         if self.options.blue_coin_sanity.value == 1:
-            for _ in range(0, self.options.blue_coin_maximum.value):
+            blue_coins = self.options.blue_coin_maximum.value
+            progression_blue_coins = int(self.options.trade_shine_maximum.value * 10 * MAXIMUM_PROGRESSION_BLUE_COIN_PERCENTAGE)
+            progression_blue_coins = min(blue_coins, progression_blue_coins)
+            for i in range(0, progression_blue_coins):
                 pool.append((self.create_item("Blue Coin")))
+            for i in range(progression_blue_coins, blue_coins):
+                pool.append((self.create_item("Blue Coin", ItemClassification.useful)))
 
         self.blue_coins_required = self.options.blue_coin_maximum.value if self.options.blue_coin_sanity.value > 0 else 0
 
@@ -206,11 +199,10 @@ class SmsWorld(World):
         if self.required_shines > int(math.ceil(valid_shine_locations * MAX_PROGRESSION_FLAG)):
             self.large_shine_count = True
 
-        for i in range(0, self.options.total_shines.value):
-            if i < self.required_shines:
-                pool.append(self.create_item("Shine Sprite"))
-            else:
-                pool.append(self.create_item("Shine Sprite", ItemClassification.useful))
+        for i in range(0, self.required_shines):
+            pool.append(self.create_item("Shine Sprite"))
+        for i in range(self.required_shines, self.options.total_shines.value):
+            pool.append(self.create_item("Shine Sprite", ItemClassification.useful))
 
         # Fill remaining locations with filler.
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
