@@ -8,6 +8,10 @@ NOZZLE_BOXES_OFFSET =   0x6C
 DELFINO_YOSHI_OFFSET =  0x71
 RECEIVED_ITEM_OFFSET = 0x48 # Uses some useless blue coin addresses for now. May need to change in future.
 
+# Global pointer to mario. If this is null, then probably in some menu, cutscene, etc.
+# Also used to help call kill mario functions.
+GP_MARIO = 0x8040E178
+
 SMS_SHINE_BYTE_COUNT = 15
 SMS_BLUECOIN_BYTE_COUNT = 55 # Should be 30 bytes, but the RAM takes up space for useless Blue Coins in memory
 NOZZLE_BOXES_BYTE_COUNT = 3
@@ -49,9 +53,6 @@ ARB_NOZZLES_ENABLER = 0x80417A01
 ARB_FLUDD_ENABLER = 0x80417A00
 ARB_VERSION_CHECKER = 0x80578AA4
 YOSHI_ADDRESS = 0x80417A03
-
-# Kill Mario Address
-KILL_MARIO = 0x8040E178
 
 # Game state
 GAME_STATE = 0x80902AA4

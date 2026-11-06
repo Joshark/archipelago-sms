@@ -206,11 +206,13 @@ class SmsContext(SuperContext):
                     recv_item in self.items_received if self.item_names.lookup_in_game(recv_item.item) in TICKET_ITEMS])
                 self.ui.update_ticket_list(ticket_list if ticket_list else ["No tickets yet..."])
 
-            # 0 is an indication main menu or file select isnt hit yet.
-            if dme.read_byte(SMS_CURRENT_STAGE) == 0:
-                return
+            # Check Send Victory on any stage that isnt file select.
+            if dme.read_byte(SMS_CURRENT_STAGE) != 0:
+                await self.send_victory()
 
-            await self.send_victory()
+            # If mario is in some cutscene or in the intro movie scene.
+            if dme.read_word(GP_MARIO) == 0:
+                return
 
             # If on stage select, don't do anything else, ignore and continue.
             # However, when you beat the game it considers current stage AS FILE SELECT
@@ -284,7 +286,7 @@ class SmsContext(SuperContext):
     def kill_mario(self):
         """Uses the same logic as Gecko code death trigger"""
         if self.slot is not None and dme.is_hooked() and self.dolphin_status == CONNECTION_CONNECTED_STATUS:
-            dme.write_bytes(dme.follow_pointers(KILL_MARIO, [0x4C]),
+            dme.write_bytes(dme.follow_pointers(GP_MARIO, [0x4C]),
                             (0x4020).to_bytes(2, byteorder="big"))
         return
 
