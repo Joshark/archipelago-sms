@@ -320,7 +320,7 @@ class SmsContext(SuperContext):
         return SMSGuiWrapper
 
     async def handle_stages(self):
-        # Gravi01  change to connection status
+        # TODO move to its own thread, probably would prevent error stated below.
         next_stage = dme.read_byte(SMS_NEXT_STAGE)
         cur_stage = dme.read_byte(SMS_CURRENT_STAGE)
         current_episode = dme.read_byte(SMS_CURRENT_EPISODE)
@@ -339,11 +339,14 @@ class SmsContext(SuperContext):
             await self.send_map_id(next_stage)
             if self.ticket_mode:
                 if not self.has_item(self.tickets[next_stage].item_name):
-                    logger.info("Entering a stage without a ticket! Initiating bootout...")
+                    # If there is an error around function 80178E48, it's probably trying to draw/init the shine select
+                    #   menu, which doesn't exist for Delfino Plaza.
+                    logger.info("Entering a stage without a ticket! Initiating boot-out...")
                     # Byte 1 should correspond to Delfino Plaza
                     dme.write_byte(SMS_NEXT_STAGE, 1)
                     dme.write_byte(SMS_CURRENT_STAGE, 1)
                     await self.send_map_id(1)
+                    return
 
         if (next_stage < 0x0D and next_stage != 0x07) and (next_episode != current_episode) and (next_episode != 0xFF):
             next_episode = dme.read_byte(SMS_NEXT_EPISODE)
@@ -552,9 +555,6 @@ class SmsContext(SuperContext):
             for ticket_id, sms_ticket in self.tickets.items():
                 if self.has_item(sms_ticket.item_name):
                     self.open_stage(self.tickets[ticket_id])
-
-                    # if sms_ticket.item_name == "Noki Bay Ticket":
-                    #     dme.write_byte(SMS_NOKI_REQ, SMS_NOKI_LO)
 
         self.receive_blue_coin()
         self.receive_shine_sprite()
