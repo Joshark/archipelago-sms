@@ -83,14 +83,14 @@ class SmsContext(SuperContext):
 
     send_index: int = 0 # TODO find a place in save ram data to store/read this
     tickets: dict[int, Ticket] = {
-        2: Ticket("Bianco Hills Ticket", 5, 0x805789f8),
-        3: Ticket("Ricco Harbor Ticket", 6, 0x805789f8),
-        4: Ticket("Gelato Beach Ticket", 7, 0x805789f8),
-        5: Ticket("Pinna Park Ticket", 1, 0x805789f9),
-        9: Ticket("Noki Bay Ticket", 3, 0x805789fd),
-        6: Ticket("Sirena Beach Ticket", 3, 0x805789f9),
-        8: Ticket("Pianta Village Ticket", 4, 0x805789f9),
-        34: Ticket("Corona Mountain Ticket", 6, 0x805789fd),
+        0x2: Ticket("Bianco Hills Ticket", 5, 0x805789f8),
+        0x3: Ticket("Ricco Harbor Ticket", 6, 0x805789f8),
+        0x4: Ticket("Gelato Beach Ticket", 7, 0x805789f8),
+        0x5: Ticket("Pinna Park Ticket", 1, 0x805789f9),
+        0x9: Ticket("Noki Bay Ticket", 3, 0x805789fd),
+        0x6: Ticket("Sirena Beach Ticket", 3, 0x805789f9),
+        0x8: Ticket("Pianta Village Ticket", 4, 0x805789f9),
+        0x34: Ticket("Corona Mountain Ticket", 6, 0x805789fd),
     }
 
     # Current Shine/Blue Coins and Recv Shine/Blue Coin
@@ -339,16 +339,15 @@ class SmsContext(SuperContext):
 
         if cur_stage != next_stage:
             await self.send_map_id(next_stage)
-            if self.ticket_mode:
-                if not self.has_item(self.tickets[next_stage].item_name):
-                    # If there is an error around function 80178E48, it's probably trying to draw/init the shine select
-                    #   menu, which doesn't exist for Delfino Plaza.
-                    logger.info("Entering a stage without a ticket! Initiating boot-out...")
-                    # Byte 1 should correspond to Delfino Plaza
-                    dme.write_byte(SMS_NEXT_STAGE, 1)
-                    dme.write_byte(SMS_CURRENT_STAGE, 1)
-                    await self.send_map_id(1)
-                    return
+            if self.ticket_mode and next_stage in self.tickets.keys() and not self.has_item(self.tickets[next_stage].item_name):
+                # If there is an error around function 80178E48, it's probably trying to draw/init the shine select
+                #   menu, which doesn't exist for Delfino Plaza.
+                logger.info("Entering a stage without a ticket! Initiating boot-out...")
+                # Byte 1 should correspond to Delfino Plaza
+                dme.write_byte(SMS_NEXT_STAGE, 1)
+                dme.write_byte(SMS_CURRENT_STAGE, 1)
+                await self.send_map_id(1)
+                return
 
         if (next_stage < 0x0D and next_stage != 0x07) and (next_episode != current_episode) and (next_episode != 0xFF):
             if next_stage == 0x01:
