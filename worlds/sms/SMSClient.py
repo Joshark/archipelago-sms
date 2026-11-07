@@ -351,7 +351,6 @@ class SmsContext(SuperContext):
                     return
 
         if (next_stage < 0x0D and next_stage != 0x07) and (next_episode != current_episode) and (next_episode != 0xFF):
-            next_episode = dme.read_byte(SMS_NEXT_EPISODE)
             if next_stage == 0x01:
                 await self.send_episode_id(-1)
             else:
@@ -500,7 +499,7 @@ class SmsContext(SuperContext):
         if self.victory:
             return
 
-        corona_byte: int = dme.read_byte(dme.read_word(SMS_FLAGS_PTR) + SMS_SHINE_BYTE_COUNT)
+        corona_byte: int = dme.read_byte(dme.read_word(SMS_FLAGS_PTR) + SMS_SHINE_BYTE_COUNT - 1)
         beat_corona: bool = (corona_byte & (1 << 7)) > 0
 
         if not beat_corona:
