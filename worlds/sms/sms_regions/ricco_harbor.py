@@ -243,7 +243,8 @@ RICCO_HARBOR_ONE: SmsRegion = SmsRegion(
         ),
         BlueCoin(
             "Spawn Building Side M",
-            [Requirements(SPRAY_OR_HOVER)],
+            [Requirements(SPRAY_OR_HOVER_OR_YOSHI,
+            location=f"{SmsRegionName.RICCO_EIGHT} - Yoshi's Fruit Adventure")],
             in_game_bit=241,
         ),
         BlueCoin(
