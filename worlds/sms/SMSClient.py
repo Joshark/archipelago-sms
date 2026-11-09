@@ -81,7 +81,6 @@ class SmsContext(SuperContext):
     password_required: bool = False
     victory: bool = False
 
-    send_index: int = 0 # TODO find a place in save ram data to store/read this
     tickets: dict[int, Ticket] = {
         0x2: Ticket("Bianco Hills Ticket", 5, 0x805789f8),
         0x3: Ticket("Ricco Harbor Ticket", 6, 0x805789f8),
@@ -449,10 +448,10 @@ class SmsContext(SuperContext):
 
     def sms_give_items(self):
         last_recv_idx: int = dme.read_word(dme.read_word(SMS_FLAGS_PTR) + RECEIVED_ITEM_OFFSET)
-        if self.send_index == last_recv_idx:
+        if last_recv_idx >= len(self.items_received):
             return
 
-        for item_id in self.items_received[self.send_index:]:
+        for item_id in self.items_received[last_recv_idx:]:
             item_name = self.item_names.lookup_in_game(item_id.item)
 
             if item_name == "1-UP":
