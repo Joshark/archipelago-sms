@@ -235,7 +235,7 @@ class SmsContext(SuperContext):
             self.re_send_progression()
 
         except Exception as dmeEx:
-            logger.error("Unable to connect to Super Mario Sunshine. Details: " + str(dmeEx))
+            logger.error(f"Unable to connect to Super Mario Sunshine. Details ({type(dmeEx).__name__}): {dmeEx}")
             await self.disconnect()
             await wait_for_next_loop(WAIT_TIMER_LONG_TIMEOUT)
 
@@ -260,7 +260,7 @@ class SmsContext(SuperContext):
                 await wait_for_next_loop(WAIT_TIMER_SHORT_TIMEOUT)
 
             except Exception as dolphinEx:
-                logger.error("Something went wrong when connecting to Dolphin Memory Engine. Details:" + str(dolphinEx))
+                logger.error(f"Something went wrong when connecting to Dolphin Memory Engine. Details ({type(dolphinEx).__name__}): {dolphinEx}")
 
     def set_dolphin_status(self, status: str) -> None:
         """
@@ -329,7 +329,7 @@ class SmsContext(SuperContext):
         if next_stage == 0x01:  # Delfino Plaza
             # If starting Fluddless without ticket mode on, open Bianco Hills
             if self.starting_nozzle == 2 and self.ticket_mode == 0:
-                self.open_stage(self.tickets[2])
+                self.open_stage(self.tickets[0x2])
 
             # Sets plaza state to 8 if in ticket mode and goal hasn't been reached
             if self.ticket_mode == 1 and next_episode != 0x8 and not self.corona_message_given:
