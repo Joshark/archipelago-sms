@@ -205,6 +205,13 @@ class SmsContext(SuperContext):
                     recv_item in self.items_received if self.item_names.lookup_in_game(recv_item.item) in TICKET_ITEMS])
                 self.ui.update_ticket_list(ticket_list if ticket_list else ["No tickets yet..."])
 
+            # Needs to always happen / be set to ensure Fludd is being properly set before mario loads in.
+            self.re_send_nozzles()
+            # Need to always set Corona Boat cutscene triggered, which allows Corona to properly unlock itself
+            flag_ptr: int = dme.read_word(SMS_FLAGS_PTR)
+            flag_val: int = dme.read_byte(flag_ptr + DELFINO_YOSHI_OFFSET)
+            dme.write_byte(flag_ptr + DELFINO_YOSHI_OFFSET, bit_flagger(flag_val, 0x2, True))
+
             # Check Send Victory on any stage that isnt file select.
             if dme.read_byte(SMS_CURRENT_STAGE) != 0:
                 await self.send_victory()
@@ -218,6 +225,8 @@ class SmsContext(SuperContext):
             # Therefore, we should check that as well.
             if dme.read_byte(SMS_CURRENT_STAGE) == 15:
                 return
+
+            self.give_fludd()
 
             await self.handle_stages()
             await self.location_watcher()
@@ -271,6 +280,18 @@ class SmsContext(SuperContext):
         """
         self.dolphin_status = status
         logger.info(self.dolphin_status)
+
+    def give_fludd(self):
+        if dme.read_byte(ARB_FLUDD_ENABLER) != 1:
+            return
+
+        mario_ptr = dme.read_word(ORIG_MARIO_PTR)
+        if mario_ptr == 0:
+            return
+
+        mario_flags = dme.read_word(mario_ptr + MARIO_FLAG_OFFSET)
+        if not (mario_flags & MARIO_FLAG_HAS_FLUDD):
+            dme.write_byte(ARB_FLUDD_APPLIED, 0x0)
 
     def on_deathlink(self, data: dict):
         super().on_deathlink(data)
@@ -331,20 +352,19 @@ class SmsContext(SuperContext):
             if self.starting_nozzle == 2 and self.ticket_mode == 0:
                 self.open_stage(self.tickets[0x2])
 
-            # Sets plaza state to 8 if in ticket mode and goal hasn't been reached
-            if self.ticket_mode == 1 and next_episode != 0x8 and not self.corona_message_given:
-                # Should change this to be flag based, set the flags necessary to load plaza 8 regardless
-                dme.write_byte(SMS_NEXT_EPISODE, 8)
-
         if cur_stage != next_stage:
             await self.send_map_id(next_stage)
-            if self.ticket_mode and next_stage in self.tickets.keys() and not self.has_item(self.tickets[next_stage].item_name):
+            if (self.ticket_mode and next_stage != 0x34 and next_stage in self.tickets.keys() and
+                not self.has_item(self.tickets[next_stage].item_name)):
                 # If there is an error around function 80178E48, it's probably trying to draw/init the shine select
                 #   menu, which doesn't exist for Delfino Plaza.
                 logger.info("Entering a stage without a ticket! Initiating boot-out...")
                 # Byte 1 should correspond to Delfino Plaza
                 dme.write_byte(SMS_NEXT_STAGE, 1)
+                shine_count: int = self.get_item_count(523004)
+                delfino_state: int = 1 if not shine_count > self.req_shine else 8
                 dme.write_byte(SMS_CURRENT_STAGE, 1)
+                dme.write_byte(SMS_NEXT_EPISODE, delfino_state)
                 await self.send_map_id(1)
                 return
 
@@ -534,7 +554,7 @@ class SmsContext(SuperContext):
         logger.info("...and you. Thanks for playing!")
         return
 
-    def re_send_progression(self):
+    def re_send_nozzles(self):
         for nozzle_name, nozzle_id in REGULAR_PROGRESSION_ITEMS.items():
             if not any([x.item for x in self.items_received if nozzle_id == x.item]):
                 continue
@@ -550,16 +570,25 @@ class SmsContext(SuperContext):
                     self.activate_nozzle(3)
                 case "Yoshi":
                     self.activate_yoshi()
+        return
 
-            for ticket_id, sms_ticket in self.tickets.items():
-                if self.has_item(sms_ticket.item_name):
-                    self.open_stage(self.tickets[ticket_id])
+    def re_send_progression(self):
+        self.re_send_nozzles()
+        for ticket_id, sms_ticket in self.tickets.items():
+            if self.has_item(sms_ticket.item_name):
+                self.open_stage(self.tickets[ticket_id])
 
         self.receive_blue_coin()
         self.receive_shine_sprite()
         return
 
     def has_item(self, item_name: str):
+        if item_name == "Corona Mountain Ticket":
+            shine_count: int = self.get_item_count(523004)
+            if not shine_count > self.req_shine:
+                return False
+            return True
+
         return any([recv_item for recv_item in self.items_received if
             self.item_names.lookup_in_game(recv_item.item) == item_name])
 
