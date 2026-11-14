@@ -227,7 +227,7 @@ class SmsContext(SuperContext):
                 await self.check_death()
 
             if shine_count >= self.req_shine:
-                self.open_stage(self.tickets[34]) # Open Corona Mountain
+                self.open_stage(self.tickets[0x34]) # Open Corona Mountain
                 if not self.corona_message_given:
                     logger.info("Corona Mountain requirements reached! Reload Delfino Plaza to unlock.")
                     self.corona_message_given = True
