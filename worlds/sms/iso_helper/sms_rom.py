@@ -10,7 +10,6 @@ from NetUtils import convert_to_base_types
 import Utils
 
 from ..constants import WORLD_NAME, SMS_USA_MD5, WORLD_VERSION
-from .SMSPatcher import SuperMarioSunshineRandomizer
 
 
 logger = logging.getLogger()
@@ -84,6 +83,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
         output_file = base_path + self.result_file_ending
 
         try:
+            from worlds.sms.iso_helper.SMSPatcher import SuperMarioSunshineRandomizer
             # Verify we have a clean rom of the game first
             self.verify_base_rom(sms_clean_iso, throw_on_missing_speedups=True)
 
@@ -201,9 +201,9 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
         self.verify_base_rom(vanilla_iso_path)
 
         # Use our randomize function to patch the file into an ISO.
-        from worlds.sms.iso_helper.SMSPatcher import SuperMarioSunshineRandomizer
         with zipfile.ZipFile(patch_file_path, "r") as zf:
             apsms_bytes = zf.read("patch.apsms")
+        from worlds.sms.iso_helper.SMSPatcher import SuperMarioSunshineRandomizer
         SuperMarioSunshineRandomizer(vanilla_iso_path, output_iso_path, apsms_bytes)
 
     def __get_remote_dependencies_and_create_iso(self, apsms_patch: str, output_file: str, sms_clean_iso: str):
