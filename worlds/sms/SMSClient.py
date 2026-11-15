@@ -2,6 +2,7 @@ import copy
 import os
 import sys
 import asyncio
+import time
 from typing import Optional
 
 import ModuleUpdate
@@ -98,7 +99,7 @@ class SmsContext(SuperContext):
     curr_blue_coins: int = 0
     req_blue_coins: int = 0
     blue_coin_sanity: bool = False
-    has_receive_death: bool = False # TODO Do not handle deathlinks while stage is transition / fade to black or during shine get.
+    has_receive_death: bool = False
     starting_nozzle: int
     ticket_mode: int
 
@@ -143,8 +144,6 @@ class SmsContext(SuperContext):
         super().on_package(cmd, args)
 
         match cmd:
-            # TODO Handle DeathLink
-
             case "RoomInfo":
                 self.password_required = bool(args["password"])
 
@@ -295,6 +294,11 @@ class SmsContext(SuperContext):
 
     def on_deathlink(self, data: dict):
         super().on_deathlink(data)
+        # Allows for death links to be received only while in a playable state to avoid dolphin errors
+        game_state = dme.read_byte(GAME_STATE)
+        if game_state != 4:
+            return
+
         source = data.get('source', 'Unknown')
         cause = data.get('cause', 'No cause specified')
         logger.info(f"DeathLink received! Source: {source}")
@@ -302,6 +306,16 @@ class SmsContext(SuperContext):
         logger.info("Killing Mario now...")
         self.has_receive_death = True
         self.kill_mario()
+
+        # Wait for mario to be alive again, then reset.
+        game_state = 0
+        wait_mario_alive = time.time() + 30
+        while game_state != 4 and time.time() <= wait_mario_alive:
+            game_state = dme.read_byte(GAME_STATE)
+            if game_state == 4:
+                self.has_receive_death = False
+                break
+        return
 
     def kill_mario(self):
         """Uses the same logic as Gecko code death trigger"""
