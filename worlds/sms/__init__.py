@@ -116,6 +116,9 @@ class SmsWorld(World):
                 elif hasattr(self, key):
                     setattr(self, key, value)
 
+            if self.options.level_access.value == 1 and self.ticket_chosen:
+                self.multiworld.push_precollected(self.create_item(self.ticket_chosen))
+
             return
 
         if self.options.level_access.value == 1:
@@ -199,7 +202,7 @@ class SmsWorld(World):
             if i < self.required_shines:
                 pool.append(self.create_item("Shine Sprite"))
             else:
-                pool.append(self.create_item("Shine Sprite", ItemClassification.useful))
+                pool.append(self.create_item("Bonus Shine Sprite", ItemClassification.useful))
 
         # Fill remaining locations with filler.
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
@@ -288,6 +291,7 @@ class SmsWorld(World):
         slot_data["required_shines"] = self.required_shines
         slot_data["death_link"] = self.options.death_link.value
         slot_data["seed"] = str(self.multiworld.seed_name)
+        slot_data["ticket_chosen"] = self.ticket_chosen
         return slot_data
 
     def generate_output(self, output_directory: str):

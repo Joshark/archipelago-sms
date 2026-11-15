@@ -25,6 +25,7 @@ TICKET_ITEMS: dict[str, int] = {
 
 ALL_PROGRESSION_ITEMS: dict[str, int] = {
     "Shine Sprite": 523004,
+    "Bonus Shine Sprite": 523141, # Some BS item needed for UT's purposes.
     "Blue Coin": 523014,
     **REGULAR_PROGRESSION_ITEMS,
     **TICKET_ITEMS,
