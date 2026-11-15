@@ -2,7 +2,6 @@ from hashlib import md5
 from typing import Any
 import shutil
 import json, logging, sys, os, zipfile, tempfile
-import requests, ssl, certifi, urllib.request
 
 from worlds.Files import APPatch, APPlayerContainer, AutoPatchRegister
 from settings import get_settings, Settings
@@ -166,6 +165,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
 
 
     def download_lib_zip(self, tmp_dir_path: str) -> None:
+        import requests, ssl, certifi, urllib.request
         logger.info("Getting missing dependencies for Super Mario Sunshine from remote source.")
 
         from sys import version_info
