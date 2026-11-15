@@ -2,10 +2,10 @@ from .sms_region_helper import *
 
 PINNA_PARK_ENTRANCE: SmsRegion = SmsRegion(
     SmsRegionName.PINNA_ENTRANCE,
-    requirements=[Requirements(shines=10)],
-    hard=[],
-    advanced=[],
-    tears=[],
+    requirements=[Requirements(location=f"{SmsRegionName.GELATO_ONE} - Dune Bud Sand Castle Secret", shines=10)],
+    hard=[Requirements(location=f"{SmsRegionName.GELATO_ONE} - Dune Bud Sand Castle Secret", shines=10)],
+    advanced=[Requirements(location=f"{SmsRegionName.GELATO_ONE} - Dune Bud Sand Castle Secret", shines=10)],
+    tears=[Requirements(location=f"{SmsRegionName.GELATO_ONE} - Dune Bud Sand Castle Secret", shines=10)],
     ticketed="Pinna Park Ticket",
     parent_region=SmsRegionName.PLAZA,
 )
@@ -329,12 +329,10 @@ PINNA_PARK_ONE: SmsRegion = SmsRegion(
             in_game_bit=339,
         ),
         BlueCoin(
-            "Beach Butterfly A",
-            requirements=[Requirements(YOSHI_AND_SPRAY_OR_YOSHI_AND_HOVER)], in_game_bit=343
+            "Beach Butterfly A", [Requirements(YOSHI_AND_SPRAY_OR_YOSHI_AND_HOVER)], in_game_bit=343
         ),
         BlueCoin(
-            "Beach Butterfly B",
-            requirements=[Requirements(YOSHI_AND_SPRAY_OR_YOSHI_AND_HOVER)], in_game_bit=344
+            "Beach Butterfly B", [Requirements(YOSHI_AND_SPRAY_OR_YOSHI_AND_HOVER)], in_game_bit=344
         ),
     ],
     parent_region=SmsRegionName.PINNA_ENTRANCE,

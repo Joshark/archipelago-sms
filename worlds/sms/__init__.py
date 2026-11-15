@@ -5,7 +5,6 @@ import math
 from dataclasses import fields
 import os, logging
 from typing import Dict, Any, ClassVar
-import settings
 
 import Options
 from BaseClasses import ItemClassification, MultiWorld, Tutorial, Item, Location
@@ -16,9 +15,10 @@ from .items import ALL_ITEMS_TABLE, REGULAR_PROGRESSION_ITEMS, ALL_PROGRESSION_I
 from .options import *
 from .world_logic_constants import *
 from .regions import create_regions, ALL_REGIONS
-from .iso_helper.sms_rom import SMSPlayerContainer
 from .regions import get_location_name_to_id
 from .sms_rules import create_sms_region_and_entrance_rules
+from .constants import WORLD_VERSION, WORLD_NAME
+from .sms_settings import SuperMarioSunshineSettings
 
 logger = logging.getLogger()
 
@@ -31,17 +31,6 @@ icon_paths["sms_ico"] = f"ap:{__name__}/assets/sms_ap_logo.png"
 components.append(
     Component("Super Mario Sunshine Client", func=run_client, component_type=Type.CLIENT,
         icon="sms_ico", file_identifier=SuffixIdentifier(".apsms")))
-
-class SuperMarioSunshineSettings(settings.Group):
-    class ISOFile(settings.UserFilePath):
-        description = "Super Mario Sunshine (USA) NTSC-U ISO File"
-        copy_to = None
-
-    class DolphinProcessName(str):
-        """The name of the Dolphin process to connect to. Leave blank for system default."""
-
-    iso_file: ISOFile = ISOFile(ISOFile.copy_to)
-    dolphin_process_name: DolphinProcessName = ""
 
 class SmsWebWorld(WebWorld):
     theme = "ocean"
@@ -127,6 +116,9 @@ class SmsWorld(World):
                 elif hasattr(self, key):
                     setattr(self, key, value)
 
+            if self.options.level_access.value == 1 and self.ticket_chosen:
+                self.multiworld.push_precollected(self.create_item(self.ticket_chosen))
+
             return
 
         if self.options.level_access.value == 1:
@@ -210,7 +202,7 @@ class SmsWorld(World):
             if i < self.required_shines:
                 pool.append(self.create_item("Shine Sprite"))
             else:
-                pool.append(self.create_item("Shine Sprite", ItemClassification.useful))
+                pool.append(self.create_item("Bonus Shine Sprite", ItemClassification.useful))
 
         # Fill remaining locations with filler.
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
@@ -298,25 +290,26 @@ class SmsWorld(World):
 
         slot_data["required_shines"] = self.required_shines
         slot_data["death_link"] = self.options.death_link.value
-        slot_data["ticket_chosen"] = self.ticket_chosen
         slot_data["seed"] = str(self.multiworld.seed_name)
+        slot_data["ticket_chosen"] = self.ticket_chosen
         return slot_data
 
     def generate_output(self, output_directory: str):
-        from .SMSClient import CLIENT_VERSION, AP_WORLD_VERSION_NAME
-
+        from .iso_helper.sms_rom import SMSPlayerContainer # circular import nonsense
         output_data = {
             "Seed": str(self.multiworld.seed_name),
             "Slot": self.player,
             "Name": self.player_name,
             "Options": {},
-            AP_WORLD_VERSION_NAME: CLIENT_VERSION
+            "Version": WORLD_VERSION
         }
 
         for field in fields(self.options):
             if "plando" in field.name.lower():
                 continue
             output_data["Options"][field.name] = getattr(self.options, field.name).value
+
+        output_data["required_shines"] = self.required_shines
 
         patch_path = os.path.join(output_directory, f"{self.multiworld.get_out_file_name_base(self.player)}"
             f"{SMSPlayerContainer.patch_file_ending}")

@@ -172,7 +172,7 @@ PIANTA_VILLAGE_ONE: SmsRegion = SmsRegion(
             "Moon",
             requirements=[Requirements(SPROVER_OR_SPROCKET)],
             hard=[
-                Requirements(SPRAY_AND_ANY_FLUDD),
+                Requirements([[NozzleType.spray]]),
                 Requirements(
                     [[NozzleType.yoshi]],
                     location=f"{SmsRegionName.PIANTA_FIVE} - Secret of the Village Underside",

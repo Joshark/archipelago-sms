@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
+from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle, StartInventoryPool
 
 
 class LevelAccess(Choice):
@@ -107,6 +107,7 @@ class AllShinesSelectable(Toggle):
 
 @dataclass
 class SmsOptions(PerGameCommonOptions):
+    start_inventory: StartInventoryPool
     level_access: LevelAccess
     enable_coin_shines: EnableCoinShines
     total_shines: TotalShines

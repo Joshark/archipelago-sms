@@ -68,16 +68,6 @@ If the game is being hosted on the Archipelago website download the patch file f
 Remember to be in the File Select screen **BEFORE** connecting in case of starting any new playthroughs as it might send unwanted checks if you connect while in a different save file
 
 ## MacOS code signing
-To use Dolphin with Archipelago on macOS, the Dolphin Emulator executable must be signed with a valid certificate and entitlements so that it can be debugged. First, [create a code signing certificate](https://sourceware.org/gdb/wiki/PermissionsDarwin):
-
-> Open Keychain Access (/Applications/Utilities/Keychain Access.app)
->
-> Open the menu item Keychain Access → Certificate Assistant → Create a Certificate...
->
-> Choose a name, set Identity Type to Self Signed Root, set Certificate Type to Code Signing and select the Let me override defaults checkbox. Click several times on Continue until you get to the Specify a Location For The Certificate screen, then set Keychain to System.
-
-Then, run the interactive `MacSetup.sh` script inside the `worlds/sms` directory to re-sign Dolphin Emulator:
-
-    sh ./MacSetup.sh
-
-**Note that Dolphin must also be re-signed using this script after an update.**
+To use Dolphin with Archipelago on macOS, the Dolphin Emulator executable must be signed with a valid certificate and entitlements so that it can be debugged. 
+We recommend reading and following this guide here: https://github.com/aldelaro5/dolphin-memory-engine#macos-1
+Which also requires use of the script mentioned in their instructions, here: https://github.com/aldelaro5/dolphin-memory-engine/blob/master/Tools/MacSetup.sh

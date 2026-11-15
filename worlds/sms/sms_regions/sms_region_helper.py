@@ -346,6 +346,11 @@ SPRAY_OR_HOVER_OR_ROCKET: list[list[str]] = [
     [NozzleType.hover],
     [NozzleType.rocket],
 ]
+SPRAY_OR_HOVER_OR_YOSHI: list[list[str]] = [
+    [NozzleType.spray],
+    [NozzleType.hover],
+    [NozzleType.yoshi],
+]
 ANY_FLUDD: list[list[str]] = [
     [NozzleType.spray],
     [NozzleType.hover],
