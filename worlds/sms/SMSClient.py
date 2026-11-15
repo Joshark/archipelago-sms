@@ -62,7 +62,7 @@ class SmsCommandProcessor(ClientCommandProcessor):
         """Specify the name of the Dolphin process to connect to. "" for system default."""
         self.ctx.hook_name = process_name
         logger.info(f"Changing Dolphin process name to: {process_name if process_name else ""}")
-        from . import SuperMarioSunshineSettings
+        from .sms_settings import SuperMarioSunshineSettings
         settings: SuperMarioSunshineSettings = get_settings().sms_options
         settings.dolphin_process_name = SuperMarioSunshineSettings.DolphinProcessName(process_name)
         get_settings().save()
@@ -613,18 +613,22 @@ async def wait_for_next_loop(time_to_wait: float) -> None:
 def main(*launch_args: str):
     import colorama
     from .iso_helper.sms_rom import SMSPatch
+    from .dolphin_launcher import DolphinLauncher
+
     server_address: str = ""
+    rom_path: str = ""
 
     parser = get_base_parser()
     parser.add_argument("apsms_file", default="", type=str, nargs="?", help="Path to a APSMS File")
     args = parser.parse_args(launch_args)
+    dolphin_launcher: DolphinLauncher = DolphinLauncher()
 
     if args.apsms_file:
         sms_patch = SMSPatch()
         try:
             sms_manifest = sms_patch.read_contents(args.apsms_file)
             server_address = sms_manifest["server"]
-            sms_patch.patch(args.apsms_file)
+            rom_path = sms_patch.patch(args.apsms_file)
         except Exception as ex:
             logger.error("Unable to patch your Super Mario Sunshine. Additional Details:\n" + str(ex))
             Utils.messagebox("Cannot Patch Super Mario Sunshine", "Unable to patch your Super Mario Sunshine ROM as " +
@@ -652,11 +656,12 @@ def main(*launch_args: str):
         if ctx.dolphin_sync_task:
             await ctx.dolphin_sync_task
 
+    Utils.asyncio.run(dolphin_launcher.launch_dolphin_async(rom_path))
     colorama.just_fix_windows_console()
     asyncio.run(_main(args.connect, args.password))
     colorama.deinit()
 
 
 if __name__ == "__main__":
-    Utils.init_logging("SMSClient", exception_logger="Client")
+    Utils.init_logging(CLIENT_NAME, exception_logger="Client")
     main(*sys.argv[1:])

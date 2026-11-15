@@ -5,7 +5,6 @@ import math
 from dataclasses import fields
 import os, logging
 from typing import Dict, Any, ClassVar
-import settings
 
 import Options
 from BaseClasses import ItemClassification, MultiWorld, Tutorial, Item, Location
@@ -19,6 +18,7 @@ from .regions import create_regions, ALL_REGIONS
 from .regions import get_location_name_to_id
 from .sms_rules import create_sms_region_and_entrance_rules
 from .constants import WORLD_VERSION, WORLD_NAME
+from .sms_settings import SuperMarioSunshineSettings
 
 logger = logging.getLogger()
 
@@ -31,17 +31,6 @@ icon_paths["sms_ico"] = f"ap:{__name__}/assets/sms_ap_logo.png"
 components.append(
     Component("Super Mario Sunshine Client", func=run_client, component_type=Type.CLIENT,
         icon="sms_ico", file_identifier=SuffixIdentifier(".apsms")))
-
-class SuperMarioSunshineSettings(settings.Group):
-    class ISOFile(settings.UserFilePath):
-        description = "Super Mario Sunshine (USA) NTSC-U ISO File"
-        copy_to = None
-
-    class DolphinProcessName(str):
-        """The name of the Dolphin process to connect to. Leave blank for system default."""
-
-    iso_file: ISOFile = ISOFile(ISOFile.copy_to)
-    dolphin_process_name: DolphinProcessName = ""
 
 class SmsWebWorld(WebWorld):
     theme = "ocean"

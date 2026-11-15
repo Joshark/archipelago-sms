@@ -74,7 +74,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
         temp_path = os.path.join(tempfile.gettempdir(), "super_mario_sunhine", WORLD_VERSION, "libs")
         return temp_path
 
-    def patch(self, apsms_patch: str):
+    def patch(self, apsms_patch: str) -> str:
         # Get the AP Path for the base ROM
         sms_clean_iso = self.get_base_rom_path()
         logger.info("Provided Super Mario Sunshine ISO Path was: " + sms_clean_iso)
@@ -93,7 +93,7 @@ class SMSPatch(APPatch, metaclass=AutoPatchRegister):
             SuperMarioSunshineRandomizer(sms_clean_iso, output_file, apsms_bytes)
         except ImportError:
             self.__get_remote_dependencies_and_create_iso(apsms_patch, output_file, sms_clean_iso)
-        return
+        return output_file
 
     def read_contents(self, apsms_patch: str) -> dict[str, Any]:
         with zipfile.ZipFile(apsms_patch, "r") as zf:
