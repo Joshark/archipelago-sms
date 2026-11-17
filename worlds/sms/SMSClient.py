@@ -285,6 +285,13 @@ class SmsContext(SuperContext):
         if dme.read_byte(ARB_FLUDD_ENABLER) != 1:
             return
 
+        # For Secret Stages, ensure fludd isn't given
+        curr_stage: int = dme.read_byte(SMS_CURRENT_STAGE)
+        next_stage: int = dme.read_byte(SMS_NEXT_STAGE)
+        if (0x1E <= curr_stage <= 0x33) or (0x1E <= next_stage <= 0x33):
+            dme.write_byte(ARB_FLUDD_APPLIED, 0x1)
+            return
+
         mario_ptr = dme.read_word(ORIG_MARIO_PTR)
         if mario_ptr == 0:
             return
