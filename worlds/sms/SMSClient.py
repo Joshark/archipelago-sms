@@ -367,9 +367,13 @@ class SmsContext(SuperContext):
             if self.starting_nozzle == 2 and self.ticket_mode == 0:
                 self.open_stage(self.tickets[0x2])
 
+            if self.ticket_mode == 1 and next_episode in [0, 1, 5, 6, 7]:
+                next_episode = 8
+                dme.write_byte(SMS_NEXT_EPISODE, next_episode)
+
         if cur_stage != next_stage:
             await self.send_map_id(next_stage)
-            if (self.ticket_mode and next_stage != 0x34 and next_stage in self.tickets.keys() and
+            if (self.ticket_mode == 1 and next_stage != 0x34 and next_stage in self.tickets.keys() and
                 not self.has_item(self.tickets[next_stage].item_name)):
                 # If there is an error around function 80178E48, it's probably trying to draw/init the shine select
                 #   menu, which doesn't exist for Delfino Plaza.
