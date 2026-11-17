@@ -139,6 +139,7 @@ class SmsContext(SuperContext):
             return
 
         await super().server_auth(password_requested)
+        await super().send_connect()
 
     def on_package(self, cmd: str, args: dict):
         super().on_package(cmd, args)
