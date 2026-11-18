@@ -19,7 +19,10 @@ from .constants import *
 from .addresses import *
 from .bit_helper import bit_flagger, get_flag_val
 from .regions import ALL_REGIONS
-from .items import REGULAR_PROGRESSION_ITEMS, TICKET_ITEMS
+from .items import ALL_PROGRESSION_ITEMS, REGULAR_PROGRESSION_ITEMS, TICKET_ITEMS
+
+# Bonus Shine Sprites are the extra shines past the required amount. In game they count like any other shine.
+SHINE_ITEM_IDS: tuple[int, ...] = (ALL_PROGRESSION_ITEMS["Shine Sprite"], ALL_PROGRESSION_ITEMS["Bonus Shine Sprite"])
 
 TRACKER_LOADED = False
 try:
@@ -194,7 +197,7 @@ class SmsContext(SuperContext):
                 self.set_dolphin_status(CONNECTION_CONNECTED_STATUS)
 
             # Update Client Labels with Data
-            shine_count: int = self.get_item_count(523004)
+            shine_count: int = self.get_shine_count()
             self.ui.update_corona_shine_count(shine_count, self.req_shine)
             if self.blue_coin_sanity == 1:
                 blue_count: int = self.get_item_count(523014)
@@ -375,7 +378,7 @@ class SmsContext(SuperContext):
                 logger.info("Entering a stage without a ticket! Initiating boot-out...")
                 # Byte 1 should correspond to Delfino Plaza
                 dme.write_byte(SMS_NEXT_STAGE, 1)
-                shine_count: int = self.get_item_count(523004)
+                shine_count: int = self.get_shine_count()
                 delfino_state: int = 1 if not shine_count > self.req_shine else 8
                 dme.write_byte(SMS_CURRENT_STAGE, 1)
                 dme.write_byte(SMS_NEXT_EPISODE, delfino_state)
@@ -509,8 +512,12 @@ class SmsContext(SuperContext):
     def get_item_count(self, item_id: int):
         return len([recv_item for recv_item in self.items_received if recv_item.item == item_id])
 
+    def get_shine_count(self) -> int:
+        """Shine Sprites received, counting the Bonus Shine Sprites as well."""
+        return len([recv_item for recv_item in self.items_received if recv_item.item in SHINE_ITEM_IDS])
+
     def receive_shine_sprite(self):
-        shine_count: int = self.get_item_count(523004)
+        shine_count: int = self.get_shine_count()
         dme.write_word(dme.read_word(SMS_FLAGS_PTR) + SHINE_COUNT_OFFSET, shine_count)
         return
 
@@ -598,7 +605,7 @@ class SmsContext(SuperContext):
 
     def has_item(self, item_name: str):
         if item_name == "Corona Mountain Ticket":
-            shine_count: int = self.get_item_count(523004)
+            shine_count: int = self.get_shine_count()
             if not shine_count > self.req_shine:
                 return False
             return True
