@@ -195,8 +195,8 @@ class SmsContext(SuperContext):
                 self.set_dolphin_status(CONNECTION_CONNECTED_STATUS)
 
             # Update Client Labels with Data
-            shine_count: int = self.get_item_count(523004)
-            self.ui.update_corona_shine_count(shine_count, self.req_shine)
+            self.curr_shines = self.get_item_count(523004) + self.get_item_count(523141)
+            self.ui.update_corona_shine_count(self.curr_shines, self.req_shine)
             if self.blue_coin_sanity == 1:
                 blue_count: int = self.get_item_count(523014)
                 self.ui.update_blue_coins(blue_count, self.req_blue_coins)
@@ -235,7 +235,7 @@ class SmsContext(SuperContext):
             if "DeathLink" in self.tags:
                 await self.check_death()
 
-            if shine_count >= self.req_shine:
+            if self.curr_shines >= self.req_shine:
                 self.open_stage(self.tickets[0x34]) # Open Corona Mountain
                 if not self.corona_message_given:
                     logger.info("Corona Mountain requirements reached! Reload Delfino Plaza to unlock.")
@@ -387,8 +387,7 @@ class SmsContext(SuperContext):
                 logger.info("Entering a stage without a ticket! Initiating boot-out...")
                 # Byte 1 should correspond to Delfino Plaza
                 dme.write_byte(SMS_NEXT_STAGE, 1)
-                shine_count: int = self.get_item_count(523004)
-                delfino_state: int = 1 if not shine_count > self.req_shine else 8
+                delfino_state: int = 1 if not self.curr_shines > self.req_shine else 8
                 dme.write_byte(SMS_CURRENT_STAGE, 1)
                 dme.write_byte(SMS_NEXT_EPISODE, delfino_state)
                 await self.send_map_id(1)
@@ -522,8 +521,7 @@ class SmsContext(SuperContext):
         return len([recv_item for recv_item in self.items_received if recv_item.item == item_id])
 
     def receive_shine_sprite(self):
-        shine_count: int = self.get_item_count(523004)
-        dme.write_word(dme.read_word(SMS_FLAGS_PTR) + SHINE_COUNT_OFFSET, shine_count)
+        dme.write_word(dme.read_word(SMS_FLAGS_PTR) + SHINE_COUNT_OFFSET, self.curr_shines)
         return
 
     def receive_blue_coin(self):
@@ -610,8 +608,7 @@ class SmsContext(SuperContext):
 
     def has_item(self, item_name: str):
         if item_name == "Corona Mountain Ticket":
-            shine_count: int = self.get_item_count(523004)
-            if not shine_count > self.req_shine:
+            if not self.curr_shines > self.req_shine:
                 return False
             return True
 
