@@ -145,7 +145,8 @@ SIRENA_BEACH_THREE: SmsRegion = SmsRegion(
         BlueCoin("Glass Hole", in_game_bit=379),
         BlueCoin(
             "White Painting",
-            requirements=[Requirements(SPRAY_OR_HOVER)],
+            requirements=[Requirements(YOSHI_AND_SPRAY_OR_YOSHI_AND_HOVER,
+                location=f"{SmsRegionName.SIRENA_FOUR} - The Secret of Casino Delfino")],
             hard=[Requirements(SPRAY_OR_HOVER_OR_TURBO)],
             in_game_bit=380,
         ),
