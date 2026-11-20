@@ -106,6 +106,10 @@ class SmsContext(SuperContext):
     # Tracker related variables
     map_id: int = 0
     episode_id: int = 0
+    curr_stage: int
+    next_stage: int
+    curr_ep: int
+    next_ep: int
 
     def __init__(self, server_address, password):
         super(SmsContext, self).__init__(server_address, password)
@@ -139,6 +143,7 @@ class SmsContext(SuperContext):
             return
 
         await super().server_auth(password_requested)
+        await super().send_connect()
 
     def on_package(self, cmd: str, args: dict):
         super().on_package(cmd, args)
@@ -194,8 +199,8 @@ class SmsContext(SuperContext):
                 self.set_dolphin_status(CONNECTION_CONNECTED_STATUS)
 
             # Update Client Labels with Data
-            shine_count: int = self.get_item_count(523004)
-            self.ui.update_corona_shine_count(shine_count, self.req_shine)
+            self.curr_shines = self.get_item_count(523004) + self.get_item_count(523141)
+            self.ui.update_corona_shine_count(self.curr_shines, self.req_shine)
             if self.blue_coin_sanity == 1:
                 blue_count: int = self.get_item_count(523014)
                 self.ui.update_blue_coins(blue_count, self.req_blue_coins)
@@ -206,23 +211,26 @@ class SmsContext(SuperContext):
 
             # Needs to always happen / be set to ensure Fludd is being properly set before mario loads in.
             self.re_send_nozzles()
+
             # Need to always set Corona Boat cutscene triggered, which allows Corona to properly unlock itself
             flag_ptr: int = dme.read_word(SMS_FLAGS_PTR)
             flag_val: int = dme.read_byte(flag_ptr + DELFINO_YOSHI_OFFSET)
             dme.write_byte(flag_ptr + DELFINO_YOSHI_OFFSET, bit_flagger(flag_val, 0x2, True))
 
-            # Check Send Victory on any stage that isnt file select.
-            if dme.read_byte(SMS_CURRENT_STAGE) != 0:
+            self.curr_stage = dme.read_byte(SMS_CURRENT_STAGE)
+            self.next_stage = dme.read_byte(SMS_NEXT_STAGE)
+            self.curr_ep = dme.read_byte(SMS_CURRENT_EPISODE)
+            self.next_ep = dme.read_byte(SMS_NEXT_EPISODE)
+
+            # Check Send Victory on any stage that isn't file select.
+            if self.curr_stage != 0:
                 await self.send_victory()
 
             # If mario is in some cutscene or in the intro movie scene.
-            if dme.read_word(GP_MARIO) == 0:
-                return
-
             # If on stage select, don't do anything else, ignore and continue.
             # However, when you beat the game it considers current stage AS FILE SELECT
             # Therefore, we should check that as well.
-            if dme.read_byte(SMS_CURRENT_STAGE) == 15:
+            if dme.read_word(GP_MARIO) == 0 or self.curr_stage == 15:
                 return
 
             self.give_fludd()
@@ -234,7 +242,7 @@ class SmsContext(SuperContext):
             if "DeathLink" in self.tags:
                 await self.check_death()
 
-            if shine_count >= self.req_shine:
+            if self.curr_shines >= self.req_shine:
                 self.open_stage(self.tickets[0x34]) # Open Corona Mountain
                 if not self.corona_message_given:
                     logger.info("Corona Mountain requirements reached! Reload Delfino Plaza to unlock.")
@@ -282,6 +290,16 @@ class SmsContext(SuperContext):
 
     def give_fludd(self):
         if dme.read_byte(ARB_FLUDD_ENABLER) != 1:
+            return
+
+        # Prevent this from giving Fludd on non-ticket mode and not picked up fludd yet.
+        if self.ticket_mode == 0 and (self.curr_stage == 0 or self.next_stage == 0):
+            dme.write_byte(ARB_FLUDD_APPLIED, 0x1)
+            return
+
+        # For Secret Stages, ensure fludd isn't given
+        if (0x1E <= self.curr_stage <= 0x33) or (0x1E <= self.next_stage <= 0x33):
+            dme.write_byte(ARB_FLUDD_APPLIED, 0x1)
             return
 
         mario_ptr = dme.read_word(ORIG_MARIO_PTR)
@@ -357,37 +375,37 @@ class SmsContext(SuperContext):
 
     async def handle_stages(self):
         # TODO move to its own thread, probably would prevent error stated below.
-        next_stage = dme.read_byte(SMS_NEXT_STAGE)
-        cur_stage = dme.read_byte(SMS_CURRENT_STAGE)
-        current_episode = dme.read_byte(SMS_CURRENT_EPISODE)
-        next_episode = dme.read_byte(SMS_NEXT_EPISODE)
-        if next_stage == 0x01:  # Delfino Plaza
+        if self.next_stage == 0x01:  # Delfino Plaza
             # If starting Fluddless without ticket mode on, open Bianco Hills
             if self.starting_nozzle == 2 and self.ticket_mode == 0:
                 self.open_stage(self.tickets[0x2])
 
-        if cur_stage != next_stage:
-            await self.send_map_id(next_stage)
-            if (self.ticket_mode and next_stage != 0x34 and next_stage in self.tickets.keys() and
-                not self.has_item(self.tickets[next_stage].item_name)):
+            if self.ticket_mode == 1 and self.next_ep in [0, 1, 5, 6, 7]:
+                next_episode = 8
+                dme.write_byte(SMS_NEXT_EPISODE, next_episode)
+
+        if self.curr_stage != self.next_stage:
+            await self.send_map_id(self.next_stage)
+            if (self.ticket_mode == 1 and self.next_stage != 0x34 and self.next_stage in self.tickets.keys() and
+                not self.has_item(self.tickets[self.next_stage].item_name)):
                 # If there is an error around function 80178E48, it's probably trying to draw/init the shine select
                 #   menu, which doesn't exist for Delfino Plaza.
                 logger.info("Entering a stage without a ticket! Initiating boot-out...")
                 # Byte 1 should correspond to Delfino Plaza
                 dme.write_byte(SMS_NEXT_STAGE, 1)
-                shine_count: int = self.get_item_count(523004)
-                delfino_state: int = 1 if not shine_count > self.req_shine else 8
+                delfino_state: int = 1 if not self.curr_shines > self.req_shine else 8
                 dme.write_byte(SMS_CURRENT_STAGE, 1)
                 dme.write_byte(SMS_NEXT_EPISODE, delfino_state)
                 await self.send_map_id(1)
                 return
 
-        if (next_stage < 0x0D and next_stage != 0x07) and (next_episode != current_episode) and (next_episode != 0xFF):
-            if next_stage == 0x01:
+        if ((self.next_stage < 0x0D and self.next_stage != 0x07) and
+                (self.next_ep != self.curr_ep) and (self.next_ep != 0xFF)):
+            if self.next_stage == 0x01:
                 await self.send_episode_id(-1)
             else:
-                await self.send_episode_id(next_episode)
-        elif next_stage >= 0x0D:
+                await self.send_episode_id(self.next_ep)
+        elif self.next_stage >= 0x0D:
             await self.send_episode_id(-1)
 
     def open_stage(self, ticket):
@@ -428,24 +446,25 @@ class SmsContext(SuperContext):
         for mis_loc_id in local_missing_locs:
             # Get the loc name, then I can get Region name + Shine Name / Blue Coin / Nozzle Box
             loc_full_name = self.location_names.lookup_in_game(mis_loc_id)
-            sms_reg = ALL_REGIONS[loc_full_name.split(" - ")[0]]
-            loc_name = loc_full_name.split(" - ")[1]
+            reg_name, loc_name = loc_full_name.split(" - ", 1)
+            sms_reg = ALL_REGIONS[reg_name]
 
+            # TODO when new locations are made, make a location type on the location object to remove extra loops here.
             # If the location is a shine
-            if sms_reg.shines and any([shine for shine in sms_reg.shines if loc_name in shine.name]):
-                in_game_bit: int = [shine.in_game_bit for shine in sms_reg.shines if loc_name in shine.name][0]
+            if sms_reg.shines and any([shine for shine in sms_reg.shines if loc_name == shine.name]):
+                in_game_bit: int = [shine.in_game_bit for shine in sms_reg.shines if loc_name == shine.name][0]
                 if get_flag_val(local_bit_list, in_game_bit):
                     self.locations_checked.add(mis_loc_id)
 
             # If the location is a blue coin
-            elif sms_reg.blue_coins and any([bc for bc in sms_reg.blue_coins if loc_name in bc.name]):
-                in_game_bit: int = [bc.in_game_bit for bc in sms_reg.blue_coins if loc_name in bc.name][0]
+            elif sms_reg.blue_coins and any([bc for bc in sms_reg.blue_coins if loc_name == bc.name]):
+                in_game_bit: int = [bc.in_game_bit for bc in sms_reg.blue_coins if loc_name == bc.name][0]
                 if get_flag_val(local_bit_list, in_game_bit):
                     self.locations_checked.add(mis_loc_id)
 
             # If the location is a nozzle box
-            elif sms_reg.nozzle_boxes and any([nb for nb in sms_reg.nozzle_boxes if loc_name in nb.name]):
-                in_game_bit: int = [nb.in_game_bit for nb in sms_reg.nozzle_boxes if loc_name in nb.name][0]
+            elif sms_reg.nozzle_boxes and any([nb for nb in sms_reg.nozzle_boxes if loc_name == nb.name]):
+                in_game_bit: int = [nb.in_game_bit for nb in sms_reg.nozzle_boxes if loc_name == nb.name][0]
                 if get_flag_val(local_bit_list, in_game_bit):
                     self.locations_checked.add(mis_loc_id)
 
@@ -510,8 +529,7 @@ class SmsContext(SuperContext):
         return len([recv_item for recv_item in self.items_received if recv_item.item == item_id])
 
     def receive_shine_sprite(self):
-        shine_count: int = self.get_item_count(523004)
-        dme.write_word(dme.read_word(SMS_FLAGS_PTR) + SHINE_COUNT_OFFSET, shine_count)
+        dme.write_word(dme.read_word(SMS_FLAGS_PTR) + SHINE_COUNT_OFFSET, self.curr_shines)
         return
 
     def receive_blue_coin(self):
@@ -598,8 +616,7 @@ class SmsContext(SuperContext):
 
     def has_item(self, item_name: str):
         if item_name == "Corona Mountain Ticket":
-            shine_count: int = self.get_item_count(523004)
-            if not shine_count > self.req_shine:
+            if not self.curr_shines > self.req_shine:
                 return False
             return True
 
