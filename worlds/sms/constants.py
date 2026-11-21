@@ -9,7 +9,7 @@ AP_REFUSED_STATUS: str = "AP Refused to connect for one or more reasons, see abo
 
 WORLD_NAME = "Super Mario Sunshine"
 CLIENT_NAME = "Super Mario Sunshine Client"
-WORLD_VERSION = "0.6.3"
+WORLD_VERSION = "0.6.5"
 GAME_ID: str = "GMSEAP"
 SMS_USA_MD5 = 0x0c6d2edae9fdf40dfc410ff1623e4119
 

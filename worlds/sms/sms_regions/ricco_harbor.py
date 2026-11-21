@@ -268,7 +268,7 @@ RICCO_HARBOR_TWO: SmsRegion = SmsRegion(
     SmsRegionName.RICCO_TWO,
     requirements=[
         Requirements(
-            location=f"{SmsRegionName.RICCO_ONE} - Ricco 1 Only - Gooper Blooper Breaks Out"
+            location=f"{SmsRegionName.RICCO_ONE} - Gooper Blooper Breaks Out"
         )
     ],
     shines=[
