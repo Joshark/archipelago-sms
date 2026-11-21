@@ -85,9 +85,12 @@ class SmsWorld(World):
 
     ut_can_gen_without_yaml = True  # class var that tells it to ignore the player yaml
 
+    post_fill_progression_items: list[SmsItem]
+
     def __init__(self, multiworld: MultiWorld, player: int):
         super().__init__(multiworld, player)
         self.ticket_chosen = ""
+        self.post_fill_progression_items = []
 
     def generate_early(self):
         if self.options.starting_nozzle.value == 0:
@@ -202,7 +205,9 @@ class SmsWorld(World):
             if i < self.required_shines:
                 pool.append(self.create_item("Shine Sprite"))
             else:
-                pool.append(self.create_item("Bonus Shine Sprite", ItemClassification.useful))
+                # Classifying extra shine sprites as useful during generation reduces the burden put on progression item placement.
+                # Allowing us to safely fill the entire pool with shine sprites if we wish.
+                pool.append(self.create_item("Shine Sprite", post_fill_progression_item=True))
 
         # Fill remaining locations with filler.
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
@@ -212,22 +217,26 @@ class SmsWorld(World):
 
         self.multiworld.itempool += pool
 
-    def create_item(self, name: str, item_class_override: ItemClassification | None = None):
+    def create_item(self, name: str, post_fill_progression_item: bool = False) -> SmsItem:
         if not name in ALL_ITEMS_TABLE:
             raise Exception(f"Invalid SMS item name: {name}")
 
-        if item_class_override is None:
-            if name in ALL_PROGRESSION_ITEMS:
-                if name == "Shine Sprite" or name == "Blue Coin":
-                    classification = ItemClassification.progression_deprioritized_skip_balancing
-                else:
-                    classification = ItemClassification.progression
+        if post_fill_progression_item:
+            classification = ItemClassification.useful
+        elif name in ALL_PROGRESSION_ITEMS:
+            if name == "Shine Sprite" or name == "Blue Coin":
+                classification = ItemClassification.progression_deprioritized_skip_balancing
             else:
-                classification = ItemClassification.filler
+                classification = ItemClassification.progression
         else:
-            classification = item_class_override
+            classification = ItemClassification.filler
 
-        return SmsItem(name, classification, ALL_ITEMS_TABLE[name], self.player)
+        item = SmsItem(name, classification, ALL_ITEMS_TABLE[name], self.player)
+
+        if post_fill_progression_item:
+            self.post_fill_progression_items.append(item)
+
+        return item
 
     def set_rules(self):
         create_sms_region_and_entrance_rules(self)
@@ -315,3 +324,7 @@ class SmsWorld(World):
             f"{SMSPlayerContainer.patch_file_ending}")
         sms_container = SMSPlayerContainer(output_data, patch_path, self.multiworld.player_name[self.player], self.player)
         sms_container.write()
+
+    def post_fill(self) -> None:
+        for item in self.post_fill_progression_items:
+            item.classification = ItemClassification.progression_deprioritized_skip_balancing
