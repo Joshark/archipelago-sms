@@ -28,6 +28,9 @@ class SuperMarioSunshineRandomizer:
 
         self.output_data = json.loads(ap_output_data.decode("utf-8"))
 
+        # Make sure that the server and client versions match before attempting to patch ISO.
+        self._check_server_version(self.output_data)
+
         self.gcm = GCM(self.clean_iso_path)
         self.gcm.read_entire_disc()
         self.dol = DOL()
