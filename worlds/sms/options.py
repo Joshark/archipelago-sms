@@ -19,6 +19,7 @@ class EnableCoinShines(Toggle):
 
 # Keep in mind this needs to account for blue coins, nozzles, tickets, and any other progression items and still have
 # Several locations to place filler/move around.
+
 class TotalShines(Range):
     """Maximum amount of Shine Sprites that can exist in the item pool.
     The amount created will be lower if there aren't enough locations to place all shines."""
@@ -27,10 +28,30 @@ class TotalShines(Range):
     range_end = 345
     default = 70
 
+class RequiredShinesMode(Choice):
+    """Determine how to calculate the amount of Shine Sprites required to goal.
+    Flat: required shines = required shines
+    Percentage: required shines = shines required percentage * total shines"""
+    display_name = "Shine Requirement Mode"
+    default = 1
+    option_flat = 0
+    option_percentage = 1
+
+class RequiredShinesFlat(Range):
+    """The amount of Shine Sprites required to access Corona Mountain and the Delfino Airstrip revisit.
+    If the amount set here is higher than the amount set for total shines, percentage will be used instead.
+    If total shines got reduced during generation, required shines will also be reduced to maintain the ratio of required to total shines.
+    If required shines take up more than 80% of available locations, the total and required shine counts may get lowered.
+    """
+    display_name = "Shines Required (Flat)"
+    range_start = 0
+    range_end = 345
+    default = 50
+
 class RequiredShinesPercentage(Range):
     """The percentage of Shine Sprites required to access Corona Mountain and the Delfino Airstrip revisit.
-    If required shines take up more than 80% of available locations, the total count may get lowered."""
-    display_name = "Shines Required Percentage"
+    If required shines take up more than 80% of available locations, the total shine count may get lowered."""
+    display_name = "Shines Required (Percentage)"
     range_start = 0
     range_end = 100
     default = 72
@@ -111,6 +132,8 @@ class SmsOptions(PerGameCommonOptions):
     level_access: LevelAccess
     enable_coin_shines: EnableCoinShines
     total_shines: TotalShines
+    required_shines_mode: RequiredShinesMode
+    required_shines_flat: RequiredShinesFlat
     required_shines_percentage: RequiredShinesPercentage
     nozzle_boxes: NozzleBoxes
     all_shines_selectable: AllShinesSelectable

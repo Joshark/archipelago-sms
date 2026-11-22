@@ -35,16 +35,29 @@ components.append(
 class SmsWebWorld(WebWorld):
     theme = "ocean"
     option_groups = [
-        Options.OptionGroup("SMS Basic", [
+        Options.OptionGroup("Shine Options", [
+            options.TotalShines,
+            options.RequiredShinesMode,
+            options.RequiredShinesFlat,
+            options.RequiredShinesPercentage
+        ]),
+        Options.OptionGroup("Progression", [
             options.LevelAccess,
-            options.Difficulty,
             options.AllShinesSelectable,
-            options.StartingNozzle,
+            options.StartingNozzle
+        ]),
+        Options.OptionGroup("Checks", [
             options.EnableCoinShines,
-            options.NozzleBoxes,
             options.BlueCoinSanity,
             options.BlueCoinMaximum,
             options.TradeShineMaximum,
+            options.NozzleBoxes
+        ]),
+        Options.OptionGroup("Logic", [
+            options.Difficulty
+        ]),
+        Options.OptionGroup("Death Link", [
+            options.DeathLink
         ])
     ]
 
@@ -128,6 +141,13 @@ class SmsWorld(World):
             self.ticket_chosen: str = str(self.random.choice(list(TICKET_ITEMS.keys())))
             self.multiworld.push_precollected(self.create_item(self.ticket_chosen))
 
+        # Ensure that required shines aren't higher than total shines when given flat options
+        if self.options.required_shines_mode.value == 0:
+            if self.options.required_shines_flat.value > self.options.total_shines.value:
+                logger.warning(f"SMS: Player's Yaml had more required shines than total shines. "
+                               + "Switching to percentage mode.")
+                self.options.required_shines_mode.value = 1
+
         # If blue coins are turned on in any way, set the max trade amount to be the max blue count required.
         if self.options.blue_coin_sanity.value == 1:
             trade_blue_coins_req: int = int(self.options.trade_shine_maximum.value * 10)
@@ -171,6 +191,13 @@ class SmsWorld(World):
         self.blue_coins_required = self.options.blue_coin_maximum.value if self.options.blue_coin_sanity.value > 0 else 0
 
         # Add Shine Sprites
+        required_shine_percentage = self.options.required_shines_percentage.value * 0.01
+        if self.options.required_shines_mode == 0:
+            # We already verified that required shines <= total shines in generate_early
+            required_shine_percentage = self.options.required_shines_flat.value / self.options.total_shines.value
+            if required_shine_percentage > 1:
+                raise Exception("Required shines higher than total shines. Flat mode should have been disabled!")
+
         remaining_locs: int = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
         if self.options.total_shines.value > remaining_locs:
             logger.warning(f"SMS: Player's Yaml {self.player_name} had total shine count higher than locations "
@@ -181,7 +208,7 @@ class SmsWorld(World):
 
         # Count how many non corona locations are available for shines sprites to be used in progression
         valid_shine_locations: int = possible_shine_locations - len(pool)
-        self.required_shines = int(self.options.total_shines.value * self.options.required_shines_percentage * 0.01)
+        self.required_shines = int(self.options.total_shines.value * required_shine_percentage)
 
         max_required_percentage: float = 90 if valid_shine_locations > 125 else 85 if valid_shine_locations > 110 else 80
         max_location_count: int = int(valid_shine_locations * max_required_percentage * 0.01)
@@ -189,13 +216,13 @@ class SmsWorld(World):
         # Lower the amount of shines required if our required shine count is too high
         # Lower the total shine count again to maintain the required shines percentage set by the player
         if self.required_shines > max_location_count:
-            new_total_shines = int(math.ceil(max_location_count * 100 / self.options.required_shines_percentage))
+            new_total_shines = math.ceil(max_location_count * 1 / required_shine_percentage)
             logger.warning(f"SMS: Player's Yaml {self.player_name} had required shine count higher than the safe limit "
                            f"of item pool percentage ({self.required_shines} shines - Limit: {max_location_count}). "
                            f"Adjusting their required shine count down to {max_location_count} and total shine count down to {new_total_shines}..."
                            )
             self.options.total_shines.value = new_total_shines
-            self.required_shines = max_location_count
+            self.options.required_shines_flat.value = self.required_shines = max_location_count
 
         # Check if this world's item pool has a large amount of shine sprites, used for item rules later on.
         if self.required_shines > int(math.ceil(valid_shine_locations * MAX_PROGRESSION_FLAG)):
